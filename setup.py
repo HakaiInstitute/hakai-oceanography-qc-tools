@@ -7,5 +7,12 @@ setup(
     author="Jessy Barrette",
     author_email="jessy.barrette@hakai.org",
     packages=["hakai_qc"],
-    install_requires=["hakai_api", "pandas", "plotly", "ipywidgets", "ioos_qc==2.1","openpyxl"],
+    install_requires=[
+        "hakai_api",
+        "pandas",
+        "plotly",
+        "ipywidgets",
+        "ioos_qc==2.1",
+        "openpyxl",
+    ],
 )
