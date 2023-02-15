@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "hakai-oceanography-qc-tools"
+version = "0.1.0"
+description = "\"Sets of tools used by Hakai oceanography to qc their data\""
+authors = ["Jessy Barrette <30420025+JessyBarrette@users.noreply.github.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pandas = "^1.5.3"
+hakai-api = "^1.2.0"
+plotly = "^5.13.0"
+ipywidgets = "^8.0.4"
+openpyxl = "^3.1.1"
+dash = "^2.8.1"
+dash-bootstrap-components = "^1.3.1"
+
+[tool.poetry.dev-dependencies]
+black = "^23.1.0"
+flake8 = "^6.0.0"
+isort = "^5.12.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+dash_interface = "src.app.py"
