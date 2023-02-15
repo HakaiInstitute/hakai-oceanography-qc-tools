@@ -1,0 +1,12 @@
+version: '3'
+services:
+  dashboard:
+    env_file:
+      - .env
+    # Path to dockerfile.
+    # '.' represents the current directory in which
+    # docker-compose.yml is present.
+    build: .
+    ports:
+      - "8050:8050"
+    container_name: hakai-oceanography-qc

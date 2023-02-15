@@ -12,17 +12,6 @@ dash.register_page(__name__)
 from hakai_qc.flags import flag_color_map
 from tools import update_dataframe
 
-
-df = pd.DataFrame(
-    {
-        "Fruit": ["Apples", "Oranges", "Bananas", "Apples", "Oranges", "Bananas"],
-        "Amount": [4, 1, 2, 2, 4, 5],
-        "City": ["SF", "SF", "SF", "Montreal", "Montreal", "Montreal"],
-    }
-)
-
-fig = px.bar(df, x="Fruit", y="Amount", color="City", barmode="group")
-
 variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
 
 
@@ -32,7 +21,7 @@ def get_flag_var(var):
 
 layout = html.Div(
     children=[
-        dcc.Graph(id={"type": "graph", "page": "nutrients"}, figure=fig),
+        dcc.Graph(id={"type": "graph", "page": "nutrients"}),
     ]
 )
 
@@ -60,8 +49,11 @@ def generate_figure(data, y, selected_data):
         x="collected",
         y=y,
         color=get_flag_var(y),
+        symbol="quality_level",
         color_discrete_map=flag_color_map,
         hover_data=["hakai_id"],
     )
-    fig.update_yaxes(autorange="reversed")
+    if fig.layout.yaxis.title.text in ['pressure','depth','line_out_depth']:
+        fig.update_yaxes(autorange="reversed")
+    fig.update_layout(height=800)
     return fig, None

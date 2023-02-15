@@ -1,19 +1,8 @@
 import logging
-import pandas as pd
+
 import dash_bootstrap_components as dbc
-from dash import (
-    Dash,
-    dash_table,
-    dcc,
-    html,
-    dash_table,
-    callback,
-    Output,
-    Input,
-    State,
-    ALL,
-    ctx
-)
+import pandas as pd
+from dash import ALL, Dash, Input, Output, State, callback, ctx, dash_table, dcc, html
 
 # from pages.nutrients import get_flag_var
 from tools import update_dataframe
@@ -56,12 +45,12 @@ selection_interface = html.Div(
 @callback(
     Output("selection-interface", "is_open"),
     Input({"type": "graph", "page": ALL}, "selectedData"),
-    Input('show-selection',"n_clicks"),
+    Input("show-selection", "n_clicks"),
     State("selection-interface", "is_open"),
 )
-def show_selection_interace(graph_selectedData, show_selection,is_open):
+def show_selection_interace(graph_selectedData, show_selection, is_open):
     trigger = ctx.triggered_id
-    if trigger=='show-selection':
+    if trigger == "show-selection":
         return not is_open
     return bool([selection for selection in graph_selectedData if selection])
 

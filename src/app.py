@@ -1,16 +1,50 @@
 # Run this app with `python app.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
 import logging
+import os
 
 import dash
 import dash_bootstrap_components as dbc
-from dash import Dash, dash_table, dcc, html
+import sentry_sdk
+import yaml
+from dash import Dash, dcc, html
+from dotenv import dotenv_values
+from sentry_sdk.integrations.logging import LoggingIntegration
 
-from utils.hakai import hakai_api_credentials_modal
 import utils.selection as selection
+from utils.hakai import hakai_api_credentials_modal
 
-logging.basicConfig(level=logging.DEBUG, filename="web_debug.log")
+# Load configuration
+with open("default-config.yaml", encoding="UTF-8") as config_handle:
+    config = yaml.load(config_handle, Loader=yaml.SafeLoader)
+config.update(
+    {
+        **dotenv_values(".env"),  # load shared development variables
+        **os.environ,  # override loaded values with environment variables
+    }
+)
+
+config.update({key: value for key, value in os.environ.items() if key in config})
+
+sentry_logging = LoggingIntegration(
+    level=config["SENTRY_LEVEL"],  # Capture info and above as breadcrumbs
+    event_level=config["SENTRY_EVENT_LEVEL"],  # Send errors as events
+)
+sentry_sdk.init(
+    dsn=config["SENTRY_DSN"],
+    integrations=[
+        sentry_logging,
+    ],
+    traces_sample_rate=1.0,
+)
+
 logger = logging.getLogger()
+logger.setLevel(config["LOG_LEVEL"])
+fileHandler = logging.FileHandler("dashboard.log")
+fileHandler.setFormatter(
+    logging.Formatter("%(asctime)s - %(name)s - %(levelname)s: %(message)s")
+)
+logger.addHandler(fileHandler)
 
 app = Dash(
     "Hakai Quality Control",
@@ -19,6 +53,8 @@ app = Dash(
     pages_folder="src/pages",
 )
 application = app.server
+
+
 stores = html.Div(
     dbc.Spinner(
         [
@@ -29,6 +65,7 @@ stores = html.Div(
         ]
     )
 )
+
 navbar = dbc.NavbarSimple(
     children=[
         stores,
@@ -39,7 +76,7 @@ navbar = dbc.NavbarSimple(
         dbc.DropdownMenu(
             children=[
                 dbc.DropdownMenuItem("Query", href="#"),
-                dbc.DropdownMenuItem("Show Selection", href="#", id='show-selection'),
+                dbc.DropdownMenuItem("Show Selection", href="#", id="show-selection"),
                 dbc.DropdownMenuItem("Setup", href="#"),
             ],
             nav=True,
@@ -49,8 +86,8 @@ navbar = dbc.NavbarSimple(
     ],
     brand="Hakai Quality Control",
     brand_href="#",
-    color="primary",
-    dark=True,
+    color=config['NAVBAR_COLOR'],
+    dark=config["NAVBAR_DARK"],
 )
 
 app.layout = html.Div(

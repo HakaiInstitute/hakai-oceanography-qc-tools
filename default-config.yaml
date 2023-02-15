@@ -1,0 +1,19 @@
+# App settings
+DEBUG: false
+HOST: '0.0.0.0'
+PORT: 8050
+
+# logging
+LOG_LEVEL: DEBUG
+WEB_LOG_LEVEL: DEBUG
+SENTRY_LEVEL: INFO
+SENTRY_EVENT_LEVEL: ERROR
+SENTRY_DSN: null
+
+# Color settings
+NAVBAR_COLOR: '#B52026'
+NAVBAR_DARK: true
+
+# Hakai endpoints
+HAKAI_DEFAULT_API_SERVER_ROOT: https://hecate.hakai.org/api
+HAKAI_ENDPOINTS: 'ctd/views/file/cast'
