@@ -8,7 +8,7 @@ import pandas as pd
 import plotly.express as px
 from dash import Dash, Input, Output, State, dash_table, dcc, html
 
-from hakai import hakai_api_credentials_modal
+from utils.hakai import hakai_api_credentials_modal
 
 logging.basicConfig(level=logging.DEBUG, filename="web_debug.log")
 logger = logging.getLogger()
