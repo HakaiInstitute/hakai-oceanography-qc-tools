@@ -13,17 +13,9 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 
 import utils.selection as selection
 from utils import hakai
+from utils.tools import load_config
 
-# Load configuration
-with open("default-config.yaml", encoding="UTF-8") as config_handle:
-    config = yaml.load(config_handle, Loader=yaml.SafeLoader)
-config.update(
-    {
-        **dotenv_values(".env"),  # load shared development variables
-        **os.environ,  # override loaded values with environment variables
-    }
-)
-
+config = load_config()
 config.update({key: value for key, value in os.environ.items() if key in config})
 
 sentry_logging = LoggingIntegration(
@@ -60,8 +52,10 @@ stores = html.Div(
             dcc.Store(id="dataframe"),
             dcc.Store(id="selected-data"),
             dcc.Store(id="main-graph-spinner"),
-        ]
-    )
+        ],
+        color="light",
+    ),
+    style={"width": "50px", "float": "center", "text-align": "center"},
 )
 
 navbar = dbc.NavbarSimple(
@@ -73,9 +67,11 @@ navbar = dbc.NavbarSimple(
         ],
         dbc.DropdownMenu(
             children=[
-                dbc.DropdownMenuItem("Query", href="#"),
-                dbc.DropdownMenuItem("Show Selection", href="#", id="show-selection"),
-                dbc.DropdownMenuItem("Log In", href="#", id="log-in"),
+                dbc.DropdownMenuItem("Query", href="#query"),
+                dbc.DropdownMenuItem(
+                    "Show Selection", href="#selection", id="show-selection"
+                ),
+                dbc.DropdownMenuItem("Log In", id="log-in"),
             ],
             nav=True,
             in_navbar=True,

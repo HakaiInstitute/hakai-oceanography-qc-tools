@@ -5,7 +5,7 @@ import pandas as pd
 from dash import ALL, Dash, Input, Output, State, callback, ctx, dash_table, dcc, html
 
 # from pages.nutrients import get_flag_var
-from tools import update_dataframe
+from utils.tools import update_dataframe
 
 variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
 

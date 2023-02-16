@@ -104,7 +104,8 @@ def get_hakai_data(path, query, credentials):
         logger.warning("No query or credentials available")
         return
     client = Client(credentials=credentials)
-
+    if "limit=" not in query:
+        query += "&limit=-1"
     url = f"{client.api_root}/{location_endpoint_mapping[path]}?{query[1:]}"
     logger.debug("run hakai query: %s", url)
 
