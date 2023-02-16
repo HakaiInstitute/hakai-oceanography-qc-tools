@@ -28,11 +28,11 @@ layout = html.Div(
             "Timeseries", id=dict(page="nutrients", type="button", label="timeseries")
         ),
         dbc.Button(
-            "Show PO4 red field",
+            "PO4 Red-Field",
             id=dict(page="nutrients", type="button", label="po4-rf"),
         ),
         dbc.Button(
-            "Show SiO2 red field",
+            "SiO2 Red-Field",
             id=dict(page="nutrients", type="button", label="sio2-rf"),
         ),
         dcc.Graph(id={"type": "graph", "page": "nutrients"}),
@@ -47,38 +47,61 @@ layout = html.Div(
     Input("variable", "value"),
     Input("selected-data-table", "data"),
     Input(dict(page="nutrients", type="button", label=ALL), "n_clicks"),
+    Input("line-out-depth-selector", "value"),
 )
-def generate_figure(data, y, selected_data, button_triggered):
-    logger.info("Generating figure")
-    if not data:
+def generate_figure(data, variable, selected_data, button_triggered, line_out_depths):
+    if not data or not variable:
+        logger.debug("no data or variable available")
         return None, None
+
+    # transform data for plotting
+    logger.info(
+        "Generating %s figure for line_out_depths=%s", variable, line_out_depths
+    )
     df = pd.DataFrame(data)
+    
+    if line_out_depths:
+        df = df.query("line_out_depth in @line_out_depths").copy()
+        
+    # apply manual selection flags
     if selected_data:
         df = update_dataframe(
             df, pd.DataFrame(selected_data), on="hakai_id", how="left"
         )
-    df[get_flag_var(y)] = df[get_flag_var(y)].fillna("UN")
-    df["time"] = pd.to_datetime(df["collected"])
-    df["year"] = df["time"].dt.year
 
+    df.loc[:,get_flag_var(variable)] = df.loc[:,get_flag_var(variable)].fillna("UN")
+    df.loc[:,"time"] = pd.to_datetime(df["collected"])
+    df.loc[:,"year"] = df["time"].dt.year
+
+    # determinate which plot type to generate
     triggered_id = ctx.triggered_id
     if isinstance(triggered_id, str) or "label" not in triggered_id:
-        pass
-    elif triggered_id["label"] == "po4-rf":
-        return get_red_field_plot(df, "po4", [2.1875, 35], 100), None
+        triggered_id = {'label': 'default'}
+    
+    if triggered_id["label"] == "po4-rf":
+        logger.debug("get po4 rf plot ")
+        fig = get_red_field_plot(df, "po4", [2.1875, 35], 100)
     elif triggered_id["label"] == "sio2-rf":
-        return get_red_field_plot(df, "sio2", [32.8125, 35], 100), None
+        logger.debug("get sio2 rf plot ")
+        fig = get_red_field_plot(df, "sio2", [32.8125, 35], 100)
+    else:
+        logger.debug("get default time series plot ")
+        fig = px.line(
+            df,
+            x="collected",
+            y=variable,
+            color=get_flag_var(variable),
+            symbol="quality_level",
+            color_discrete_map=flag_color_map,
+            hover_data=["hakai_id"],
+            template="simple_white",
+            labels=config['VARIABLES_LABEL']
+        )
+    logger.debug("figure %s", fig)
+    for trace in fig.data:
+        if "AV" not in trace['name'] and "UN" not in trace['name']:
+            trace.mode = 'markers'
 
-    fig = px.scatter(
-        df,
-        x="collected",
-        y=y,
-        color=get_flag_var(y),
-        symbol="quality_level",
-        color_discrete_map=flag_color_map,
-        hover_data=["hakai_id"],
-        template="simple_white",
-    )
     if fig.layout.yaxis.title.text in ["pressure", "depth", "line_out_depth"]:
         fig.update_yaxes(autorange="reversed")
     fig.update_layout(height=800)
@@ -86,20 +109,15 @@ def generate_figure(data, y, selected_data, button_triggered):
 
 
 def get_red_field_plot(df, var, slope_limit, max_depth):
-    labels = {
-        "sio2": f"SiO2 (uM)",
-        "po4": "PO4 (uM)",
-        "line_out_depth": "Bottle Target Depth (m)",
-    }
     figs = px.scatter(
-        df.query("line_out_depth<@max_depth"),
+        df.query(f"line_out_depth<{max_depth}"),
         x=var,
         y="no2_no3_um",
         color="line_out_depth",
         hover_data=["hakai_id", "date"],
         template="simple_white",
-        title=labels[var],
-        labels=labels,
+        title=config['VARIABLES_LABEL'][var],
+        labels=config['VARIABLES_LABEL'],
         facet_col="year",
     )
 

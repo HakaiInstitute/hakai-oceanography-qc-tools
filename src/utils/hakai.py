@@ -9,7 +9,10 @@ import pandas as pd
 from dash import Input, Output, State, callback, dcc, html, ctx
 from hakai_api import Client
 
+from utils.tools import load_config
+
 logger = logging.getLogger(__name__)
+config = load_config()
 
 
 def parse_hakai_token(token):
@@ -95,6 +98,8 @@ def apply_credentials(modal_open, credentials_input, credentials_stored, log_in_
 
 @callback(
     Output("dataframe", "data"),
+    Output("variable", "options"),
+    Output("line-out-depth-selector", "options"),
     Output("toast-container", "children"),
     Input("location", "pathname"),
     Input("location", "search"),
@@ -113,7 +118,7 @@ def get_hakai_data(path, query, credentials):
     logger.info("Load hakai data")
     if not credentials or not query:
         logger.warning("No query or credentials available")
-        return None, None
+        return None, None, None, None
     client = Client(credentials=credentials)
     if "limit=" not in query:
         query += "&limit=-1"
@@ -121,12 +126,24 @@ def get_hakai_data(path, query, credentials):
     logger.debug("run hakai query: %s", url)
 
     response = client.get(url)
-    if response.status_code == 200:
-        result = response.json()
-        if not result:
-            return None, _make_toast_error("No data available")
-        logger.debug("result: %s", pd.DataFrame(result).head())
-        return response.json(), None
-    logger.debug("failed hakai query: %s", response.text)
-    response_parsed = json.loads(response.text)
-    return None, _make_toast_error(response_parsed["hint"])
+    if response.status_code != 200:
+        logger.debug("failed hakai query: %s", response.text)
+        response_parsed = json.loads(response.text)
+        return None, None, None, _make_toast_error(response_parsed["hint"])
+    # No data  available
+    result = response.json()
+    if not result:
+        return None, None, None, _make_toast_error("No data available")
+    logger.debug("result: %s", pd.DataFrame(result).head())
+
+    # Review data to extract needed data
+    df = pd.DataFrame(result)
+    if "line_out_depth" in df:
+        line_out_depths = df["line_out_depth"].drop_duplicates().sort_values().to_list()
+    else:
+        line_out_depths = None
+
+    variables = [var for var in df.columns if var in config["PRIMARY_VARIABLES"]]
+    logger.debug("variables available %s", variables)
+    logger.debug("line_out_depths available %s", line_out_depths)
+    return result, variables, line_out_depths, None

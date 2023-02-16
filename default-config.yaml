@@ -18,3 +18,14 @@ NAVBAR_DARK: true
 # Hakai endpoints
 HAKAI_DEFAULT_API_SERVER_ROOT: https://hecate.hakai.org/api
 HAKAI_ENDPOINTS: 'ctd/views/file/cast'
+
+PRIMARY_VARIABLES: [sio2, po4, no2_no3_um]
+
+VARIABLES_LABEL:
+  {
+    'sio2': 'SiO2 (uM)',
+    'po4': 'PO4 (uM)',
+    'no2_no3_um': 'NO2 NO3 (uM)',
+    'line_out_depth': 'Bottle Target Depth (m)',
+    'collected': 'Collection Time',
+  }

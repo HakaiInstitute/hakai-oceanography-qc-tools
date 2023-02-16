@@ -101,11 +101,10 @@ def show_selection_interace(graph_selectedData, show_selection, is_open):
 def add_flag_selection(
     click, graphs_selected_flag, previously_selected_flag, flag_to_apply, variable
 ):
-    logger.debug("start selected_flag: %s", graphs_selected_flag)
     graphs_selected_flag = [graph for graph in graphs_selected_flag if graph]
     if not graphs_selected_flag:
         return previously_selected_flag
-    logger.debug("selected data: %s", graphs_selected_flag)
+
     df = pd.DataFrame(
         [
             {
@@ -118,7 +117,6 @@ def add_flag_selection(
     ).set_index("hakai_id")
 
     if previously_selected_flag:
-        logger.debug("previously selected data: %s", previously_selected_flag)
         df_previous = pd.DataFrame(previously_selected_flag).set_index("hakai_id")
         df = update_dataframe(df_previous, df, on=["hakai_id"])
     return df.reset_index().to_dict("records")

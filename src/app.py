@@ -7,7 +7,7 @@ import dash
 import dash_bootstrap_components as dbc
 import sentry_sdk
 import yaml
-from dash import Dash, dcc, html
+from dash import Dash, dcc, html, callback, Output,Input, State
 from dotenv import dotenv_values
 from sentry_sdk.integrations.logging import LoggingIntegration
 
@@ -84,12 +84,31 @@ navbar = dbc.NavbarSimple(
     dark=config["NAVBAR_DARK"],
 )
 
+data_interface = html.Div(
+    [
+        dbc.Label("Primary Variable"),
+        dcc.Dropdown(id="variable",clearable=False),
+        "Depth[s] (line_out_depth)",
+        dcc.Dropdown(
+            id="line-out-depth-selector",
+            multi=True,
+        ),
+    ]
+)
+@callback(
+    Output('variable','value'),
+    State('variable','value'),
+    Input('variable','options'),
+)
+def define_variable(value,options):
+    if value:
+        return value
+    return options[0]
 
 app.layout = html.Div(
     [
         navbar,
-        dbc.Label("Primary Variable"),
-        dbc.Select(options=["sio2", "po4", "no2_no3_um"], value="sio2", id="variable"),
+        data_interface,
         dash.page_container,
         selection.selection_interface,
         hakai.hakai_api_credentials_modal,
