@@ -86,7 +86,7 @@ navbar = dbc.NavbarSimple(
     ],
     brand="Hakai Quality Control",
     brand_href="#",
-    color=config['NAVBAR_COLOR'],
+    color=config["NAVBAR_COLOR"],
     dark=config["NAVBAR_DARK"],
 )
 
@@ -103,4 +103,6 @@ app.layout = html.Div(
 )
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(
+        host=config["DASH_HOST"], port=config["DASH_PORT"], debug=config["DASH_DEBUG"]
+    )

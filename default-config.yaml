@@ -1,7 +1,7 @@
 # App settings
-DEBUG: false
-HOST: '0.0.0.0'
-PORT: 8050
+DASH_DEBUG: false
+DASH_HOST: '0.0.0.0'
+DASH_PORT: 8050
 
 # logging
 LOG_LEVEL: DEBUG

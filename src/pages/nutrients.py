@@ -53,7 +53,7 @@ def generate_figure(data, y, selected_data):
         color_discrete_map=flag_color_map,
         hover_data=["hakai_id"],
     )
-    if fig.layout.yaxis.title.text in ['pressure','depth','line_out_depth']:
+    if fig.layout.yaxis.title.text in ["pressure", "depth", "line_out_depth"]:
         fig.update_yaxes(autorange="reversed")
     fig.update_layout(height=800)
     return fig, None
