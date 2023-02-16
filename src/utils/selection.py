@@ -6,6 +6,7 @@ from dash import ALL, Dash, Input, Output, State, callback, ctx, dash_table, dcc
 
 # from pages.nutrients import get_flag_var
 from utils.tools import update_dataframe, load_config
+
 config = load_config()
 variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
 
@@ -28,7 +29,7 @@ selection_table = dash_table.DataTable(
     style_header={
         "fontWeight": "bold",
         "fontSize": "15px",
-        "backgroundColor": config['NAVBAR_COLOR'],
+        "backgroundColor": config["NAVBAR_COLOR"],
         "color": "white",
         "textAlign": "center",
     },
@@ -44,11 +45,11 @@ selection_table = dash_table.DataTable(
         {
             "if": {"column_id": "hakai_id"},
             "textAlign": "left",
-            "backgroundColor": config['NAVBAR_COLOR'],
+            "backgroundColor": config["NAVBAR_COLOR"],
             "color": "white",
         }
     ],
-    style_table={"minWidth": "200px","float":"center"},
+    style_table={"minWidth": "200px", "float": "center"},
 )
 selection_interface = html.Div(
     [
