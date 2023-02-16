@@ -6,14 +6,18 @@ import os
 import dash
 import dash_bootstrap_components as dbc
 import sentry_sdk
-import yaml
 from dash import Dash, dcc, html, callback, Output,Input, State
-from dotenv import dotenv_values
 from sentry_sdk.integrations.logging import LoggingIntegration
+import plotly.io as pio
 
 import utils.selection as selection
 from utils import hakai
 from utils.tools import load_config
+from utils.hakai_plotly_template import hakai_template
+
+# load hakai template
+pio.templates["hakai"] = hakai_template
+pio.templates.default = "hakai"
 
 config = load_config()
 config.update({key: value for key, value in os.environ.items() if key in config})
