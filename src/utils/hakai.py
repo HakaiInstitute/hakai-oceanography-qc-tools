@@ -106,9 +106,10 @@ def get_hakai_data(path, query, credentials):
             message,
             header="Hakai Download Error",
             dismissable=True,
-            icon='danger',
+            icon="danger",
             style={"position": "fixed", "top": 66, "right": 10},
         )
+
     logger.info("Load hakai data")
     if not credentials or not query:
         logger.warning("No query or credentials available")
@@ -128,4 +129,4 @@ def get_hakai_data(path, query, credentials):
         return response.json(), None
     logger.debug("failed hakai query: %s", response.text)
     response_parsed = json.loads(response.text)
-    return None, _make_toast_error(response_parsed['hint'])
+    return None, _make_toast_error(response_parsed["hint"])
