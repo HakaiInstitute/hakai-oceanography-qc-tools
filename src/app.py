@@ -94,6 +94,7 @@ app.layout = html.Div(
         selection.selection_interface,
         hakai.hakai_api_credentials_modal,
         dcc.Location(id="location"),
+        html.Div(id="toast-container"),
     ]
 )
 

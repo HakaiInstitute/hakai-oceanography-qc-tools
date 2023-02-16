@@ -2,6 +2,7 @@ import logging
 import re
 import webbrowser
 from time import time
+import json
 
 import dash_bootstrap_components as dbc
 import pandas as pd
@@ -94,15 +95,24 @@ def apply_credentials(modal_open, credentials_input, credentials_stored, log_in_
 
 @callback(
     Output("dataframe", "data"),
+    Output("toast-container", "children"),
     Input("location", "pathname"),
     Input("location", "search"),
     Input("credentials", "data"),
 )
 def get_hakai_data(path, query, credentials):
+    def _make_toast_error(message):
+        return dbc.Toast(
+            message,
+            header="Hakai Download Error",
+            dismissable=True,
+            icon='danger',
+            style={"position": "fixed", "top": 66, "right": 10},
+        )
     logger.info("Load hakai data")
     if not credentials or not query:
         logger.warning("No query or credentials available")
-        return
+        return None, None
     client = Client(credentials=credentials)
     if "limit=" not in query:
         query += "&limit=-1"
@@ -112,6 +122,10 @@ def get_hakai_data(path, query, credentials):
     response = client.get(url)
     if response.status_code == 200:
         result = response.json()
+        if not result:
+            return None, _make_toast_error("No data available")
         logger.debug("result: %s", pd.DataFrame(result).head())
-        return response.json()
-    logger.debug("failed hakai query: %s", response.status_code)
+        return response.json(), None
+    logger.debug("failed hakai query: %s", response.text)
+    response_parsed = json.loads(response.text)
+    return None, _make_toast_error(response_parsed['hint'])
