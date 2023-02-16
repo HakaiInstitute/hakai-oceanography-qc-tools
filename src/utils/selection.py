@@ -5,8 +5,8 @@ import pandas as pd
 from dash import ALL, Dash, Input, Output, State, callback, ctx, dash_table, dcc, html
 
 # from pages.nutrients import get_flag_var
-from utils.tools import update_dataframe
-
+from utils.tools import update_dataframe, load_config
+config = load_config()
 variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
 
 
@@ -15,7 +15,41 @@ def get_flag_var(var):
 
 
 logger = logging.getLogger(__name__)
-
+selection_table = dash_table.DataTable(
+    id="selected-data-table",
+    # filter_action="native",
+    page_size=15,
+    sort_action="native",
+    export_format="xlsx",
+    export_headers="display",
+    # row_selectable="multi",
+    # column_selectable="single",
+    fixed_columns={"headers": True, "data": 2},
+    style_header={
+        "fontWeight": "bold",
+        "fontSize": "15px",
+        "backgroundColor": config['NAVBAR_COLOR'],
+        "color": "white",
+        "textAlign": "center",
+    },
+    style_cell={
+        # all three widths are needed
+        "overflow": "hidden",
+        "textOverflow": "ellipsis",
+        "minWidth": 100,
+        "textAlign": "center",
+        "fontSize": "14px",
+    },
+    style_cell_conditional=[
+        {
+            "if": {"column_id": "hakai_id"},
+            "textAlign": "left",
+            "backgroundColor": config['NAVBAR_COLOR'],
+            "color": "white",
+        }
+    ],
+    style_table={"minWidth": "200px","float":"center"},
+)
 selection_interface = html.Div(
     [
         dbc.Collapse(
@@ -33,7 +67,7 @@ selection_interface = html.Div(
                         ]
                     )
                 ),
-                dash_table.DataTable(id="selected-data-table"),
+                selection_table,
             ],
             is_open=True,
             id="selection-interface",
