@@ -12,7 +12,7 @@ from dotenv import dotenv_values
 from sentry_sdk.integrations.logging import LoggingIntegration
 
 import utils.selection as selection
-from utils.hakai import hakai_api_credentials_modal
+from utils import hakai
 
 # Load configuration
 with open("default-config.yaml", encoding="UTF-8") as config_handle:
@@ -47,19 +47,17 @@ fileHandler.setFormatter(
 logger.addHandler(fileHandler)
 
 app = Dash(
-    "Hakai Quality Control",
+    config["APP_NAME"],
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     use_pages=True,
     pages_folder="src/pages",
 )
-application = app.server
 
 
 stores = html.Div(
     dbc.Spinner(
         [
             dcc.Store(id="dataframe"),
-            dcc.Store(id="credentials", storage_type="local"),
             dcc.Store(id="selected-data"),
             dcc.Store(id="main-graph-spinner"),
         ]
@@ -77,7 +75,7 @@ navbar = dbc.NavbarSimple(
             children=[
                 dbc.DropdownMenuItem("Query", href="#"),
                 dbc.DropdownMenuItem("Show Selection", href="#", id="show-selection"),
-                dbc.DropdownMenuItem("Setup", href="#"),
+                dbc.DropdownMenuItem("Log In", href="#", id="log-in"),
             ],
             nav=True,
             in_navbar=True,
@@ -90,6 +88,7 @@ navbar = dbc.NavbarSimple(
     dark=config["NAVBAR_DARK"],
 )
 
+
 app.layout = html.Div(
     [
         navbar,
@@ -97,12 +96,17 @@ app.layout = html.Div(
         dbc.Select(options=["sio2", "po4", "no2_no3_um"], value="sio2", id="variable"),
         dash.page_container,
         selection.selection_interface,
-        hakai_api_credentials_modal,
+        hakai.hakai_api_credentials_modal,
         dcc.Location(id="location"),
     ]
 )
 
 if __name__ == "__main__":
-    app.run_server(
-        host=config["DASH_HOST"], port=config["DASH_PORT"], debug=config["DASH_DEBUG"]
-    )
+    if config["DASH_DEBUG"]:
+        app.run_server(debug=True)
+    else:
+        app.run_server(
+            host=config["DASH_HOST"],
+            port=config["DASH_PORT"],
+            debug=config["DASH_DEBUG"],
+        )

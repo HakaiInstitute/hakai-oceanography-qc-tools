@@ -10,7 +10,8 @@ SENTRY_LEVEL: INFO
 SENTRY_EVENT_LEVEL: ERROR
 SENTRY_DSN: null
 
-# Color settings
+# App settings
+APP_NAME: Hakai Quality Control
 NAVBAR_COLOR: '#B52026'
 NAVBAR_DARK: true
 
