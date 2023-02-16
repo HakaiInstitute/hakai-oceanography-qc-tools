@@ -17,15 +17,24 @@ variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
 
 config = load_config()
 
+
 def get_flag_var(var):
     return variables_flag_mapping.get(var, var + "_flag")
 
 
 layout = html.Div(
     children=[
-        dbc.Button('Timeseries',id=dict(page='nutrients',type="button",label="timeseries")),
-        dbc.Button('Show PO4 red field',id=dict(page='nutrients',type="button",label="po4-rf")),
-        dbc.Button('Show SiO2 red field',id=dict(page='nutrients',type="button",label="sio2-rf")),
+        dbc.Button(
+            "Timeseries", id=dict(page="nutrients", type="button", label="timeseries")
+        ),
+        dbc.Button(
+            "Show PO4 red field",
+            id=dict(page="nutrients", type="button", label="po4-rf"),
+        ),
+        dbc.Button(
+            "Show SiO2 red field",
+            id=dict(page="nutrients", type="button", label="sio2-rf"),
+        ),
         dcc.Graph(id={"type": "graph", "page": "nutrients"}),
     ]
 )
@@ -37,9 +46,9 @@ layout = html.Div(
     Input("dataframe", "data"),
     Input("variable", "value"),
     Input("selected-data-table", "data"),
-    Input(dict(page='nutrients',type="button",label=ALL),"n_clicks"),
+    Input(dict(page="nutrients", type="button", label=ALL), "n_clicks"),
 )
-def generate_figure(data, y, selected_data,button_triggered):
+def generate_figure(data, y, selected_data, button_triggered):
     logger.info("Generating figure")
     if not data:
         return None, None
@@ -49,16 +58,16 @@ def generate_figure(data, y, selected_data,button_triggered):
             df, pd.DataFrame(selected_data), on="hakai_id", how="left"
         )
     df[get_flag_var(y)] = df[get_flag_var(y)].fillna("UN")
-    df['time'] = pd.to_datetime(df['collected'])
-    df['year'] = df['time'].dt.year
+    df["time"] = pd.to_datetime(df["collected"])
+    df["year"] = df["time"].dt.year
 
     triggered_id = ctx.triggered_id
-    if isinstance(triggered_id,str) or 'label' not in triggered_id:
+    if isinstance(triggered_id, str) or "label" not in triggered_id:
         pass
-    elif triggered_id['label']=='po4-rf':
-        return get_red_field_plot(df,'po4',[2.1875,35],100), None
-    elif triggered_id['label']=='sio2-rf':
-        return get_red_field_plot(df,'sio2',[32.8125,35],100),None
+    elif triggered_id["label"] == "po4-rf":
+        return get_red_field_plot(df, "po4", [2.1875, 35], 100), None
+    elif triggered_id["label"] == "sio2-rf":
+        return get_red_field_plot(df, "sio2", [32.8125, 35], 100), None
 
     fig = px.scatter(
         df,
@@ -107,5 +116,3 @@ def get_red_field_plot(df, var, slope_limit, max_depth):
             col=id + 1,
         )
     return figs
-
-
