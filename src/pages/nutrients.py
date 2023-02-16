@@ -97,14 +97,20 @@ def generate_figure(data, variable, selected_data, button_triggered, line_out_de
             template="simple_white",
             labels=config['VARIABLES_LABEL']
         )
-    logger.debug("figure %s", fig)
-    for trace in fig.data:
-        if "AV" not in trace['name'] and "UN" not in trace['name']:
-            trace.mode = 'markers'
+        for trace in fig.data:
+            if "AV" not in trace['name'] and "UN" not in trace['name']:
+                trace.mode = 'markers'
 
     if fig.layout.yaxis.title.text in ["pressure", "depth", "line_out_depth"]:
         fig.update_yaxes(autorange="reversed")
-    fig.update_layout(height=800)
+    fig.update_layout(height=800, legend=dict(
+    yanchor="top",
+    y=0.99,
+    xanchor="left",
+    x=0.01,
+    entrywidth=0.3, # change it to 0.3
+    entrywidthmode='fraction'
+))
     return fig, None
 
 
