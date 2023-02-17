@@ -21,12 +21,9 @@ def get_flag_var(var):
 logger = logging.getLogger(__name__)
 selection_table = dash_table.DataTable(
     id="selected-data-table",
-    # filter_action="native",
-    page_size=15,
+    page_size=40,
     sort_action="native",
-    # row_selectable="multi",
-    # column_selectable="single",
-    fixed_columns={"headers": True, "data": 2},
+    row_deletable=True,
     style_header={
         "fontWeight": "bold",
         "fontSize": "15px",
@@ -38,7 +35,7 @@ selection_table = dash_table.DataTable(
         # all three widths are needed
         "overflow": "hidden",
         "textOverflow": "ellipsis",
-        "minWidth": 100,
+        "width": 150,
         "textAlign": "center",
         "fontSize": "14px",
     },
