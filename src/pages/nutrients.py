@@ -28,6 +28,14 @@ layout = html.Div(
             "Timeseries", id=dict(page="nutrients", type="button", label="timeseries")
         ),
         dbc.Button(
+            "Timeseries Profiles",
+            id=dict(page="nutrients", type="button", label="timeseries-profiles"),
+        ),
+        dbc.Button(
+            "Contour",
+            id=dict(page="nutrients", type="button", label="contour"),
+        ),
+        dbc.Button(
             "PO4 Red-Field",
             id=dict(page="nutrients", type="button", label="po4-rf"),
         ),
@@ -59,58 +67,59 @@ def generate_figure(data, variable, selected_data, button_triggered, line_out_de
         "Generating %s figure for line_out_depths=%s", variable, line_out_depths
     )
     df = pd.DataFrame(data)
-    
+
     if line_out_depths:
         df = df.query("line_out_depth in @line_out_depths").copy()
-        
+
     # apply manual selection flags
     if selected_data:
         df = update_dataframe(
             df, pd.DataFrame(selected_data), on="hakai_id", how="left"
         )
 
-    df.loc[:,get_flag_var(variable)] = df.loc[:,get_flag_var(variable)].fillna("UN")
-    df.loc[:,"time"] = pd.to_datetime(df["collected"])
-    df.loc[:,"year"] = df["time"].dt.year
+    df.loc[:, get_flag_var(variable)] = df.loc[:, get_flag_var(variable)].fillna("UN")
+    df.loc[:, "time"] = pd.to_datetime(df["collected"])
+    df.loc[:, "year"] = df["time"].dt.year
 
     # determinate which plot type to generate
     triggered_id = ctx.triggered_id
     if isinstance(triggered_id, str) or "label" not in triggered_id:
-        triggered_id = {'label': 'default'}
-    
+        triggered_id = {"label": "default"}
+
     if triggered_id["label"] == "po4-rf":
         logger.debug("get po4 rf plot ")
         fig = get_red_field_plot(df, "po4", [2.1875, 35], 100)
     elif triggered_id["label"] == "sio2-rf":
         logger.debug("get sio2 rf plot ")
         fig = get_red_field_plot(df, "sio2", [32.8125, 35], 100)
+    elif triggered_id["label"] == "timeseries-profiles":
+        fig = get_timeseries_plot(
+            df,
+            y="line_out_depth",
+            color=variable,
+        )
+    elif triggered_id["label"] == "contour":
+        fig = get_contour(df, x="collected", y="line_out_depth", color=variable)
     else:
         logger.debug("get default time series plot ")
-        fig = px.line(
+        fig = get_timeseries_plot(
             df,
-            x="collected",
             y=variable,
             color=get_flag_var(variable),
             symbol="quality_level",
-            color_discrete_map=flag_color_map,
-            hover_data=["hakai_id"],
-            template="simple_white",
-            labels=config['VARIABLES_LABEL']
         )
-        for trace in fig.data:
-            if "AV" not in trace['name'] and "UN" not in trace['name']:
-                trace.mode = 'markers'
 
-    if fig.layout.yaxis.title.text in ["pressure", "depth", "line_out_depth"]:
-        fig.update_yaxes(autorange="reversed")
-    fig.update_layout(height=800, legend=dict(
-    yanchor="top",
-    y=0.99,
-    xanchor="left",
-    x=0.01,
-    entrywidth=0.3, # change it to 0.3
-    entrywidthmode='fraction'
-))
+    fig.update_layout(
+        height=500,
+        legend=dict(
+            yanchor="top",
+            y=0.99,
+            xanchor="left",
+            x=0.01,
+            entrywidth=0.3,  # change it to 0.3
+            entrywidthmode="fraction",
+        ),
+    )
     return fig, None
 
 
@@ -122,8 +131,8 @@ def get_red_field_plot(df, var, slope_limit, max_depth):
         color="line_out_depth",
         hover_data=["hakai_id", "date"],
         template="simple_white",
-        title=config['VARIABLES_LABEL'][var],
-        labels=config['VARIABLES_LABEL'],
+        title=config["VARIABLES_LABEL"][var],
+        labels=config["VARIABLES_LABEL"],
         facet_col="year",
     )
 
@@ -140,3 +149,54 @@ def get_red_field_plot(df, var, slope_limit, max_depth):
             col=id + 1,
         )
     return figs
+
+
+def get_timeseries_plot(df, **kwargs):
+    default_inputs = dict(
+        x="collected",
+        color_discrete_map=flag_color_map,
+        hover_data=["hakai_id"],
+        labels=config["VARIABLES_LABEL"],
+    )
+    default_inputs.update(kwargs)
+    fig = px.scatter(df, **default_inputs)
+    for trace in fig.data:
+        if "AV" not in trace["name"] and "UN" not in trace["name"]:
+            trace.mode = "markers"
+    if kwargs.get("y") in ["pressure", "depth", "line_out_depth"]:
+        fig.update_yaxes(autorange="reversed")
+    return fig
+
+
+def get_contour(df, x, y, color, x_interp_limit=3, y_interp_limit=4):
+    df_pivot = (
+        pd.pivot_table(df, values=color, index=y, columns=x, aggfunc="mean")
+        .interpolate(axis="index", limit=x_interp_limit)
+        .sort_index(axis=0)
+        .sort_index(axis=1)
+        .interpolate(axis="columns", limit=y_interp_limit)
+    )
+    fig = go.Figure(
+        data=go.Contour(
+            z=df_pivot.values,
+            x=df_pivot.columns,
+            y=df_pivot.index.values,
+            colorbar=dict(title=color, titleside="right"),
+            colorscale="RdYlGn",
+            ncontours=10,
+            contours_coloring="heatmap"
+            # ,connectgaps=True
+        )
+    )
+    fig.update_yaxes(
+        title=y,
+        autorange="reversed",
+        linecolor="black",
+        mirror=True,
+        ticks="outside",
+        showline=True,
+    )
+    fig.update_xaxes(
+        title=x, linecolor="black", mirror=True, ticks="outside", showline=True
+    )
+    return fig
