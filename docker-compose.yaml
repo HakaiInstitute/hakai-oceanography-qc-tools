@@ -9,4 +9,7 @@ services:
     build: .
     ports:
       - "8050:8050"
+    environment:
+      - DASH_HOST=0.0.0.0
+      - DASH_DEBUG=False
     container_name: hakai-oceanography-qc

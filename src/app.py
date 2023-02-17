@@ -6,7 +6,7 @@ import os
 import dash
 import dash_bootstrap_components as dbc
 import sentry_sdk
-from dash import Dash, dcc, html, callback, Output,Input, State
+from dash import Dash, dcc, html, callback, Output, Input, State
 from sentry_sdk.integrations.logging import LoggingIntegration
 import plotly.io as pio
 
@@ -91,7 +91,7 @@ navbar = dbc.NavbarSimple(
 data_interface = html.Div(
     [
         dbc.Label("Primary Variable"),
-        dcc.Dropdown(id="variable",clearable=False),
+        dcc.Dropdown(id="variable", clearable=False),
         "Depth[s] (line_out_depth)",
         dcc.Dropdown(
             id="line-out-depth-selector",
@@ -99,15 +99,18 @@ data_interface = html.Div(
         ),
     ]
 )
+
+
 @callback(
-    Output('variable','value'),
-    State('variable','value'),
-    Input('variable','options'),
+    Output("variable", "value"),
+    State("variable", "value"),
+    Input("variable", "options"),
 )
-def define_variable(value,options):
+def define_variable(value, options):
     if value:
         return value
-    return options[0]
+    return options[0] if options else None
+
 
 app.layout = html.Div(
     [
@@ -122,11 +125,10 @@ app.layout = html.Div(
 )
 
 if __name__ == "__main__":
-    if config["DASH_DEBUG"]:
-        app.run_server(debug=True)
-    else:
-        app.run_server(
-            host=config["DASH_HOST"],
-            port=config["DASH_PORT"],
-            debug=config["DASH_DEBUG"],
-        )
+    app.run_server(
+        host=config["DASH_HOST"],
+        port=config["DASH_PORT"],
+        debug=True
+        if config["DASH_DEBUG"] not in (False, "false", "False", 0)
+        else False,
+    )
