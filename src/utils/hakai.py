@@ -72,7 +72,9 @@ def apply_credentials(modal_open, credentials_input, credentials_stored, log_in_
         if creds is None:
             return False
         try:
-            Client(credentials=creds)
+            client = Client(credentials=creds)
+            response = client.get(f"{client.api_root}/ctd/views/file/cast?limit=10")
+            # Should return a 404 error
             return True
         except Exception as e:
             # logger('token test failed: %s', e)
