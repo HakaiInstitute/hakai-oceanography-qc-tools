@@ -61,13 +61,16 @@ selection_interface = html.Div(
                                 options=["AV", "SVC", "SVD"],
                                 value="AV",
                                 id="selection-flag",
+                                size="sm",
+                                className='apply-flag-selector',
                             ),
                             dbc.Button("Apply Flag", id="apply-selection-flag"),
-                            dbc.Button("Download .xlsx", id="download-qc-excel-button"),
-                            dcc.Download(id="download-qc-excel"),
-                        ]
-                    )
+                        ],
+                    ),
+                    className='apply-flag-section'
                 ),
+                dbc.Button("Download .xlsx", id="download-qc-excel-button"),
+                dcc.Download(id="download-qc-excel"),
                 selection_table,
             ],
             is_open=True,
