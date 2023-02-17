@@ -47,6 +47,7 @@ app = Dash(
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     use_pages=True,
     pages_folder="src/pages",
+    assets_folder="src/assets",
 )
 
 
@@ -88,7 +89,7 @@ navbar = dbc.NavbarSimple(
     dark=config["NAVBAR_DARK"],
 )
 
-data_interface = html.Div(
+data_interface = dbc.Collapse(
     [
         dbc.Label("Primary Variable"),
         dcc.Dropdown(id="variable", clearable=False),
@@ -97,7 +98,10 @@ data_interface = html.Div(
             id="line-out-depth-selector",
             multi=True,
         ),
-    ]
+    ],
+    id="data-selection-interface",
+    className="data-selection-interface",
+    is_open=True,
 )
 
 
