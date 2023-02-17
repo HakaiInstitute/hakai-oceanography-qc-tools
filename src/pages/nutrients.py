@@ -32,7 +32,6 @@ layout = html.Div(
                     inputClassName="btn-check",
                     labelClassName="btn btn-outline-primary",
                     labelCheckedClassName="active",
-
                     options=[
                         {"label": "Time Series", "value": "timeseries"},
                         {
@@ -109,11 +108,7 @@ def generate_figure(
         fig = get_contour(df, x="collected", y="line_out_depth", color=variable)
     else:
         logger.debug("get default time series plot for %s", figure_type)
-        fig = get_timeseries_plot(
-            df,
-            y=variable,
-            color=get_flag_var(variable)
-        )
+        fig = get_timeseries_plot(df, y=variable, color=get_flag_var(variable))
 
     fig.update_layout(
         height=600,

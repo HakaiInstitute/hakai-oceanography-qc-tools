@@ -2,6 +2,7 @@
 DASH_DEBUG: false
 DASH_HOST: '0.0.0.0'
 DASH_PORT: 8050
+TEMP_FOLDER: './temp'
 
 # logging
 LOG_LEVEL: DEBUG

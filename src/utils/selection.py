@@ -1,4 +1,7 @@
 import logging
+import shutil
+import os
+from datetime import datetime
 
 import dash_bootstrap_components as dbc
 import pandas as pd
@@ -9,7 +12,7 @@ from utils.tools import update_dataframe, load_config
 
 config = load_config()
 variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
-
+MODULE_PATH = os.path.dirname(__file__)
 
 def get_flag_var(var):
     return variables_flag_mapping.get(var, var + "_flag")
@@ -21,8 +24,6 @@ selection_table = dash_table.DataTable(
     # filter_action="native",
     page_size=15,
     sort_action="native",
-    export_format="xlsx",
-    export_headers="display",
     # row_selectable="multi",
     # column_selectable="single",
     fixed_columns={"headers": True, "data": 2},
@@ -65,6 +66,8 @@ selection_interface = html.Div(
                                 id="selection-flag",
                             ),
                             dbc.Button("Apply Flag", id="apply-selection-flag"),
+                            dbc.Button("Download .xlsx", id="download-qc-excel-button"),
+                            dcc.Download(id="download-qc-excel"),
                         ]
                     )
                 ),
@@ -120,3 +123,39 @@ def add_flag_selection(
         df_previous = pd.DataFrame(previously_selected_flag).set_index("hakai_id")
         df = update_dataframe(df_previous, df, on=["hakai_id"])
     return df.reset_index().to_dict("records")
+
+
+@callback(
+    Output("download-qc-excel", "data"),
+    Input("download-qc-excel-button", "n_clicks"),
+    State("selected-data-table", "data"),
+    State("location", "pathname"),
+)
+def get_qc_excel(n_clicks, data,location):
+    """Save file to an excel file format compatible with the Hakai Portal upload"""
+    logger.info("Generate excel file")
+    if data is None:
+        return None
+    df = pd.DataFrame(data).drop(
+        columns=["id", "start_depth", "target_depth_m", "bottle_drop", "collected"],
+        errors="ignore",
+    )
+
+    if not os.path.exists(config["TEMP_FOLDER"]):
+        os.makedirs(config["TEMP_FOLDER"])
+    temp_file = os.path.join(
+        config["TEMP_FOLDER"],
+        f"hakai-qc-{location[1:]}-{datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}.xlsx",
+    )
+    temp_dir = os.path.dirname(temp_file)
+    if not os.path.exists(temp_dir):
+        os.makedirs(temp_dir)
+    shutil.copy(
+        os.path.join(MODULE_PATH, f"../assets/hakai-template-{location[1:]}-samples.xlsx"), temp_file
+    )
+    with pd.ExcelWriter(
+        temp_file, engine="openpyxl", mode="a", if_sheet_exists="replace"
+    ) as writer:
+        df.to_excel(writer, sheet_name="Hakai Data")
+    logger.info("Upload Hakai QC excel file")
+    return dcc.send_file(temp_file)

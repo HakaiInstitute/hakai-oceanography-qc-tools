@@ -24,11 +24,11 @@ hakai_template["layout"]["coloraxis"]["colorbar"] = {
     "ypad": 0.01,
 }
 
-hakai_template['layout']["legend"] = {
-    "yanchor":"bottom",
-    "y":1.02,
-    "xanchor":"left",
-    "x":-0.03,
-    "orientation":"h",
+hakai_template["layout"]["legend"] = {
+    "yanchor": "bottom",
+    "y": 1.02,
+    "xanchor": "left",
+    "x": -0.03,
+    "orientation": "h",
 }
 hakai_template["layout"]["margin"] = dict(b=40, t=10, r=10, l=70)
