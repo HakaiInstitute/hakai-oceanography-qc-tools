@@ -26,30 +26,27 @@ layout = html.Div(
     children=[
         html.Div(
             [
-                dbc.Button(
-                    "Timeseries",
-                    id=dict(page="nutrients", type="button", label="timeseries"),
-                ),
-                dbc.Button(
-                    "Timeseries Profiles",
-                    id=dict(
-                        page="nutrients", type="button", label="timeseries-profiles"
-                    ),
-                ),
-                dbc.Button(
-                    "Contour",
-                    id=dict(page="nutrients", type="button", label="contour"),
-                ),
-                dbc.Button(
-                    "PO4 Red-Field",
-                    id=dict(page="nutrients", type="button", label="po4-rf"),
-                ),
-                dbc.Button(
-                    "SiO2 Red-Field",
-                    id=dict(page="nutrients", type="button", label="sio2-rf"),
-                ),
+                dbc.RadioItems(
+                    id={"page": "nutrient", "type": "figure-type-selector"},
+                    className="btn-group",
+                    inputClassName="btn-check",
+                    labelClassName="btn btn-outline-primary",
+                    labelCheckedClassName="active",
+
+                    options=[
+                        {"label": "Time Series", "value": "timeseries"},
+                        {
+                            "label": "Time Series Profiles",
+                            "value": "timeseries-profiles",
+                        },
+                        {"label": "Contour Profiles", "value": "contour"},
+                        {"label": "PO4 red-field", "value": "po4-rf"},
+                        {"label": "SiO2 red-field", "value": "sio2-rf"},
+                    ],
+                    value="timeseries",
+                )
             ],
-            className="d-grid gap-2 d-md-flex justify-content-md-center",
+            className="radio-group d-grid gap-2 col-6 mx-auto",
         ),
         dcc.Graph(id={"type": "graph", "page": "nutrients"}),
     ]
@@ -59,35 +56,22 @@ layout = html.Div(
 @callback(
     Output({"type": "graph", "page": "nutrients"}, "figure"),
     Output("main-graph-spinner", "data"),
-    Output(dict(page="nutrients", type="button", label=ALL), "active"),
     Input("dataframe", "data"),
     Input("variable", "value"),
     Input("selected-data-table", "data"),
-    State(dict(page="nutrients", type="button", label=ALL), "id"),
-    Input(dict(page="nutrients", type="button", label=ALL), "n_clicks"),
-    State(dict(page="nutrients", type="button", label=ALL), "active"),
+    Input({"page": "nutrient", "type": "figure-type-selector"}, "value"),
     Input("line-out-depth-selector", "value"),
 )
 def generate_figure(
     data,
     variable,
     selected_data,
-    button_id,
-    button_click,
-    button_active,
+    figure_type,
     line_out_depths,
 ):
     if not data or not variable:
         logger.debug("no data or variable available")
-        return None, None, button_active
-
-    # handle trigger
-    triggered_id = ctx.triggered_id
-    active_button = [id for id, active in zip(button_id, button_active) if active]
-    if triggered_id not in button_id:
-        triggered_id = active_button[0] if any(active_button) else button_id[0]
-
-    is_active_button = [id == triggered_id for id in button_id]
+        return None, None
 
     # transform data for plotting
     logger.info(
@@ -95,7 +79,7 @@ def generate_figure(
     )
     df = pd.DataFrame(data)
 
-    if line_out_depths and triggered_id["label"] != "contour":
+    if line_out_depths and figure_type != "contour":
         df = df.query("line_out_depth in @line_out_depths").copy()
 
     # apply manual selection flags
@@ -109,42 +93,33 @@ def generate_figure(
     df.loc[:, "year"] = df["time"].dt.year
 
     # select plot to present based on triggered_id
-    if triggered_id["label"] == "po4-rf":
+    if figure_type == "po4-rf":
         logger.debug("get po4 rf plot ")
         fig = get_red_field_plot(df, "po4", [2.1875, 35], 100)
-    elif triggered_id["label"] == "sio2-rf":
+    elif figure_type == "sio2-rf":
         logger.debug("get sio2 rf plot ")
         fig = get_red_field_plot(df, "sio2", [32.8125, 35], 100)
-    elif triggered_id["label"] == "timeseries-profiles":
+    elif figure_type == "timeseries-profiles":
         fig = get_timeseries_plot(
             df,
             y="line_out_depth",
             color=variable,
         )
-    elif triggered_id["label"] == "contour":
+    elif figure_type == "contour":
         fig = get_contour(df, x="collected", y="line_out_depth", color=variable)
     else:
-        logger.debug("get default time series plot ")
+        logger.debug("get default time series plot for %s", figure_type)
         fig = get_timeseries_plot(
             df,
             y=variable,
-            color=get_flag_var(variable),
-            symbol="quality_level",
+            color=get_flag_var(variable)
         )
 
     fig.update_layout(
-        height=500,
-        legend=dict(
-            yanchor="top",
-            y=0.99,
-            xanchor="left",
-            x=0.01,
-            entrywidth=0.3,  # change it to 0.3
-            entrywidthmode="fraction",
-        ),
+        height=600,
     )
-    logger.debug("triggerd_id = %s , active button = %s", triggered_id, active_button)
-    return fig, None, is_active_button
+    fig.update_layout(legend_tracegroupgap=5)
+    return fig, None
 
 
 def get_red_field_plot(df, var, slope_limit, max_depth):

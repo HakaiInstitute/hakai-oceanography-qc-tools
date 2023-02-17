@@ -145,7 +145,11 @@ def get_hakai_data(path, query, credentials):
     else:
         line_out_depths = None
 
-    variables = [var for var in df.columns if var in config["PRIMARY_VARIABLES"]]
+    variables = [
+        {"label": config["VARIABLES_LABEL"].get(var, var), "value": var}
+        for var in df.columns
+        if var in config["PRIMARY_VARIABLES"]
+    ]
     logger.debug("variables available %s", variables)
     logger.debug("line_out_depths available %s", line_out_depths)
     return result, variables, line_out_depths, None

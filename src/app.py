@@ -91,12 +91,12 @@ navbar = dbc.NavbarSimple(
 
 data_interface = dbc.Collapse(
     [
-        dbc.Label("Primary Variable"),
-        dcc.Dropdown(id="variable", clearable=False),
-        "Depth[s] (line_out_depth)",
+        dcc.Dropdown(id="variable", clearable=False, className="selection-box"),
         dcc.Dropdown(
             id="line-out-depth-selector",
             multi=True,
+            className="selection-box",
+            placeholder="line out depth(s)",
         ),
     ],
     id="data-selection-interface",
@@ -113,7 +113,7 @@ data_interface = dbc.Collapse(
 def define_variable(value, options):
     if value:
         return value
-    return options[0] if options else None
+    return options[0]["value"] if options else None
 
 
 app.layout = html.Div(

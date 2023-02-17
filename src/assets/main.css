@@ -1,4 +1,27 @@
-data-selection-interface {
-    width:80%;
-    max-width: 100px;
+.data-selection-interface {
+    padding-top:5px;
+    padding-bottom:5px;
+    width:90%;
+    text-align: center;
+    align-content: center;
+    margin:auto;
 }
+
+/* restyle radio items */
+.radio-group .form-check {
+    padding-left: 0;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+  
+  .radio-group .btn-group > .form-check:not(:last-child) > .btn {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    margin-left: auto;
+  }
+  
+  .radio-group .btn-group > .form-check:not(:first-child) > .btn {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    margin-left: -1px;
+  }
