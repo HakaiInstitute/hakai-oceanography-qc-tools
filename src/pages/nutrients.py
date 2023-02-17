@@ -24,24 +24,32 @@ def get_flag_var(var):
 
 layout = html.Div(
     children=[
-        dbc.Button(
-            "Timeseries", id=dict(page="nutrients", type="button", label="timeseries")
-        ),
-        dbc.Button(
-            "Timeseries Profiles",
-            id=dict(page="nutrients", type="button", label="timeseries-profiles"),
-        ),
-        dbc.Button(
-            "Contour",
-            id=dict(page="nutrients", type="button", label="contour"),
-        ),
-        dbc.Button(
-            "PO4 Red-Field",
-            id=dict(page="nutrients", type="button", label="po4-rf"),
-        ),
-        dbc.Button(
-            "SiO2 Red-Field",
-            id=dict(page="nutrients", type="button", label="sio2-rf"),
+        html.Div(
+            [
+                dbc.Button(
+                    "Timeseries",
+                    id=dict(page="nutrients", type="button", label="timeseries"),
+                ),
+                dbc.Button(
+                    "Timeseries Profiles",
+                    id=dict(
+                        page="nutrients", type="button", label="timeseries-profiles"
+                    ),
+                ),
+                dbc.Button(
+                    "Contour",
+                    id=dict(page="nutrients", type="button", label="contour"),
+                ),
+                dbc.Button(
+                    "PO4 Red-Field",
+                    id=dict(page="nutrients", type="button", label="po4-rf"),
+                ),
+                dbc.Button(
+                    "SiO2 Red-Field",
+                    id=dict(page="nutrients", type="button", label="sio2-rf"),
+                ),
+            ],
+            className="d-grid gap-2 d-md-flex justify-content-md-center",
         ),
         dcc.Graph(id={"type": "graph", "page": "nutrients"}),
     ]
@@ -51,16 +59,35 @@ layout = html.Div(
 @callback(
     Output({"type": "graph", "page": "nutrients"}, "figure"),
     Output("main-graph-spinner", "data"),
+    Output(dict(page="nutrients", type="button", label=ALL), "active"),
     Input("dataframe", "data"),
     Input("variable", "value"),
     Input("selected-data-table", "data"),
+    State(dict(page="nutrients", type="button", label=ALL), "id"),
     Input(dict(page="nutrients", type="button", label=ALL), "n_clicks"),
+    State(dict(page="nutrients", type="button", label=ALL), "active"),
     Input("line-out-depth-selector", "value"),
 )
-def generate_figure(data, variable, selected_data, button_triggered, line_out_depths):
+def generate_figure(
+    data,
+    variable,
+    selected_data,
+    button_id,
+    button_click,
+    button_active,
+    line_out_depths,
+):
     if not data or not variable:
         logger.debug("no data or variable available")
-        return None, None
+        return None, None, button_active
+
+    # handle trigger
+    triggered_id = ctx.triggered_id
+    active_button = [id for id, active in zip(button_id, button_active) if active]
+    if triggered_id not in button_id:
+        triggered_id = active_button[0] if any(active_button) else button_id[0]
+
+    is_active_button = [id == triggered_id for id in button_id]
 
     # transform data for plotting
     logger.info(
@@ -68,7 +95,7 @@ def generate_figure(data, variable, selected_data, button_triggered, line_out_de
     )
     df = pd.DataFrame(data)
 
-    if line_out_depths:
+    if line_out_depths and triggered_id["label"] != "contour":
         df = df.query("line_out_depth in @line_out_depths").copy()
 
     # apply manual selection flags
@@ -81,11 +108,7 @@ def generate_figure(data, variable, selected_data, button_triggered, line_out_de
     df.loc[:, "time"] = pd.to_datetime(df["collected"])
     df.loc[:, "year"] = df["time"].dt.year
 
-    # determinate which plot type to generate
-    triggered_id = ctx.triggered_id
-    if isinstance(triggered_id, str) or "label" not in triggered_id:
-        triggered_id = {"label": "default"}
-
+    # select plot to present based on triggered_id
     if triggered_id["label"] == "po4-rf":
         logger.debug("get po4 rf plot ")
         fig = get_red_field_plot(df, "po4", [2.1875, 35], 100)
@@ -120,7 +143,8 @@ def generate_figure(data, variable, selected_data, button_triggered, line_out_de
             entrywidthmode="fraction",
         ),
     )
-    return fig, None
+    logger.debug("triggerd_id = %s , active button = %s", triggered_id, active_button)
+    return fig, None, is_active_button
 
 
 def get_red_field_plot(df, var, slope_limit, max_depth):
@@ -160,6 +184,7 @@ def get_timeseries_plot(df, **kwargs):
     )
     default_inputs.update(kwargs)
     fig = px.scatter(df, **default_inputs)
+
     for trace in fig.data:
         if "AV" not in trace["name"] and "UN" not in trace["name"]:
             trace.mode = "markers"
