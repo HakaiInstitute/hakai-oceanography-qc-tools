@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 
 def get_interannual_variability(data, groupby, time_grid="14D"):
@@ -30,3 +31,25 @@ def get_interannual_variability(data, groupby, time_grid="14D"):
     )
 
     return df_interannual
+
+
+def pooled_standard_deviation(df_to_review, count_col="count", std_col="std"):
+    # Keep only records that have replicates
+    df_replicates = df_to_review[df_to_review[count_col] > 1]
+    upper = df_replicates[count_col].sub(-1).mul(df_replicates[std_col].pow(2)).sum()
+    lower = df_replicates[count_col].sub(-1).sum()
+    return np.sqrt(upper / lower)
+
+
+def get_samples_pool_standard_deviation(df, variables, groupby):
+    df_grouped = df.groupby(groupby).agg(["mean", "std", "count"])
+    return {
+        variable: pooled_standard_deviation(df_grouped[variable])
+        for variable in variables
+    }
+
+
+def pool_std(stds, counts):
+    upper = (counts.sub(1).mul(stds.pow(2))).sum()
+    lower = (counts.sum() - len(counts)).sum()
+    return np.sqrt(upper / lower)

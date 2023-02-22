@@ -104,36 +104,36 @@ def show_selection_interace(graph_selectedData, show_selection, is_open):
     return bool([selection for selection in graph_selectedData if selection])
 
 
-@callback(
-    Output("selected-data-table", "data"),
-    Input("apply-selection-flag", "n_clicks"),
-    State({"type": "graph", "page": ALL}, "selectedData"),
-    State("selected-data-table", "data"),
-    State("selection-flag", "value"),
-    State("variable", "value"),
-)
-def add_flag_selection(
-    click, graphs_selected_flag, previously_selected_flag, flag_to_apply, variable
-):
-    graphs_selected_flag = [graph for graph in graphs_selected_flag if graph]
-    if not graphs_selected_flag:
-        return previously_selected_flag
+# @callback(
+#     Output("selected-data-table", "data"),
+#     Input("apply-selection-flag", "n_clicks"),
+#     State({"type": "graph", "page": ALL}, "selectedData"),
+#     State("selected-data-table", "data"),
+#     State("selection-flag", "value"),
+#     State("variable", "value"),
+# )
+# def add_flag_selection(
+#     click, graphs_selected_flag, previously_selected_flag, flag_to_apply, variable
+# ):
+#     graphs_selected_flag = [graph for graph in graphs_selected_flag if graph]
+#     if not graphs_selected_flag:
+#         return previously_selected_flag
 
-    df = pd.DataFrame(
-        [
-            {
-                "hakai_id": point["customdata"][0],
-                variables_flag_mapping.get(variable, variable + "_flag"): flag_to_apply,
-            }
-            for graph in graphs_selected_flag
-            for point in graph["points"]
-        ]
-    ).set_index("hakai_id")
+#     df = pd.DataFrame(
+#         [
+#             {
+#                 "hakai_id": point["customdata"][0],
+#                 variables_flag_mapping.get(variable, variable + "_flag"): flag_to_apply,
+#             }
+#             for graph in graphs_selected_flag
+#             for point in graph["points"]
+#         ]
+#     ).set_index("hakai_id")
 
-    if previously_selected_flag:
-        df_previous = pd.DataFrame(previously_selected_flag).set_index("hakai_id")
-        df = update_dataframe(df_previous, df, on=["hakai_id"])
-    return df.reset_index().to_dict("records")
+#     if previously_selected_flag:
+#         df_previous = pd.DataFrame(previously_selected_flag).set_index("hakai_id")
+#         df = update_dataframe(df_previous, df, on=["hakai_id"])
+#     return df.reset_index().to_dict("records")
 
 
 @callback(

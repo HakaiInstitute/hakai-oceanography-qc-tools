@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 dash.register_page(__name__)
 
 from hakai_qc.flags import flag_color_map
+from hakai_qc.nutrients import run_nutrient_qc
 from utils.tools import update_dataframe, load_config
 
 variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
@@ -96,7 +97,7 @@ def generate_figure(
             df, pd.DataFrame(selected_data), on="hakai_id", how="left"
         )
 
-    df.loc[:, get_flag_var(variable)] = df.loc[:, get_flag_var(variable)].fillna("UN")
+    df.loc[:, get_flag_var(variable)] = df.loc[:, get_flag_var(variable)].fillna("UKN")
     df.loc[:, "time"] = pd.to_datetime(df["collected"])
     df.loc[:, "year"] = df["time"].dt.year
 
@@ -204,3 +205,31 @@ def get_contour(df, x, y, color, x_interp_limit=3, y_interp_limit=4):
         title=x, linecolor="black", mirror=True, ticks="outside", showline=True
     )
     return fig
+
+
+@callback(
+    Output("selected-data-table", "data"),
+    Output("auto-qc-nutrient-spinner", "data"),
+    State("dataframe", "data"),
+    State("selected-data-table", "data"),
+    Input("run-nutrient-auto-qc", "n_clicks"),
+)
+def run_nutrient_auto_qc(data, selected_data, n_clicks):
+    if data is None:
+        return None, None
+    df = pd.DataFrame(data)
+    df['collected'] = pd.to_datetime(df['collected'], utc=True).dt.tz_localize(None)
+    pre_qc_df = df.copy()
+    if selected_data:
+        df = update_dataframe(
+            df, pd.DataFrame(selected_data), on="hakai_id", how="left"
+        )
+    logger.debug("run qc on dataframe: %s", df.head())
+    df = run_nutrient_qc(df, overwrite_existing_flags=False)
+
+    df_compare = df.compare(pre_qc_df).swaplevel(axis='columns')['self']
+
+    return (
+        df_compare.reset_index()[['hakai_id','no2_no3_flag','sio2_flag','po4_flag']].to_dict("records"),
+        None
+    )
