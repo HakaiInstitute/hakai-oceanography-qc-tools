@@ -1,12 +1,12 @@
+import json
 import logging
 import re
 import webbrowser
 from time import time
-import json
 
 import dash_bootstrap_components as dbc
 import pandas as pd
-from dash import Input, Output, State, callback, dcc, html, ctx
+from dash import Input, Output, State, callback, ctx, dcc, html
 from hakai_api import Client
 
 from utils.tools import load_config
@@ -59,97 +59,108 @@ hakai_api_credentials_modal = dbc.Modal(
 )
 
 
+def _test_hakai_api_credentials(creds):
+    if not creds:
+        return False
+    try:
+        client = Client(credentials=creds)
+        response = client.get(f"{client.api_root}/ctd/views/file/cast?limit=10")
+        # Should return a 404 error
+        return True
+    except Exception as e:
+        # logger('token test failed: %s', e)
+        return False
+
+
 @callback(
-    Output("credentials", "data"),
     Output("credentials-modal", "is_open"),
-    Input("credentials-modal", "is_open"),
-    Input("credentials-input", "value"),
-    Input("credentials", "data"),
+    State("credentials-modal", "is_open"),
     Input("log-in", "n_clicks"),
 )
-def apply_credentials(modal_open, credentials_input, credentials_stored, log_in_clicks):
-    def _test_hakai_api_credentials(creds):
-        if creds is None:
-            return False
-        try:
-            client = Client(credentials=creds)
-            response = client.get(f"{client.api_root}/ctd/views/file/cast?limit=10")
-            # Should return a 404 error
-            return True
-        except Exception as e:
-            # logger('token test failed: %s', e)
-            return False
-
-    triggered_id = ctx.triggered_id
-    if triggered_id == "log-in":
-        logger.debug("clicked on log-in")
-        return credentials_stored, not modal_open
-
-    stored_credentials_test = _test_hakai_api_credentials(credentials_stored)
-    input_credentials_test = _test_hakai_api_credentials(credentials_input)
-    if input_credentials_test:
-        logger.debug("updated credentials with input")
-        return credentials_input, False
-    elif stored_credentials_test:
-        logger.debug("keep good stored credentials")
-        return credentials_stored, False
-
-    logger.warning("no credentials available")
-    return None, True
+def open_hakai_log_in(is_open, n_click):
+    return not is_open if n_click else False
 
 
-@callback(
-    Output("dataframe", "data"),
-    Output("variable", "options"),
-    Output("line-out-depth-selector", "options"),
-    Output("toast-container", "children"),
-    Input("location", "pathname"),
-    Input("location", "search"),
-    Input("credentials", "data"),
-)
-def get_hakai_data(path, query, credentials):
-    def _make_toast_error(message):
-        return dbc.Toast(
-            message,
-            header="Hakai Download Error",
-            dismissable=True,
-            icon="danger",
-            style={"position": "fixed", "top": 66, "right": 10},
-        )
+# @callback(
+#     Output("credentials", "data"),
+#     Output("credentials-modal", "is_open"),
+#     Input("credentials-modal", "is_open"),
+#     Input("credentials-input", "value"),
+#     Input("credentials", "data"),
+#     Input("log-in", "n_clicks"),
+# )
+# def apply_hakai_credentials(modal_open, credentials_input, credentials_stored, log_in_clicks):
 
-    logger.info("Load hakai data")
-    if not credentials or not query:
-        logger.warning("No query or credentials available")
-        return None, None, None, None
-    client = Client(credentials=credentials)
-    if "limit=" not in query:
-        query += "&limit=-1"
-    url = f"{client.api_root}/{location_endpoint_mapping[path]}?{query[1:]}"
-    logger.debug("run hakai query: %s", url)
+#     triggered_id = ctx.triggered_id
+#     if triggered_id == "log-in":
+#         logger.debug("clicked on log-in")
+#         return credentials_stored, not modal_open
 
-    response = client.get(url)
-    if response.status_code != 200:
-        logger.debug("failed hakai query: %s", response.text)
-        response_parsed = json.loads(response.text)
-        return None, None, None, _make_toast_error(response_parsed["hint"])
-    # No data  available
-    result = response.json()
-    if not result:
-        return None, None, None, _make_toast_error("No data available")
-    logger.debug("result: %s", pd.DataFrame(result).head())
+#     stored_credentials_test = _test_hakai_api_credentials(credentials_stored)
+#     input_credentials_test = _test_hakai_api_credentials(credentials_input)
+#     if input_credentials_test:
+#         logger.debug("updated credentials with input")
+#         return credentials_input, False
+#     elif stored_credentials_test:
+#         logger.debug("keep good stored credentials")
+#         return credentials_stored, False
 
-    # Review data to extract needed data
-    df = pd.DataFrame(result)
-    if "line_out_depth" in df:
-        line_out_depths = df["line_out_depth"].drop_duplicates().sort_values().to_list()
-    else:
-        line_out_depths = None
+#     logger.warning("no credentials available")
+#     return None, True
 
-    variables = [
-        {"label": config["VARIABLES_LABEL"].get(var, var), "value": var}
-        for var in df.columns
-        if var in config["PRIMARY_VARIABLES"]
-    ]
-    logger.debug("variables available %s", variables)
-    logger.debug("line_out_depths available %s", line_out_depths)
-    return result, variables, line_out_depths, None
+
+# @callback(
+#     Output("dataframe", "data"),
+#     Output("variable", "options"),
+#     Output("line-out-depth-selector", "options"),
+#     Output("toast-container", "children"),
+#     Input("location", "pathname"),
+#     Input("location", "search"),
+#     Input("credentials", "data"),
+# )
+# def get_hakai_data(path, query, credentials):
+#     def _make_toast_error(message):
+#         return dbc.Toast(
+#             message,
+#             header="Hakai Download Error",
+#             dismissable=True,
+#             icon="danger",
+#             style={"position": "fixed", "top": 66, "right": 10},
+#         )
+
+#     logger.info("Load hakai data")
+#     if not credentials or not query:
+#         logger.warning("Do no donwload data since no query or credentials available")
+#         return [], None, None, None
+#     client = Client(credentials=credentials)
+#     if "limit=" not in query:
+#         query += "&limit=-1"
+#     url = f"{client.api_root}/{location_endpoint_mapping[path]}?{query[1:]}"
+#     logger.debug("run hakai query: %s", url)
+
+#     response = client.get(url)
+#     if response.status_code != 200:
+#         logger.debug("failed hakai query: %s", response.text)
+#         response_parsed = json.loads(response.text)
+#         return None, None, None, _make_toast_error(response_parsed["hint"])
+#     # No data  available
+#     result = response.json()
+#     if not result:
+#         return None, None, None, _make_toast_error("No data available")
+#     logger.debug("result: %s", pd.DataFrame(result).head())
+
+#     # Review data to extract needed data
+#     df = pd.DataFrame(result)
+#     if "line_out_depth" in df:
+#         line_out_depths = df["line_out_depth"].drop_duplicates().sort_values().to_list()
+#     else:
+#         line_out_depths = None
+
+#     variables = [
+#         {"label": config["VARIABLES_LABEL"].get(var, var), "value": var}
+#         for var in df.columns
+#         if var in config["PRIMARY_VARIABLES"]
+#     ]
+#     logger.debug("variables available %s", variables)
+#     logger.debug("line_out_depths available %s", line_out_depths)
+#     return result, variables, line_out_depths, None

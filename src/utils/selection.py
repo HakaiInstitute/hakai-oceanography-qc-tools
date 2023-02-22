@@ -1,18 +1,19 @@
 import logging
-import shutil
 import os
+import shutil
 from datetime import datetime
 
 import dash_bootstrap_components as dbc
 import pandas as pd
 from dash import ALL, Dash, Input, Output, State, callback, ctx, dash_table, dcc, html
-
+from app import app
 # from pages.nutrients import get_flag_var
-from utils.tools import update_dataframe, load_config
+from utils.tools import load_config, update_dataframe
 
 config = load_config()
 variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
 MODULE_PATH = os.path.dirname(__file__)
+
 
 def get_flag_var(var):
     return variables_flag_mapping.get(var, var + "_flag")
@@ -62,12 +63,12 @@ selection_interface = html.Div(
                                 value="AV",
                                 id="selection-flag",
                                 size="sm",
-                                className='apply-flag-selector',
+                                className="apply-flag-selector",
                             ),
                             dbc.Button("Apply Flag", id="apply-selection-flag"),
                         ],
                     ),
-                    className='apply-flag-section'
+                    className="apply-flag-section",
                 ),
                 dbc.Button("Download .xlsx", id="download-qc-excel-button"),
                 dcc.Download(id="download-qc-excel"),
@@ -80,7 +81,7 @@ selection_interface = html.Div(
 )
 
 
-@callback(
+@app.callback(
     Output("selection-interface", "is_open"),
     Input({"type": "graph", "page": ALL}, "selectedData"),
     Input("show-selection", "n_clicks"),
@@ -93,7 +94,7 @@ def show_selection_interace(graph_selectedData, show_selection, is_open):
     return bool([selection for selection in graph_selectedData if selection])
 
 
-@callback(
+@app.callback(
     Output("selected-data-table", "data"),
     Input("apply-selection-flag", "n_clicks"),
     State({"type": "graph", "page": ALL}, "selectedData"),
@@ -125,13 +126,13 @@ def add_flag_selection(
     return df.reset_index().to_dict("records")
 
 
-@callback(
+@app.callback(
     Output("download-qc-excel", "data"),
     Input("download-qc-excel-button", "n_clicks"),
     State("selected-data-table", "data"),
     State("location", "pathname"),
 )
-def get_qc_excel(n_clicks, data,location):
+def get_qc_excel(n_clicks, data, location):
     """Save file to an excel file format compatible with the Hakai Portal upload"""
     logger.info("Generate excel file")
     if data is None:
@@ -151,7 +152,10 @@ def get_qc_excel(n_clicks, data,location):
     if not os.path.exists(temp_dir):
         os.makedirs(temp_dir)
     shutil.copy(
-        os.path.join(MODULE_PATH, f"../assets/hakai-template-{location[1:]}-samples.xlsx"), temp_file
+        os.path.join(
+            MODULE_PATH, f"../assets/hakai-template-{location[1:]}-samples.xlsx"
+        ),
+        temp_file,
     )
     with pd.ExcelWriter(
         temp_file, engine="openpyxl", mode="a", if_sheet_exists="replace"

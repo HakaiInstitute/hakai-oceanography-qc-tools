@@ -5,13 +5,14 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from dash import Input, Output, State, callback, dcc, html, ctx, ALL
+from dash import ALL, Input, Output, State, callback, ctx, dcc, html
 
 logger = logging.getLogger(__name__)
 dash.register_page(__name__)
 
+from app import app
 from hakai_qc.flags import flag_color_map
-from utils.tools import update_dataframe, load_config
+from utils.tools import load_config, update_dataframe
 
 variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
 
@@ -52,7 +53,7 @@ layout = html.Div(
 )
 
 
-@callback(
+@app.callback(
     Output({"type": "graph", "page": "nutrients"}, "figure"),
     Output("main-graph-spinner", "data"),
     Input("dataframe", "data"),
@@ -69,7 +70,7 @@ def generate_figure(
     line_out_depths,
 ):
     if not data or not variable:
-        logger.debug("no data or variable available")
+        logger.debug("Plot not generated since no data or variable available")
         return None, None
 
     # transform data for plotting
@@ -113,7 +114,7 @@ def generate_figure(
     fig.update_layout(
         height=600,
     )
-    fig.update_layout(modebar=dict(color=config['NAVBAR_COLOR']),dragmode='select')
+    fig.update_layout(modebar=dict(color=config["NAVBAR_COLOR"]), dragmode="select")
     return fig, None
 
 
