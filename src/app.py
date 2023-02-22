@@ -38,7 +38,7 @@ sentry_sdk.init(
 
 logger = logging.getLogger()
 logger.setLevel(config["LOG_LEVEL"])
-fileHandler = logging.FileHandler("dashboard.log")
+fileHandler = logging.FileHandler("logs/dashboard.log")
 fileHandler.setFormatter(
     logging.Formatter("%(asctime)s - %(name)s - %(levelname)s: %(message)s")
 )
