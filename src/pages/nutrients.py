@@ -22,30 +22,39 @@ def get_flag_var(var):
     return variables_flag_mapping.get(var, var + "_flag")
 
 
+figure_radio_buttons = dbc.RadioItems(
+    id={"page": "nutrient", "type": "figure-type-selector"},
+    className="btn-group",
+    inputClassName="btn-check",
+    labelClassName="btn btn-outline-primary",
+    labelCheckedClassName="active",
+    options=[
+        {"label": "Time Series", "value": "timeseries"},
+        {
+            "label": "Time Series Profiles",
+            "value": "timeseries-profiles",
+        },
+        {"label": "Contour Profiles", "value": "contour"},
+        {"label": "PO4 red-field", "value": "po4-rf"},
+        {"label": "SiO2 red-field", "value": "sio2-rf"},
+    ],
+    value="timeseries",
+)
+
 layout = html.Div(
     children=[
-        html.Div(
+        dbc.Row(
             [
-                dbc.RadioItems(
-                    id={"page": "nutrient", "type": "figure-type-selector"},
-                    className="btn-group",
-                    inputClassName="btn-check",
-                    labelClassName="btn btn-outline-primary",
-                    labelCheckedClassName="active",
-                    options=[
-                        {"label": "Time Series", "value": "timeseries"},
-                        {
-                            "label": "Time Series Profiles",
-                            "value": "timeseries-profiles",
-                        },
-                        {"label": "Contour Profiles", "value": "contour"},
-                        {"label": "PO4 red-field", "value": "po4-rf"},
-                        {"label": "SiO2 red-field", "value": "sio2-rf"},
-                    ],
-                    value="timeseries",
-                )
-            ],
-            className="radio-group d-grid gap-2 col-6 mx-auto",
+                dbc.Col(width=2),
+                dbc.Col(
+                    figure_radio_buttons,
+                    className="radio-group col-5 mx-auto",
+                ),
+                dbc.Col(
+                    dbc.Button("Run Auto-QC", id="run-nutrient-auto-qc"),
+                    width=2,
+                ),
+            ]
         ),
         dcc.Graph(id={"type": "graph", "page": "nutrients"}),
     ]
