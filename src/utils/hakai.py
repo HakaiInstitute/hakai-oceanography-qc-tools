@@ -88,7 +88,9 @@ hakai_api_credentials_modal = dbc.Modal(
     State("credentials-input", "value"),
     Input("log-in", "n_clicks"),
 )
-def review_stored_credentials(credentials_stored, valid_credentials_input,credential_input,log_in_clicks):
+def review_stored_credentials(
+    credentials_stored, valid_credentials_input, credential_input, log_in_clicks
+):
     triggered_id = ctx.triggered_id
     if triggered_id == "log-in":
         logger.debug("clicked on log-in")
