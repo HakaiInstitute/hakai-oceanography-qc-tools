@@ -23,7 +23,7 @@ config = load_config()
 config.update({key: value for key, value in os.environ.items() if key in config})
 if not os.path.exists(config['TEMP_FOLDER']):
     os.makedirs(config['TEMP_FOLDER'])
-    
+
 sentry_logging = LoggingIntegration(
     level=config["SENTRY_LEVEL"],  # Capture info and above as breadcrumbs
     event_level=config["SENTRY_EVENT_LEVEL"],  # Send errors as events
@@ -61,6 +61,7 @@ stores = html.Div(
             dcc.Store(id="main-graph-spinner"),
         ],
         color="light",
+        spinner_style={"width": "3rem", "height": "3rem"}
     ),
     style={"width": "50px", "float": "center", "text-align": "center"},
 )

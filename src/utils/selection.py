@@ -69,7 +69,7 @@ selection_interface = html.Div(
                     ),
                     className='apply-flag-section'
                 ),
-                dbc.Button("Download .xlsx", id="download-qc-excel-button"),
+                dbc.Button(html.Div(["Download .xlsx",dbc.Spinner(html.Div(id='hakai-excel-load-spinner'),size="lg")]), id="download-qc-excel-button"),
                 dcc.Download(id="download-qc-excel"),
                 selection_table,
             ],
@@ -127,6 +127,7 @@ def add_flag_selection(
 
 @callback(
     Output("download-qc-excel", "data"),
+    Output("hakai-excel-load-spinner","children"),
     Input("download-qc-excel-button", "n_clicks"),
     State("selected-data-table", "data"),
     State("location", "pathname"),
@@ -135,7 +136,7 @@ def get_qc_excel(n_clicks, data,location):
     """Save file to an excel file format compatible with the Hakai Portal upload"""
     logger.info("Generate excel file")
     if data is None:
-        return None
+        return None,None
     df = pd.DataFrame(data).drop(
         columns=["id", "start_depth", "target_depth_m", "bottle_drop", "collected"],
         errors="ignore",
@@ -154,4 +155,4 @@ def get_qc_excel(n_clicks, data,location):
     ) as writer:
         df.to_excel(writer, sheet_name="Hakai Data",index=False)
     logger.info("Upload Hakai QC excel file")
-    return dcc.send_file(temp_file)
+    return dcc.send_file(temp_file), None
