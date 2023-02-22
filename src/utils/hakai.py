@@ -23,6 +23,26 @@ def parse_hakai_token(token):
     return parsed_token
 
 
+def _test_hakai_api_credentials(creds):
+    if creds is None:
+        return False, None
+    try:
+        client = Client(credentials=creds)
+        response = client.get(f"{client.api_root}/ctd/views/file/cast?limit=10")
+        if response.status_code != 200:
+            response.raise_for_status()
+        # Should return a 404 error
+        return True, (False, dbc.Alert("Valid Credentials", color="success"))
+    except Exception as e:
+        return (
+            False,
+            dbc.Alert(
+                [html.H4("Credentials failed"), html.Hr(), html.P(repr(e))],
+                color="danger",
+            ),
+        )
+
+
 location_endpoint_mapping = {"/nutrients": "eims/views/output/nutrients"}
 
 hakai_api_credentials_modal = dbc.Modal(
@@ -49,6 +69,7 @@ hakai_api_credentials_modal = dbc.Modal(
                     persistence_type="local",
                     className="crendentials-input",
                 ),
+                dbc.Spinner(html.Div(id="credentials-spinners")),
                 dcc.Store(id="credentials", storage_type="local"),
             ]
         ),
@@ -62,40 +83,41 @@ hakai_api_credentials_modal = dbc.Modal(
 @callback(
     Output("credentials", "data"),
     Output("credentials-modal", "is_open"),
-    Input("credentials-modal", "is_open"),
-    Input("credentials-input", "value"),
     Input("credentials", "data"),
+    Input("credentials-input", "valid"),
+    State("credentials-input", "value"),
     Input("log-in", "n_clicks"),
 )
-def apply_credentials(modal_open, credentials_input, credentials_stored, log_in_clicks):
-    def _test_hakai_api_credentials(creds):
-        if creds is None:
-            return False
-        try:
-            client = Client(credentials=creds)
-            response = client.get(f"{client.api_root}/ctd/views/file/cast?limit=10")
-            # Should return a 404 error
-            return True
-        except Exception as e:
-            # logger('token test failed: %s', e)
-            return False
-
+def review_stored_credentials(credentials_stored, valid_credentials_input,credential_input,log_in_clicks):
     triggered_id = ctx.triggered_id
     if triggered_id == "log-in":
         logger.debug("clicked on log-in")
-        return credentials_stored, not modal_open
+        return credentials_stored, True
+    elif triggered_id == "credentials-input":
+        if valid_credentials_input:
+            logger.debug("save valid credentials input")
+            return credential_input, False
+        else:
+            logger.debug("bad credentials input")
+            return None, True
 
-    stored_credentials_test = _test_hakai_api_credentials(credentials_stored)
-    input_credentials_test = _test_hakai_api_credentials(credentials_input)
-    if input_credentials_test:
-        logger.debug("updated credentials with input")
-        return credentials_input, False
-    elif stored_credentials_test:
+    stored_credentials_test, _ = _test_hakai_api_credentials(credentials_stored)
+    if stored_credentials_test:
         logger.debug("keep good stored credentials")
         return credentials_stored, False
-
     logger.warning("no credentials available")
     return None, True
+
+
+@callback(
+    Output("credentials-input", "valid"),
+    Output("credentials-input", "invalid"),
+    Output("credentials-spinners", "children"),
+    Input("credentials-input", "value"),
+)
+def review_input_credentials(credentials):
+    is_valid, error_toast = _test_hakai_api_credentials(credentials)
+    return is_valid, not is_valid, error_toast
 
 
 @callback(
