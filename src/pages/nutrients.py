@@ -113,7 +113,7 @@ def generate_figure(
     fig.update_layout(
         height=600,
     )
-    fig.update_layout(modebar=dict(color=config['NAVBAR_COLOR']),dragmode='select')
+    fig.update_layout(modebar=dict(color=config["NAVBAR_COLOR"]), dragmode="select")
     return fig, None
 
 

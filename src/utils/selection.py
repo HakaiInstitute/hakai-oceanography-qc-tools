@@ -14,6 +14,7 @@ config = load_config()
 variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
 MODULE_PATH = os.path.dirname(__file__)
 
+
 def get_flag_var(var):
     return variables_flag_mapping.get(var, var + "_flag")
 
@@ -62,14 +63,24 @@ selection_interface = html.Div(
                                 value="AV",
                                 id="selection-flag",
                                 size="sm",
-                                className='apply-flag-selector',
+                                className="apply-flag-selector",
                             ),
                             dbc.Button("Apply Flag", id="apply-selection-flag"),
                         ],
                     ),
-                    className='apply-flag-section'
+                    className="apply-flag-section",
                 ),
-                dbc.Button(html.Div(["Download .xlsx",dbc.Spinner(html.Div(id='hakai-excel-load-spinner'),size="lg")]), id="download-qc-excel-button"),
+                dbc.Button(
+                    html.Div(
+                        [
+                            "Download .xlsx",
+                            dbc.Spinner(
+                                html.Div(id="hakai-excel-load-spinner"), size="lg"
+                            ),
+                        ]
+                    ),
+                    id="download-qc-excel-button",
+                ),
                 dcc.Download(id="download-qc-excel"),
                 selection_table,
             ],
@@ -127,16 +138,16 @@ def add_flag_selection(
 
 @callback(
     Output("download-qc-excel", "data"),
-    Output("hakai-excel-load-spinner","children"),
+    Output("hakai-excel-load-spinner", "children"),
     Input("download-qc-excel-button", "n_clicks"),
     State("selected-data-table", "data"),
     State("location", "pathname"),
 )
-def get_qc_excel(n_clicks, data,location):
+def get_qc_excel(n_clicks, data, location):
     """Save file to an excel file format compatible with the Hakai Portal upload"""
     logger.info("Generate excel file")
     if data is None:
-        return None,None
+        return None, None
     df = pd.DataFrame(data).drop(
         columns=["id", "start_depth", "target_depth_m", "bottle_drop", "collected"],
         errors="ignore",
@@ -147,12 +158,15 @@ def get_qc_excel(n_clicks, data,location):
     )
     logger.debug("Make a copy from the %s template", location[1:])
     shutil.copy(
-        os.path.join(MODULE_PATH, f"../assets/hakai-template-{location[1:]}-samples.xlsx"), temp_file
+        os.path.join(
+            MODULE_PATH, f"../assets/hakai-template-{location[1:]}-samples.xlsx"
+        ),
+        temp_file,
     )
     logger.debug("Add data to qc excel file")
     with pd.ExcelWriter(
         temp_file, engine="openpyxl", mode="a", if_sheet_exists="replace"
     ) as writer:
-        df.to_excel(writer, sheet_name="Hakai Data",index=False)
+        df.to_excel(writer, sheet_name="Hakai Data", index=False)
     logger.info("Upload Hakai QC excel file")
     return dcc.send_file(temp_file), None
