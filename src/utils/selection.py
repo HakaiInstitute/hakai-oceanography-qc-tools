@@ -140,22 +140,18 @@ def get_qc_excel(n_clicks, data,location):
         columns=["id", "start_depth", "target_depth_m", "bottle_drop", "collected"],
         errors="ignore",
     )
-
-    if not os.path.exists(config["TEMP_FOLDER"]):
-        os.makedirs(config["TEMP_FOLDER"])
     temp_file = os.path.join(
         config["TEMP_FOLDER"],
         f"hakai-qc-{location[1:]}-{datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}.xlsx",
     )
-    temp_dir = os.path.dirname(temp_file)
-    if not os.path.exists(temp_dir):
-        os.makedirs(temp_dir)
+    logger.debug("Make a copy from the %s template", location[1:])
     shutil.copy(
         os.path.join(MODULE_PATH, f"../assets/hakai-template-{location[1:]}-samples.xlsx"), temp_file
     )
+    logger.debug("Add data to qc excel file")
     with pd.ExcelWriter(
         temp_file, engine="openpyxl", mode="a", if_sheet_exists="replace"
     ) as writer:
-        df.to_excel(writer, sheet_name="Hakai Data")
+        df.to_excel(writer, sheet_name="Hakai Data",index=False)
     logger.info("Upload Hakai QC excel file")
     return dcc.send_file(temp_file)
