@@ -1,12 +1,12 @@
+import json
 import logging
 import re
 import webbrowser
 from time import time
-import json
 
 import dash_bootstrap_components as dbc
 import pandas as pd
-from dash import Input, Output, State, callback, dcc, html, ctx
+from dash import Input, Output, State, callback, ctx, dcc, html
 from hakai_api import Client
 
 from utils.tools import load_config
@@ -37,7 +37,7 @@ def _test_hakai_api_credentials(creds):
         return (
             False,
             dbc.Alert(
-                [html.H4("Credentials failed"), html.Hr(), html.P(repr(e))],
+                [html.H5("Credentials failed"), html.Hr(), html.P(repr(e))],
                 color="danger",
             ),
         )
@@ -143,7 +143,7 @@ def get_hakai_data(path, query, credentials):
 
     logger.info("Load hakai data")
     if not credentials or not query:
-        logger.warning("No query or credentials available")
+        logger.info("No query or credentials available")
         return None, None, None, None
     client = Client(credentials=credentials)
     if "limit=" not in query:
