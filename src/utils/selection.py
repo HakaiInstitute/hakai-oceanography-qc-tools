@@ -96,15 +96,10 @@ selection_interface = html.Div(
                                             ),
                                             dbc.ButtonGroup(
                                                 [
-                                                    dbc.Button(
-                                                        "Apply to selection",
-                                                        id="apply-quality-level-all",
-                                                        outline=True,
-                                                        color="primary",
-                                                    ),
+
                                                     dbc.Button(
                                                         "Apply to all",
-                                                        id="apply-quality-level-selection",
+                                                        id="apply-quality-level-all",
                                                         outline=True,
                                                         color="primary",
                                                     ),
@@ -120,7 +115,6 @@ selection_interface = html.Div(
                     ),
                     className="apply-flag-section",
                 ),
-                dbc.Button("Clear Table", id="clear-selected-data-table"),
                 dbc.Button(
                     html.Div(
                         [
@@ -142,7 +136,6 @@ selection_interface = html.Div(
         dcc.Store(id={"id": "selected-data", "source": "figure"}),
     ]
 )
-
 
 @callback(
     Output("selection-interface", "is_open"),
@@ -168,9 +161,17 @@ def show_selection_interace(
             Input({"id": "selected-data", "source": "figure"}, "data"),
             Input({"id": "selected-data", "source": "auto-qc"}, "data"),
         ],
+        Input("apply-quality-level-all","n_clicks"),
+        Input("quality-level-selector","value")
     ],
 )
-def update_selected_data(selected_data, newly_selected):
+def update_selected_data(selected_data, newly_selected,apply_quality_level,quality_level):
+
+    if apply_quality_level and ctx.triggered_id == "apply-quality-level-all":
+        df = pd.DataFrame(selected_data)
+        df['quality_level'] =  quality_level
+        return df.to_dict("records")
+    
     logger.debug(
         "updated selection data: selected=%s, newly_selected=%s",
         selected_data,
