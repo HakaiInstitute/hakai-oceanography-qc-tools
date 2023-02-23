@@ -59,7 +59,7 @@ stores = html.Div(
             dcc.Store(id="dataframe"),
             dcc.Store(id="selected-data"),
             dcc.Store(id="main-graph-spinner"),
-            dcc.Store(id='auto-qc-nutrient-spinner')
+            dcc.Store(id="auto-qc-nutrient-spinner"),
         ],
         color="light",
         spinner_style={"width": "3rem", "height": "3rem"},

@@ -37,7 +37,7 @@ def _test_hakai_api_credentials(creds):
         return (
             False,
             dbc.Alert(
-                [html.H4("Credentials failed"), html.Hr(), html.P(repr(e))],
+                [html.H5("Credentials failed"), html.Hr(), html.P(repr(e))],
                 color="danger",
             ),
         )
@@ -143,7 +143,7 @@ def get_hakai_data(path, query, credentials):
 
     logger.info("Load hakai data")
     if not credentials or not query:
-        logger.warning("No query or credentials available")
+        logger.info("No query or credentials available")
         return None, None, None, None
     client = Client(credentials=credentials)
     if "limit=" not in query:

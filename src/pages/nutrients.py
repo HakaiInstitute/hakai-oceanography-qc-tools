@@ -57,7 +57,8 @@ layout = html.Div(
                 ),
             ]
         ),
-        dcc.Graph(id={"type": "graph", "page": "nutrients"}),
+        dcc.Graph(id={"type": "graph", "page": "nutrients"}, figure={}),
+        dcc.Store(id={"id": "selected-data", "source": "auto-qc"}),
     ]
 )
 
@@ -80,7 +81,7 @@ def generate_figure(
 ):
     if not data or not variable:
         logger.debug("no data or variable available")
-        return None, None
+        return {}, None
 
     # transform data for plotting
     logger.info(
@@ -208,17 +209,18 @@ def get_contour(df, x, y, color, x_interp_limit=3, y_interp_limit=4):
 
 
 @callback(
-    Output("selected-data-table", "data"),
+    Output({"id": "selected-data", "source": "auto-qc"}, "data"),
     Output("auto-qc-nutrient-spinner", "data"),
     State("dataframe", "data"),
     State("selected-data-table", "data"),
     Input("run-nutrient-auto-qc", "n_clicks"),
 )
 def run_nutrient_auto_qc(data, selected_data, n_clicks):
+    logger.debug("Run nutrient auto qc")
     if data is None:
-        return None, None
+        return [], None
     df = pd.DataFrame(data)
-    df['collected'] = pd.to_datetime(df['collected'], utc=True).dt.tz_localize(None)
+    df["collected"] = pd.to_datetime(df["collected"], utc=True).dt.tz_localize(None)
     pre_qc_df = df.copy()
     if selected_data:
         df = update_dataframe(
@@ -227,9 +229,11 @@ def run_nutrient_auto_qc(data, selected_data, n_clicks):
     logger.debug("run qc on dataframe: %s", df.head())
     df = run_nutrient_qc(df, overwrite_existing_flags=False)
 
-    df_compare = df.compare(pre_qc_df).swaplevel(axis='columns')['self']
+    df_compare = df.compare(pre_qc_df).swaplevel(axis="columns")["self"]
 
     return (
-        df_compare.reset_index()[['hakai_id','no2_no3_flag','sio2_flag','po4_flag']].to_dict("records"),
-        None
+        df_compare.reset_index()[
+            ["hakai_id", "no2_no3_flag", "sio2_flag", "po4_flag"]
+        ].to_dict("records"),
+        None,
     )

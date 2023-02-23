@@ -87,53 +87,79 @@ selection_interface = html.Div(
             is_open=True,
             id="selection-interface",
         ),
+        dcc.Store(id={"id": "selected-data", "source": "figure"}),
     ]
 )
 
 
 @callback(
     Output("selection-interface", "is_open"),
-    Input({"type": "graph", "page": ALL}, "selectedData"),
+    Input("selected-data-table", "data"),
     Input("show-selection", "n_clicks"),
     State("selection-interface", "is_open"),
 )
-def show_selection_interace(graph_selectedData, show_selection, is_open):
+def show_selection_interace(selected_data_table, show_selection, is_open):
     trigger = ctx.triggered_id
     if trigger == "show-selection":
         return not is_open
-    return bool([selection for selection in graph_selectedData if selection])
+    return bool(selected_data_table)
 
 
-# @callback(
-#     Output("selected-data-table", "data"),
-#     Input("apply-selection-flag", "n_clicks"),
-#     State({"type": "graph", "page": ALL}, "selectedData"),
-#     State("selected-data-table", "data"),
-#     State("selection-flag", "value"),
-#     State("variable", "value"),
-# )
-# def add_flag_selection(
-#     click, graphs_selected_flag, previously_selected_flag, flag_to_apply, variable
-# ):
-#     graphs_selected_flag = [graph for graph in graphs_selected_flag if graph]
-#     if not graphs_selected_flag:
-#         return previously_selected_flag
+@callback(
+    Output("selected-data-table", "data"),
+    State("selected-data-table", "data"),
+    Input({"id": "selected-data", "source": ALL}, "data"),
+)
+def update_selected_data(selected_data, newly_selected):
+    logger.debug(
+        "updated selection data: selected=%s, newly_selected=%s",
+        selected_data,
+        newly_selected,
+    )
+    newly_selected =  [pd.DataFrame(source) for source in newly_selected if source is not None  and len(source)>0]
+    if not selected_data and not newly_selected:
+        logger.debug("no selection exist")
+        return []
+    if not selected_data:
+        logger.debug("add a new selection to an empty list %s", newly_selected)
+        return pd.concat(newly_selected).to_dict("records")
 
-#     df = pd.DataFrame(
-#         [
-#             {
-#                 "hakai_id": point["customdata"][0],
-#                 variables_flag_mapping.get(variable, variable + "_flag"): flag_to_apply,
-#             }
-#             for graph in graphs_selected_flag
-#             for point in graph["points"]
-#         ]
-#     ).set_index("hakai_id")
+    logger.debug("append to a selection")
+    for source in newly_selected:
+        selected_data.update(pd.DataFrame(source), on="hakai_id", how="outer")
+    return selected_data.reset_index().to_dict("records")
 
-#     if previously_selected_flag:
-#         df_previous = pd.DataFrame(previously_selected_flag).set_index("hakai_id")
-#         df = update_dataframe(df_previous, df, on=["hakai_id"])
-#     return df.reset_index().to_dict("records")
+
+@callback(
+    Output({"id": "selected-data", "source": "figure"}, "data"),
+    Input("apply-selection-flag", "n_clicks"),
+    State({"type": "graph", "page": ALL}, "selectedData"),
+    State("selected-data-table", "data"),
+    State("selection-flag", "value"),
+    State("variable", "value"),
+)
+def add_flag_selection(
+    click, graphs_selected_flag, previously_selected_flag, flag_to_apply, variable
+):
+    graphs_selected_flag = [graph for graph in graphs_selected_flag if graph]
+    if not graphs_selected_flag:
+        return previously_selected_flag
+
+    df = pd.DataFrame(
+        [
+            {
+                "hakai_id": point["customdata"][0],
+                variables_flag_mapping.get(variable, variable + "_flag"): flag_to_apply,
+            }
+            for graph in graphs_selected_flag
+            for point in graph["points"]
+        ]
+    ).set_index("hakai_id")
+
+    if previously_selected_flag:
+        df_previous = pd.DataFrame(previously_selected_flag).set_index("hakai_id")
+        df = update_dataframe(df_previous, df, on=["hakai_id"])
+    return df.reset_index().to_dict("records")
 
 
 @callback(
