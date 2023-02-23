@@ -12,6 +12,7 @@ default_axe_variables = dict(time="time", z="depth", lat="lat", lon="lon")
 
 
 def qc_dataframe(df, configs, groupby=None, axes=None):
+    """Run ioos_qc on subsets of a dataframe"""
     result_store = []
     if configs is not dict:
         config = {"": configs}
@@ -20,23 +21,41 @@ def qc_dataframe(df, configs, groupby=None, axes=None):
     else:
         default_axe_variables.update(axes)
 
-    logger.debug("Use axes: %s", axes)
-    logger.debug("dataframe dtypes: %s", df.dtypes)
-    logger.debug("qc len(df)=%s", len(df))
+    logger.debug("qc nutrient dataframe.index.name=%s, df=%s", df.index.name,df)
+    original_columns = df.columns
     for query, config in configs.items():
-        df_subset = df.query(query)
+        result_store = []
+        df_subset = df.query(query)[original_columns]
         logger.info("run qc on query: %s = len(df)=%s", query, len(df_subset))
         for group, timeserie in df_subset.groupby(groupby, as_index=False):
             # Make sure that the timeseries are sorted chronologically
-
-            logger.debug("timeseries to qc len(df)=%s", len(timeserie))
-            stream = PandasStream(timeserie.reset_index(), **axes)
+            timeserie = timeserie.reset_index()
+            # logger.debug("timeseries to be qc len(df)=%s: %s", len(timeserie),timeserie)
+            stream = PandasStream(timeserie, **axes)
             results = stream.run(Config(config))
 
             store = PandasStore(results, axes=axes)
             result_store += [
                 timeserie.join(store.save(write_data=False, write_axes=False))
             ]
-            logger.debug("result_stored %s: %s", group, len(result_store[-1]))
 
-    return pd.concat(result_store, ignore_index=True)
+        df_qced = pd.concat(result_store, ignore_index=True)
+        df = update_dataframe(df,df_qced, on='hakai_id')
+
+    return df
+
+
+def update_dataframe(df, new_df, on=None, suffix="_new", how="outer"):
+    """Merge two dataframes on specified columns and update
+    missing values from the second dataframe by the first one."""
+    # Compbine the two dataframes
+    df_merge = pd.merge(df, new_df, how=how, suffixes=("", suffix), on=on)
+
+    # merge columns
+    drop_cols = []
+    for new_col in [col for col in df_merge.columns if col.endswith(suffix)]:
+        col = new_col[:-4]
+        df_merge[col] = df_merge[new_col].fillna(df_merge[col])
+        drop_cols += [new_col]
+    df_merge.drop(columns=drop_cols, inplace=True)
+    return df_merge
