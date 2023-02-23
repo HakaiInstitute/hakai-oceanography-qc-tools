@@ -21,7 +21,7 @@ def qc_dataframe(df, configs, groupby=None, axes=None):
     else:
         default_axe_variables.update(axes)
 
-    logger.debug("qc nutrient dataframe.index.name=%s, df=%s", df.index.name,df)
+    logger.debug("qc nutrient dataframe.index.name=%s, df=%s", df.index.name, df)
     original_columns = df.columns
     for query, config in configs.items():
         result_store = []
@@ -40,7 +40,7 @@ def qc_dataframe(df, configs, groupby=None, axes=None):
             ]
 
         df_qced = pd.concat(result_store, ignore_index=True)
-        df = update_dataframe(df,df_qced, on='hakai_id')
+        df = update_dataframe(df, df_qced, on="hakai_id")
 
     return df
 

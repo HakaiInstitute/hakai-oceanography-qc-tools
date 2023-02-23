@@ -10,12 +10,12 @@ from dash import Input, Output, State, callback, dcc, html, ctx, ALL
 logger = logging.getLogger(__name__)
 dash.register_page(__name__)
 
-from hakai_qc.flags import flag_color_map,get_hakai_variable_flag
+from hakai_qc.flags import flag_color_map, get_hakai_variable_flag
 from hakai_qc.nutrients import run_nutrient_qc
 from utils.tools import update_dataframe, load_config
 
 variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
-nutrient_variables = ['no2_no3_um','sio2','po4']
+nutrient_variables = ["no2_no3_um", "sio2", "po4"]
 config = load_config()
 
 
@@ -226,12 +226,20 @@ def run_nutrient_auto_qc(data, selected_data, n_clicks):
         df = update_dataframe(
             df, pd.DataFrame(selected_data), on="hakai_id", how="left"
         )
-    nutrient_variables_flags = [get_hakai_variable_flag(var) for var in nutrient_variables]
+    nutrient_variables_flags = [
+        get_hakai_variable_flag(var) for var in nutrient_variables
+    ]
     df = run_nutrient_qc(df, overwrite_existing_flags=False)
-    df = df.set_index('hakai_id').sort_index()
-    pre_qc_df = pd.DataFrame(data).set_index('hakai_id').sort_index()[nutrient_variables_flags]
+    df = df.set_index("hakai_id").sort_index()
+    pre_qc_df = (
+        pd.DataFrame(data).set_index("hakai_id").sort_index()[nutrient_variables_flags]
+    )
 
-    df_compare = df[nutrient_variables_flags].compare(pre_qc_df).swaplevel(axis="columns")["self"]
+    df_compare = (
+        df[nutrient_variables_flags]
+        .compare(pre_qc_df)
+        .swaplevel(axis="columns")["self"]
+    )
     # Return just the flags that have been updated
     return (
         df_compare[nutrient_variables_flags].reset_index().to_dict("records"),
