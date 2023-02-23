@@ -3,9 +3,9 @@ import logging
 import pandas as pd
 from ioos_qc import qartod
 from ioos_qc.config import Config
+from ioos_qc.qartod import qartod_compare
 from ioos_qc.stores import PandasStore
 from ioos_qc.streams import PandasStream
-from ioos_qc.qartod import qartod_compare
 
 logger = logging.getLogger(__name__)
 default_axe_variables = dict(time="time", z="depth", lat="lat", lon="lon")

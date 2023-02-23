@@ -5,14 +5,14 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from dash import Input, Output, State, callback, dcc, html, ctx, ALL
+from dash import ALL, Input, Output, State, callback, ctx, dcc, html
 
 logger = logging.getLogger(__name__)
 dash.register_page(__name__)
 
 from hakai_qc.flags import flag_color_map, get_hakai_variable_flag
 from hakai_qc.nutrients import run_nutrient_qc
-from utils.tools import update_dataframe, load_config
+from utils.tools import load_config, update_dataframe
 
 variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
 nutrient_variables = ["no2_no3_um", "sio2", "po4"]

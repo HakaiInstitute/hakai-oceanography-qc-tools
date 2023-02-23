@@ -1,6 +1,5 @@
-from hakai_qc.qc import qartod_compare
-from hakai_qc.qc import qc_dataframe
 from hakai_qc.flags import flag_qartod_to_hakai, get_hakai_variable_flag
+from hakai_qc.qc import qartod_compare, qc_dataframe
 
 nutrients_qc_configs = {
     "-5 < line_out_depth < 50": """

@@ -1,12 +1,12 @@
+import json
 import logging
 import re
 import webbrowser
 from time import time
-import json
 
 import dash_bootstrap_components as dbc
 import pandas as pd
-from dash import Input, Output, State, callback, dcc, html, ctx
+from dash import Input, Output, State, callback, ctx, dcc, html
 from hakai_api import Client
 
 from utils.tools import load_config

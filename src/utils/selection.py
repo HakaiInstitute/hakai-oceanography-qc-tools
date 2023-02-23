@@ -1,15 +1,16 @@
 import logging
-import shutil
 import os
+import shutil
 from datetime import datetime
 
 import dash_bootstrap_components as dbc
 import pandas as pd
-from dash import ALL, Dash, Input, Output, State, callback, ctx, dash_table, dcc, html
+from dash import (ALL, Dash, Input, Output, State, callback, ctx, dash_table,
+                  dcc, html)
 
+from hakai_qc.qc import update_dataframe
 # from pages.nutrients import get_flag_var
 from utils.tools import load_config
-from hakai_qc.qc import update_dataframe
 
 config = load_config()
 variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}

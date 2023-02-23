@@ -1,5 +1,5 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 
 def get_interannual_variability(data, groupby, time_grid="14D"):
