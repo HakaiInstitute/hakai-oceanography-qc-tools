@@ -29,7 +29,7 @@ def qc_dataframe(df, configs, groupby=None, axes=None):
         for group, timeserie in df_subset.groupby(groupby, as_index=False):
             # Make sure that the timeseries are sorted chronologically
 
-            logger.debug('timeseries to qc len(df)=%s',len(timeserie))
+            logger.debug("timeseries to qc len(df)=%s", len(timeserie))
             stream = PandasStream(timeserie.reset_index(), **axes)
             results = stream.run(Config(config))
 
@@ -37,6 +37,6 @@ def qc_dataframe(df, configs, groupby=None, axes=None):
             result_store += [
                 timeserie.join(store.save(write_data=False, write_axes=False))
             ]
-            logger.debug("result_stored %s: %s", group,len(result_store[-1]))
+            logger.debug("result_stored %s: %s", group, len(result_store[-1]))
 
     return pd.concat(result_store, ignore_index=True)

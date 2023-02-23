@@ -76,7 +76,7 @@ def run_nutrient_qc(
     """Run Hakai Nutrient automated QC"""
     # Run QARTOD tests
     original_columns = df.columns
-    df = df.sort_values(['site_id','line_out_depth','collected'])
+    df = df.sort_values(["site_id", "line_out_depth", "collected"])
     df = qc_dataframe(
         df,
         configs=config,
