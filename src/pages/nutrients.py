@@ -41,12 +41,44 @@ figure_radio_buttons = dbc.RadioItems(
     ],
     value="timeseries",
 )
+plot_inputs = dbc.Col(
+    [
+        dbc.InputGroup(
+            [
+                dbc.InputGroupText("Rows"),
+                dbc.Select(
+                    options=[
+                        {"label": None, "value": None},
+                        {"label": "Quality Level", "value": "quality_level"},
+                        {"label": "Year", "value": "year"},
+                    ],
+                    value=None,
+                    id="nutrients-facet-rows",
+                ),
+            ]
+        ),
+        dbc.InputGroup(
+            [
+                dbc.InputGroupText("Columns"),
+                dbc.Select(
+                    options=[
+                        {"label": None, "value": None},
+                        {"label": "Quality Level", "value": "quality_level"},
+                        {"label": "Year", "value": "year"},
+                    ],
+                    value=None,
+                    id="nutrients-facet-columns",
+                ),
+            ]
+        ),
+    ]
+)
 
 layout = html.Div(
     children=[
         dbc.Row(
             [
-                dbc.Col(width=2),
+                dbc.Col(plot_inputs, width=2),
                 dbc.Col(
                     figure_radio_buttons,
                     className="radio-group col-5 mx-auto",
@@ -71,6 +103,8 @@ layout = html.Div(
     Input("selected-data-table", "data"),
     Input({"page": "nutrient", "type": "figure-type-selector"}, "value"),
     Input("line-out-depth-selector", "value"),
+    Input("nutrients-facet-columns", "value"),
+    Input("nutrients-facet-rows", "value"),
 )
 def generate_figure(
     data,
@@ -78,6 +112,8 @@ def generate_figure(
     selected_data,
     figure_type,
     line_out_depths,
+    facet_col,
+    facet_row,
 ):
     if not data or not variable:
         logger.debug("no data or variable available")
@@ -88,7 +124,10 @@ def generate_figure(
         "Generating %s figure for line_out_depths=%s", variable, line_out_depths
     )
     df = pd.DataFrame(data)
-
+    px_kwargs = {"facet_col": facet_col, "facet_row": facet_row}
+    px_kwargs = {
+        key: value if value != "" else None for key, value in px_kwargs.items()
+    }
     if line_out_depths and figure_type != "contour":
         df = df.query("line_out_depth in @line_out_depths").copy()
 
@@ -105,21 +144,29 @@ def generate_figure(
     # select plot to present based on triggered_id
     if figure_type == "po4-rf":
         logger.debug("get po4 rf plot ")
-        fig = get_red_field_plot(df, "po4", [2.1875, 35], 100)
+        fig = get_red_field_plot(df, "po4", [2.1875, 35], 100, px_kwargs)
     elif figure_type == "sio2-rf":
         logger.debug("get sio2 rf plot ")
-        fig = get_red_field_plot(df, "sio2", [32.8125, 35], 100)
+        fig = get_red_field_plot(df, "sio2", [32.8125, 35], 100, px_kwargs)
     elif figure_type == "timeseries-profiles":
         fig = get_timeseries_plot(
             df,
             y="line_out_depth",
             color=variable,
+            facet_col=px_kwargs["facet_col"],
+            facet_row=px_kwargs["facet_row"],
         )
     elif figure_type == "contour":
         fig = get_contour(df, x="collected", y="line_out_depth", color=variable)
     else:
         logger.debug("get default time series plot for %s", figure_type)
-        fig = get_timeseries_plot(df, y=variable, color=get_flag_var(variable))
+        fig = get_timeseries_plot(
+            df,
+            y=variable,
+            color=get_flag_var(variable),
+            facet_col=px_kwargs["facet_col"],
+            facet_row=px_kwargs["facet_row"],
+        )
 
     fig.update_layout(
         height=600,
@@ -128,7 +175,7 @@ def generate_figure(
     return fig, None
 
 
-def get_red_field_plot(df, var, slope_limit, max_depth):
+def get_red_field_plot(df, var, slope_limit, max_depth, px_kwargs):
     figs = px.scatter(
         df.query(f"line_out_depth<{max_depth}"),
         x=var,
@@ -138,7 +185,7 @@ def get_red_field_plot(df, var, slope_limit, max_depth):
         template="simple_white",
         title=config["VARIABLES_LABEL"][var],
         labels=config["VARIABLES_LABEL"],
-        facet_col="year",
+        **px_kwargs,
     )
 
     for id, item in enumerate(figs.data):
@@ -164,6 +211,7 @@ def get_timeseries_plot(df, **kwargs):
         labels=config["VARIABLES_LABEL"],
     )
     default_inputs.update(kwargs)
+    logger.debug("Plot figure kwargs: %s", kwargs)
     fig = px.scatter(df, **default_inputs)
 
     for trace in fig.data:
