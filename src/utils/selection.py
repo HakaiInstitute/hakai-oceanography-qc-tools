@@ -1,14 +1,16 @@
 import logging
-import shutil
 import os
+import shutil
 from datetime import datetime
 
 import dash_bootstrap_components as dbc
 import pandas as pd
-from dash import ALL, Dash, Input, Output, State, callback, ctx, dash_table, dcc, html
+from dash import (ALL, Dash, Input, Output, State, callback, ctx, dash_table,
+                  dcc, html)
 
+from hakai_qc.qc import update_dataframe
 # from pages.nutrients import get_flag_var
-from utils.tools import update_dataframe, load_config
+from utils.tools import load_config
 
 config = load_config()
 variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
@@ -87,25 +89,64 @@ selection_interface = html.Div(
             is_open=True,
             id="selection-interface",
         ),
+        dcc.Store(id={"id": "selected-data", "source": "figure"}),
     ]
 )
 
 
 @callback(
     Output("selection-interface", "is_open"),
-    Input({"type": "graph", "page": ALL}, "selectedData"),
+    Input("selected-data-table", "data"),
     Input("show-selection", "n_clicks"),
     State("selection-interface", "is_open"),
 )
-def show_selection_interace(graph_selectedData, show_selection, is_open):
+def show_selection_interace(selected_data_table, show_selection, is_open):
     trigger = ctx.triggered_id
     if trigger == "show-selection":
         return not is_open
-    return bool([selection for selection in graph_selectedData if selection])
+    return bool(selected_data_table)
 
 
 @callback(
-    Output("selected-data-table", "data"),
+    output=Output("selected-data-table", "data"),
+    inputs=[
+        State("selected-data-table", "data"),
+        [
+            Input({"id": "selected-data", "source": "figure"}, "data"),
+            Input({"id": "selected-data", "source": "auto-qc"}, "data"),
+        ],
+    ],
+)
+def update_selected_data(selected_data, newly_selected):
+    logger.debug(
+        "updated selection data: selected=%s, newly_selected=%s",
+        selected_data,
+        newly_selected,
+    )
+    newly_selected = [
+        pd.DataFrame(source)
+        for source in newly_selected
+        if source is not None and len(source) > 0
+    ]
+    if not selected_data and not newly_selected:
+        logger.debug("no selection exist")
+        return []
+    if not selected_data:
+        logger.debug("add a new selection to an empty list %s", newly_selected)
+        return pd.concat(newly_selected).to_dict("records")
+
+    df = pd.DataFrame(selected_data)
+    # logger.debug("append to a selection %s",df)
+    logger.debug("new selection %s", newly_selected)
+    for source in reversed(newly_selected):
+        df_newly_selected = pd.DataFrame(source)
+        logger.debug("append selection source %s", source)
+        df = update_dataframe(df, df_newly_selected, on=["hakai_id"], how="outer")
+    return df.to_dict("records")
+
+
+@callback(
+    Output({"id": "selected-data", "source": "figure"}, "data"),
     Input("apply-selection-flag", "n_clicks"),
     State({"type": "graph", "page": ALL}, "selectedData"),
     State("selected-data-table", "data"),

@@ -13,3 +13,9 @@ flag_qartod_to_hakai = {
     4: "SVD",
     9: "MV",
 }
+
+flag_mapping = {"no2_no3_um": "no2_no3_flag"}
+
+
+def get_hakai_variable_flag(variable):
+    return flag_mapping.get(variable, f"{variable}_flag")

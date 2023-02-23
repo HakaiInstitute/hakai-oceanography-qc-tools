@@ -5,15 +5,15 @@ import os
 
 import dash
 import dash_bootstrap_components as dbc
-import sentry_sdk
-from dash import Dash, dcc, html, callback, Output, Input, State
-from sentry_sdk.integrations.logging import LoggingIntegration
 import plotly.io as pio
+import sentry_sdk
+from dash import Dash, Input, Output, State, callback, dcc, html
+from sentry_sdk.integrations.logging import LoggingIntegration
 
 import utils.selection as selection
 from utils import hakai
-from utils.tools import load_config
 from utils.hakai_plotly_template import hakai_template
+from utils.tools import load_config
 
 # load hakai template
 pio.templates["hakai"] = hakai_template
@@ -59,6 +59,7 @@ stores = html.Div(
             dcc.Store(id="dataframe"),
             dcc.Store(id="selected-data"),
             dcc.Store(id="main-graph-spinner"),
+            dcc.Store(id="auto-qc-nutrient-spinner"),
         ],
         color="light",
         spinner_style={"width": "3rem", "height": "3rem"},
