@@ -1,7 +1,7 @@
 **/__pycache__
 **/*.egg-info
-*.xlsx
 *.log
 .env
 .DS_Store
 **/.DS_Store
+temp/
