@@ -151,7 +151,9 @@ selection_interface = html.Div(
     State("selection-interface", "is_open"),
     Input({"type": "graph", "page": ALL}, "selectedData"),
 )
-def show_selection_interace(selected_data_table, show_selection, is_open,graph_selection):
+def show_selection_interace(
+    selected_data_table, show_selection, is_open, graph_selection
+):
     trigger = ctx.triggered_id
     if trigger == "show-selection":
         return not is_open
