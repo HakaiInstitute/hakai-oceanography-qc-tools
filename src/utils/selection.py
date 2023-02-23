@@ -5,15 +5,23 @@ from datetime import datetime
 
 import dash_bootstrap_components as dbc
 import pandas as pd
-from dash import (ALL, Dash, Input, Output, State, callback, ctx, dash_table,
-                  dcc, html)
+from dash import ALL, Dash, Input, Output, State, callback, ctx, dash_table, dcc, html
 
 from hakai_qc.qc import update_dataframe
+
 # from pages.nutrients import get_flag_var
 from utils.tools import load_config
 
 config = load_config()
 variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
+quality_levels = [
+    "Raw",
+    "Technician",
+    "Technicianm",
+    "Technicianr",
+    "Technicianmr",
+    "Principal Investigator",
+]
 MODULE_PATH = os.path.dirname(__file__)
 
 
@@ -59,25 +67,67 @@ selection_interface = html.Div(
                 dbc.Card(
                     dbc.CardBody(
                         [
-                            html.H4("Apply flag to selection"),
-                            dbc.Select(
-                                options=["AV", "SVC", "SVD"],
-                                value="AV",
-                                id="selection-flag",
-                                size="sm",
-                                className="apply-flag-selector",
+                            dbc.Row(
+                                [
+                                    dbc.Col(
+                                        [
+                                            html.H5("Apply flag to selection"),
+                                            dbc.Select(
+                                                options=["AV", "SVC", "SVD"],
+                                                value="AV",
+                                                id="selection-flag",
+                                            ),
+                                            dbc.Button(
+                                                "Apply Flag",
+                                                id="apply-selection-flag",
+                                                outline=True,
+                                                color="primary",
+                                            ),
+                                        ],
+                                        className="d-grid gap-2 col-6 mx-auto",
+                                    ),
+                                    dbc.Col(
+                                        [
+                                            html.H5("Apply Quality Level"),
+                                            dbc.Select(
+                                                options=quality_levels,
+                                                value="Technicianmr",
+                                                id="quality-level-selector",
+                                            ),
+                                            dbc.ButtonGroup(
+                                                [
+                                                    dbc.Button(
+                                                        "Apply to selection",
+                                                        id="apply-quality-level-all",
+                                                        outline=True,
+                                                        color="primary",
+                                                    ),
+                                                    dbc.Button(
+                                                        "Apply to all",
+                                                        id="apply-quality-level-selection",
+                                                        outline=True,
+                                                        color="primary",
+                                                    ),
+                                                ],
+                                                className="me-1",
+                                            ),
+                                        ],
+                                        className="d-grid gap-2 col-6 mx-auto",
+                                    ),
+                                ]
                             ),
-                            dbc.Button("Apply Flag", id="apply-selection-flag"),
                         ],
                     ),
                     className="apply-flag-section",
                 ),
+                dbc.Button("Clear Table", id="clear-selected-data-table"),
                 dbc.Button(
                     html.Div(
                         [
                             "Download .xlsx",
                             dbc.Spinner(
-                                html.Div(id="hakai-excel-load-spinner"), size="lg"
+                                html.Div(id="hakai-excel-load-spinner"),
+                                size="lg",
                             ),
                         ]
                     ),
