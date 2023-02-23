@@ -8,7 +8,8 @@ import pandas as pd
 from dash import ALL, Dash, Input, Output, State, callback, ctx, dash_table, dcc, html
 
 # from pages.nutrients import get_flag_var
-from utils.tools import update_dataframe, load_config
+from utils.tools import load_config
+from hakai_qc.qc import update_dataframe
 
 config = load_config()
 variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
@@ -106,9 +107,14 @@ def show_selection_interace(selected_data_table, show_selection, is_open):
 
 
 @callback(
-    Output("selected-data-table", "data"),
-    State("selected-data-table", "data"),
-    Input({"id": "selected-data", "source": ALL}, "data"),
+    output=Output("selected-data-table", "data"),
+    inputs=[
+        State("selected-data-table", "data"),
+        [
+            Input({"id": "selected-data", "source": "figure"}, "data"),
+            Input({"id": "selected-data", "source": "auto-qc"}, "data"),
+        ],
+    ],
 )
 def update_selected_data(selected_data, newly_selected):
     logger.debug(
@@ -116,7 +122,11 @@ def update_selected_data(selected_data, newly_selected):
         selected_data,
         newly_selected,
     )
-    newly_selected =  [pd.DataFrame(source) for source in newly_selected if source is not None  and len(source)>0]
+    newly_selected = [
+        pd.DataFrame(source)
+        for source in newly_selected
+        if source is not None and len(source) > 0
+    ]
     if not selected_data and not newly_selected:
         logger.debug("no selection exist")
         return []
@@ -124,10 +134,14 @@ def update_selected_data(selected_data, newly_selected):
         logger.debug("add a new selection to an empty list %s", newly_selected)
         return pd.concat(newly_selected).to_dict("records")
 
-    logger.debug("append to a selection")
-    for source in newly_selected:
-        selected_data.update(pd.DataFrame(source), on="hakai_id", how="outer")
-    return selected_data.reset_index().to_dict("records")
+    df = pd.DataFrame(selected_data)
+    # logger.debug("append to a selection %s",df)
+    logger.debug("new selection %s", newly_selected)
+    for source in reversed(newly_selected):
+        df_newly_selected = pd.DataFrame(source)
+        logger.debug("append selection source %s", source)
+        df = update_dataframe(df, df_newly_selected, on=["hakai_id"], how="outer")
+    return df.to_dict("records")
 
 
 @callback(
