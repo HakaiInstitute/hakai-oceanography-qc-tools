@@ -267,7 +267,7 @@ def run_nutrient_auto_qc(data, selected_data, n_clicks):
     logger.debug("Run nutrient auto qc")
     if data is None:
         return [], None
-    df = pd.DataFrame(data)
+    df = pd.DataFrame(data).dropna(subset=nutrient_variables)
     # Convert collected to datetime object and ignore timezone
     df["collected"] = pd.to_datetime(df["collected"], utc=True).dt.tz_localize(None)
     if selected_data:
@@ -280,7 +280,10 @@ def run_nutrient_auto_qc(data, selected_data, n_clicks):
     df = run_nutrient_qc(df, overwrite_existing_flags=False)
     df = df.set_index("hakai_id").sort_index()
     pre_qc_df = (
-        pd.DataFrame(data).set_index("hakai_id").sort_index()[nutrient_variables_flags]
+        pd.DataFrame(data)
+        .dropna(subset=nutrient_variables)
+        .set_index("hakai_id")
+        .sort_index()[nutrient_variables_flags]
     )
 
     df_compare = (
