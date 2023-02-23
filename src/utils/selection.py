@@ -96,7 +96,6 @@ selection_interface = html.Div(
                                             ),
                                             dbc.ButtonGroup(
                                                 [
-
                                                     dbc.Button(
                                                         "Apply to all",
                                                         id="apply-quality-level-all",
@@ -137,6 +136,7 @@ selection_interface = html.Div(
     ]
 )
 
+
 @callback(
     Output("selection-interface", "is_open"),
     Input("selected-data-table", "data"),
@@ -161,17 +161,18 @@ def show_selection_interace(
             Input({"id": "selected-data", "source": "figure"}, "data"),
             Input({"id": "selected-data", "source": "auto-qc"}, "data"),
         ],
-        Input("apply-quality-level-all","n_clicks"),
-        Input("quality-level-selector","value")
+        Input("apply-quality-level-all", "n_clicks"),
+        Input("quality-level-selector", "value"),
     ],
 )
-def update_selected_data(selected_data, newly_selected,apply_quality_level,quality_level):
-
+def update_selected_data(
+    selected_data, newly_selected, apply_quality_level, quality_level
+):
     if apply_quality_level and ctx.triggered_id == "apply-quality-level-all":
         df = pd.DataFrame(selected_data)
-        df['quality_level'] =  quality_level
+        df["quality_level"] = quality_level
         return df.to_dict("records")
-    
+
     logger.debug(
         "updated selection data: selected=%s, newly_selected=%s",
         selected_data,
