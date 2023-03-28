@@ -266,10 +266,13 @@ def get_contour(df, x, y, color, x_interp_limit=3, y_interp_limit=4):
 def run_nutrient_auto_qc(data, selected_data, n_clicks):
     logger.debug("Run nutrient auto qc")
     if data is None:
+        logger.debug("No data to qc")
         return [], None
     df = pd.DataFrame(data).dropna(subset=nutrient_variables)
     # Convert collected to datetime object and ignore timezone
     df["collected"] = pd.to_datetime(df["collected"], utc=True).dt.tz_localize(None)
+    pre_qc_df = df.copy()
+
     if selected_data:
         df = update_dataframe(
             df, pd.DataFrame(selected_data), on="hakai_id", how="left"
@@ -277,20 +280,19 @@ def run_nutrient_auto_qc(data, selected_data, n_clicks):
     nutrient_variables_flags = [
         get_hakai_variable_flag(var) for var in nutrient_variables
     ]
+    # Run QC
     df = run_nutrient_qc(df, overwrite_existing_flags=False)
-    df = df.set_index("hakai_id").sort_index()
+
+    # Standardize flag tables
+    df = df[["hakai_id"] + nutrient_variables_flags].groupby("hakai_id").first()
     pre_qc_df = (
-        pd.DataFrame(data)
-        .dropna(subset=nutrient_variables)
-        .set_index("hakai_id")
-        .sort_index()[nutrient_variables_flags]
+        pre_qc_df[["hakai_id"] + nutrient_variables_flags].groupby("hakai_id").first()
     )
 
-    df_compare = (
-        df[nutrient_variables_flags]
-        .compare(pre_qc_df)
-        .swaplevel(axis="columns")["self"]
-    )
+
+    # Compare prior and after qc results
+    df_compare = df.compare(pre_qc_df).swaplevel(axis="columns")["self"]
+
     # Return just the flags that have been updated
     return (
         df_compare[nutrient_variables_flags].reset_index().to_dict("records"),
