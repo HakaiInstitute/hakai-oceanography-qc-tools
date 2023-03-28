@@ -207,7 +207,7 @@ def get_timeseries_plot(df, **kwargs):
     default_inputs = dict(
         x="collected",
         color_discrete_map=flag_color_map,
-        hover_data=["hakai_id"],
+        hover_data=["hakai_id", "line_out_depth"],
         labels=config["VARIABLES_LABEL"],
     )
     default_inputs.update(kwargs)
