@@ -289,7 +289,6 @@ def run_nutrient_auto_qc(data, selected_data, n_clicks):
         pre_qc_df[["hakai_id"] + nutrient_variables_flags].groupby("hakai_id").first()
     )
 
-
     # Compare prior and after qc results
     df_compare = df.compare(pre_qc_df).swaplevel(axis="columns")["self"]
 
