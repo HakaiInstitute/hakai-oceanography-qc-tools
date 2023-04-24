@@ -96,12 +96,7 @@ navbar = dbc.NavbarSimple(
 data_interface = dbc.Collapse(
     [
         dcc.Dropdown(id="variable", clearable=False, className="selection-box"),
-        dcc.Dropdown(
-            id="line-out-depth-selector",
-            multi=True,
-            className="selection-box",
-            placeholder="line out depth(s)",
-        ),
+        html.Div(id="dataframe-subsets"),
     ],
     id="data-selection-interface",
     className="data-selection-interface",

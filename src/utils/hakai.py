@@ -125,7 +125,7 @@ def review_input_credentials(credentials):
 @callback(
     Output("dataframe", "data"),
     Output("variable", "options"),
-    Output("line-out-depth-selector", "options"),
+    Output("dataframe-subsets", "children"),
     Output("toast-container", "children"),
     Input("location", "pathname"),
     Input("location", "search"),
@@ -162,12 +162,23 @@ def get_hakai_data(path, query, credentials):
         return None, None, None, _make_toast_error("No data available")
     logger.debug("result: %s", pd.DataFrame(result).head())
 
-    # Review data to extract needed data
+    # Extract subsets
     df = pd.DataFrame(result)
-    if "line_out_depth" in df:
-        line_out_depths = df["line_out_depth"].drop_duplicates().sort_values().to_list()
+    if path == "/nutrients":
+        subset_variables = ["site_id", "line_out_depth"]
     else:
-        line_out_depths = None
+        subset_variables = {}
+    subsets = {var: df[var].unique() for var in subset_variables}
+    subset_selection = [
+        dcc.Dropdown(
+            id={"type": "dataframe-subset", "subset": key},
+            options=options,
+            multi=True,
+            className="selection-box",
+            placeholder=key,
+        )
+        for key, options in subsets.items()
+    ]
 
     variables = [
         {"label": config["VARIABLES_LABEL"].get(var, var), "value": var}
@@ -175,5 +186,5 @@ def get_hakai_data(path, query, credentials):
         if var in config["PRIMARY_VARIABLES"]
     ]
     logger.debug("variables available %s", variables)
-    logger.debug("line_out_depths available %s", line_out_depths)
-    return result, variables, line_out_depths, None
+    logger.debug("subsets available %s", subset_variables)
+    return result, variables, subset_selection, None

@@ -102,7 +102,8 @@ layout = html.Div(
     Input("variable", "value"),
     Input("selected-data-table", "data"),
     Input({"page": "nutrient", "type": "figure-type-selector"}, "value"),
-    Input("line-out-depth-selector", "value"),
+    Input({"type": "dataframe-subset", "subset": ALL}, "placeholder"),
+    Input({"type": "dataframe-subset", "subset": ALL}, "value"),
     Input("nutrients-facet-columns", "value"),
     Input("nutrients-facet-rows", "value"),
 )
@@ -111,7 +112,8 @@ def generate_figure(
     variable,
     selected_data,
     figure_type,
-    line_out_depths,
+    subset_vars,
+    subsets,
     facet_col,
     facet_row,
 ):
@@ -121,15 +123,24 @@ def generate_figure(
 
     # transform data for plotting
     logger.info(
-        "Generating %s figure for line_out_depths=%s", variable, line_out_depths
+        "Generating %s figure for subsets=%s", variable, zip(subset_vars, subsets)
     )
     df = pd.DataFrame(data)
     px_kwargs = {"facet_col": facet_col, "facet_row": facet_row}
     px_kwargs = {
         key: value if value != "" else None for key, value in px_kwargs.items()
     }
-    if line_out_depths and figure_type != "contour":
-        df = df.query("line_out_depth in @line_out_depths").copy()
+    filter_subsets = " and ".join(
+        [
+            f"{subset_var} in {subset}"
+            for subset_var, subset in zip(subset_vars, subsets)
+            if subset
+        ]
+    )
+
+    if filter_subsets:
+        logger.debug("filter data with: %s", filter_subsets)
+        df = df.query(filter_subsets).copy()
 
     # apply manual selection flags
     if selected_data:
