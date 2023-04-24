@@ -24,22 +24,11 @@ def get_flag_var(var):
 
 
 figure_radio_buttons = dbc.RadioItems(
-    id={"page": "nutrient", "type": "figure-type-selector"},
+    id="figure-type-selector",
     className="btn-group",
     inputClassName="btn-check",
     labelClassName="btn btn-outline-primary",
     labelCheckedClassName="active",
-    options=[
-        {"label": "Time Series", "value": "timeseries"},
-        {
-            "label": "Time Series Profiles",
-            "value": "timeseries-profiles",
-        },
-        {"label": "Contour Profiles", "value": "contour"},
-        {"label": "PO4 red-field", "value": "po4-rf"},
-        {"label": "SiO2 red-field", "value": "sio2-rf"},
-    ],
-    value="timeseries",
 )
 plot_inputs = dbc.Col(
     [
@@ -101,7 +90,7 @@ layout = html.Div(
     Input("dataframe", "data"),
     Input("variable", "value"),
     Input("selected-data-table", "data"),
-    Input({"page": "nutrient", "type": "figure-type-selector"}, "value"),
+    Input("figure-type-selector", "value"),
     Input({"type": "dataframe-subset", "subset": ALL}, "placeholder"),
     Input({"type": "dataframe-subset", "subset": ALL}, "value"),
     Input("nutrients-facet-columns", "value"),
@@ -308,3 +297,32 @@ def run_nutrient_auto_qc(data, selected_data, n_clicks):
         df_compare[nutrient_variables_flags].reset_index().to_dict("records"),
         None,
     )
+
+
+@callback(
+    Output("figure-type-selector", "options"),
+    Output("figure-type-selector", "value"),
+    Input("location", "pathname"),
+)
+def get_plot_types(path):
+    if path == "/nutrients":
+        return [
+            {"label": "Time Series", "value": "timeseries"},
+            {
+                "label": "Time Series Profiles",
+                "value": "timeseries-profiles",
+            },
+            {"label": "Contour Profiles", "value": "contour"},
+            {"label": "PO4 red-field", "value": "po4-rf"},
+            {"label": "SiO2 red-field", "value": "sio2-rf"},
+        ], "timeseries"
+    elif path == "/ctd":
+        return [
+            {"label": "Time Series", "value": "timeseries"},
+            {
+                "label": "Time Series Profiles",
+                "value": "timeseries-profiles",
+            },
+            {"label": "Contour Profiles", "value": "contour"},
+        ], "timeseries"
+    return []
