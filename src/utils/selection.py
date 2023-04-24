@@ -8,6 +8,8 @@ import pandas as pd
 from dash import ALL, Dash, Input, Output, State, callback, ctx, dash_table, dcc, html
 
 from hakai_qc.qc import update_dataframe
+from hakai_qc.flags import flag_color_map, get_hakai_variable_flag
+from hakai_qc.nutrients import nutrient_variables, run_nutrient_qc
 
 # from pages.nutrients import get_flag_var
 from utils.tools import load_config
@@ -84,7 +86,7 @@ selection_interface = html.Div(
                                                 color="primary",
                                             ),
                                         ],
-                                        className="d-grid gap-2 col-6 mx-auto",
+                                        className="d-grid gap-2 col-3 mx-auto",
                                     ),
                                     dbc.Col(
                                         [
@@ -106,7 +108,29 @@ selection_interface = html.Div(
                                                 className="me-1",
                                             ),
                                         ],
-                                        className="d-grid gap-2 col-6 mx-auto",
+                                        className="d-grid gap-2 col-3 mx-auto",
+                                    ),
+                                    dbc.Col(
+                                        [
+                                            html.H5("Run QC on"),
+                                            dbc.Select(
+                                                options=["unknown", "selection", "all"],
+                                                value="unknonn",
+                                                id="run-auto-qc-type",
+                                            ),
+                                            dbc.ButtonGroup(
+                                                [
+                                                    dbc.Button(
+                                                        "Apply to all",
+                                                        id="run-nutrient-auto-qc",
+                                                        outline=True,
+                                                        color="primary",
+                                                    ),
+                                                ],
+                                                className="me-1",
+                                            ),
+                                        ],
+                                        className="d-grid gap-2 col-3 mx-auto",
                                     ),
                                 ]
                             ),
@@ -132,7 +156,6 @@ selection_interface = html.Div(
             is_open=True,
             id="selection-interface",
         ),
-        dcc.Store(id={"id": "selected-data", "source": "figure"}),
     ]
 )
 
@@ -198,6 +221,49 @@ def update_selected_data(
         logger.debug("append selection source %s", source)
         df = update_dataframe(df, df_newly_selected, on=["hakai_id"], how="outer")
     return df.to_dict("records")
+
+
+@callback(
+    Output({"id": "selected-data", "source": "auto-qc"}, "data"),
+    Output("auto-qc-nutrient-spinner", "data"),
+    State("dataframe", "data"),
+    State("selected-data-table", "data"),
+    Input("run-nutrient-auto-qc", "n_clicks"),
+)
+def run_nutrient_auto_qc(data, selected_data, n_clicks):
+    logger.debug("Run nutrient auto qc")
+    if data is None:
+        logger.debug("No data to qc")
+        return [], None
+    df = pd.DataFrame(data).dropna(subset=nutrient_variables)
+    # Convert collected to datetime object and ignore timezone
+    df["collected"] = pd.to_datetime(df["collected"], utc=True).dt.tz_localize(None)
+    pre_qc_df = df.copy()
+
+    if selected_data:
+        df = update_dataframe(
+            df, pd.DataFrame(selected_data), on="hakai_id", how="left"
+        )
+    nutrient_variables_flags = [
+        get_hakai_variable_flag(var) for var in nutrient_variables
+    ]
+    # Run QC
+    df = run_nutrient_qc(df, overwrite_existing_flags=False)
+
+    # Standardize flag tables
+    df = df[["hakai_id"] + nutrient_variables_flags].groupby("hakai_id").first()
+    pre_qc_df = (
+        pre_qc_df[["hakai_id"] + nutrient_variables_flags].groupby("hakai_id").first()
+    )
+
+    # Compare prior and after qc results
+    df_compare = df.compare(pre_qc_df).swaplevel(axis="columns")["self"]
+
+    # Return just the flags that have been updated
+    return (
+        df_compare[nutrient_variables_flags].reset_index().to_dict("records"),
+        None,
+    )
 
 
 @callback(

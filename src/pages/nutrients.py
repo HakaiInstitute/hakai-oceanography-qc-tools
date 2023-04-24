@@ -11,11 +11,13 @@ logger = logging.getLogger(__name__)
 dash.register_page(__name__)
 
 from hakai_qc.flags import flag_color_map, get_hakai_variable_flag
-from hakai_qc.nutrients import run_nutrient_qc
+from hakai_qc.nutrients import (
+    run_nutrient_qc,
+    nutrient_variables,
+    variables_flag_mapping,
+)
 from utils.tools import load_config, update_dataframe
 
-variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
-nutrient_variables = ["no2_no3_um", "sio2", "po4"]
 config = load_config()
 
 
@@ -72,14 +74,10 @@ layout = html.Div(
                     figure_radio_buttons,
                     className="radio-group col-5 mx-auto",
                 ),
-                dbc.Col(
-                    dbc.Button("Run Auto-QC", id="run-nutrient-auto-qc"),
-                    width=2,
-                ),
+                dbc.Col(width=2),
             ]
         ),
         dcc.Graph(id={"type": "graph", "page": "nutrients"}, figure={}),
-        dcc.Store(id={"id": "selected-data", "source": "auto-qc"}),
     ]
 )
 
@@ -254,49 +252,6 @@ def get_contour(df, x, y, color, x_interp_limit=3, y_interp_limit=4):
         title=x, linecolor="black", mirror=True, ticks="outside", showline=True
     )
     return fig
-
-
-@callback(
-    Output({"id": "selected-data", "source": "auto-qc"}, "data"),
-    Output("auto-qc-nutrient-spinner", "data"),
-    State("dataframe", "data"),
-    State("selected-data-table", "data"),
-    Input("run-nutrient-auto-qc", "n_clicks"),
-)
-def run_nutrient_auto_qc(data, selected_data, n_clicks):
-    logger.debug("Run nutrient auto qc")
-    if data is None:
-        logger.debug("No data to qc")
-        return [], None
-    df = pd.DataFrame(data).dropna(subset=nutrient_variables)
-    # Convert collected to datetime object and ignore timezone
-    df["collected"] = pd.to_datetime(df["collected"], utc=True).dt.tz_localize(None)
-    pre_qc_df = df.copy()
-
-    if selected_data:
-        df = update_dataframe(
-            df, pd.DataFrame(selected_data), on="hakai_id", how="left"
-        )
-    nutrient_variables_flags = [
-        get_hakai_variable_flag(var) for var in nutrient_variables
-    ]
-    # Run QC
-    df = run_nutrient_qc(df, overwrite_existing_flags=False)
-
-    # Standardize flag tables
-    df = df[["hakai_id"] + nutrient_variables_flags].groupby("hakai_id").first()
-    pre_qc_df = (
-        pre_qc_df[["hakai_id"] + nutrient_variables_flags].groupby("hakai_id").first()
-    )
-
-    # Compare prior and after qc results
-    df_compare = df.compare(pre_qc_df).swaplevel(axis="columns")["self"]
-
-    # Return just the flags that have been updated
-    return (
-        df_compare[nutrient_variables_flags].reset_index().to_dict("records"),
-        None,
-    )
 
 
 @callback(

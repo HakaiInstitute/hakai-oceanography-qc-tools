@@ -1,6 +1,8 @@
 from hakai_qc.flags import flag_qartod_to_hakai, get_hakai_variable_flag
 from hakai_qc.qc import qartod_compare, qc_dataframe
 
+variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
+nutrient_variables = ["no2_no3_um", "sio2", "po4"]
 nutrients_qc_configs = {
     "-5 < line_out_depth < 50": """
         contexts:

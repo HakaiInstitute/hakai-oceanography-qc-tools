@@ -58,6 +58,8 @@ stores = html.Div(
         [
             dcc.Store(id="dataframe"),
             dcc.Store(id="selected-data"),
+            dcc.Store(id={"id": "selected-data", "source": "auto-qc"}),
+            dcc.Store(id={"id": "selected-data", "source": "figure"}),
             dcc.Store(id="main-graph-spinner"),
             dcc.Store(id="auto-qc-nutrient-spinner"),
         ],
