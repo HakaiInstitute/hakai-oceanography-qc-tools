@@ -36,10 +36,11 @@
   }
 
   .selection-area {
-    max-width: 750px;
+    width: 70%;
+    max-width: 900px;
+    min-width: 400px;
     margin: 5px;
     vertical-align: center;
-    height: 60px;
     border: 1px lightgray solid;
     border-radius: 10px;
     place-items: left;
