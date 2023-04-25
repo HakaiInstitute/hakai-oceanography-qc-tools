@@ -202,12 +202,6 @@ def update_selected_data(selected_data, newly_selected):
     return df.to_dict("records")
 
 
-def add_flag_selection(df_new, df_previous, on):
-    if df_previous:
-        df_new = update_dataframe(df_previous, df_new, on=on)
-    return df_new.reset_index().to_dict("records")
-
-
 def get_selected_records_from_graph(graph_selected, custom_data_variables):
     available_selection = [graph for graph in graph_selected if graph]
     if not available_selection:
@@ -246,6 +240,15 @@ def apply_to_selection(
     manually_selected_data,
     auto_qced_data,
 ):
+    def _add_flag_selection(df_new, df_previous):
+        if df_previous is not None:
+            return update_dataframe(df_previous, df_new, on=on)
+        return df_new
+
+    def _return_json(df):
+        return None if df is None else df.reset_index().to_dict("records")
+
+    on = ["hakai_id"]
     if not variable:
         return auto_qced_data, manually_selected_data
 
@@ -260,44 +263,34 @@ def apply_to_selection(
 
     # Update data with already selected data
     data = pd.DataFrame(data).set_index(["hakai_id"])
-    if manually_selected_data:
-        data = update_dataframe(
-            data, pd.DataFrame(manually_selected_data), on=["hakai_id"]
-        )
-    if auto_qced_data:
-        data = update_dataframe(data, pd.DataFrame(auto_qced_data), on=["hakai_id"])
+    manually_selected_data = (
+        pd.DataFrame(manually_selected_data) if manually_selected_data else None
+    )
+    auto_qced_data = pd.DataFrame(auto_qced_data) if auto_qced_data else None
+    if manually_selected_data is not None:
+        data = update_dataframe(data, manually_selected_data, on=["hakai_id"])
+    if auto_qced_data is not None:
+        data = update_dataframe(data, auto_qced_data, on=["hakai_id"])
 
     # Apply action
     logger.debug("Apply %s to data[%s=='%s'] = %s", action, flag_var, to, apply_value)
     if action in ("Flag", "Quality Level") and to == "selection":
         logger.debug("Apply '%s'=%s to selection", action, apply_value)
-        manually_selected_data = add_flag_selection(
-            graph_selected.assign(**{flag_var:apply_value}).set_index(["hakai_id"]),
-            pd.DataFrame(manually_selected_data) if manually_selected_data else None,
-            ['hakai_id']
+        manually_selected_data = _add_flag_selection(
+            graph_selected.assign(**{flag_var: apply_value}),
+            manually_selected_data,
         )
     elif action in ("Flag", "Quality Level"):
-        logger.debug("to=%s", to)
         filter_by = f"{flag_var} == '{to}'" if to != "UKN" else f"{flag_var}.isna()"
-        logger.debug("Filter data by %s", filter_by)
-        selected_data = data.query(filter_by)
-        if selected_data.empty:
-            return manually_selected_data, auto_qced_data
-        selected_data.loc[selected_data.index, flag_var] = apply_value
+        logger.debug(
+            "Filter data by %s and apply %s=%s", filter_by, flag_var, apply_value
+        )
+        selected_data = data.query(filter_by).assign(**{flag_var: apply_value})
         logger.debug("Selected %s records", len(selected_data))
-        if manually_selected_data:
-            manually_selected_data = update_dataframe(
-                manually_selected_data,
-                selected_data[flag_var],
-                on=["hakai_id"],
-            )
-            manually_selected_data = manually_selected_data.reset_index().to_dict(
-                "records"
-            )
-        else:
-            manually_selected_data = (
-                selected_data[flag_var].reset_index().to_dict("records")
-            )
+        manually_selected_data = _add_flag_selection(
+            selected_data[flag_var], manually_selected_data
+        )
+
     elif action == "Automated QC":
         logger.debug("Run Automated QC")
         data = data.dropna(subset=nutrient_variables).reset_index()
@@ -315,9 +308,9 @@ def apply_to_selection(
 
         # Compare prior and after qc results
         df_compare = auto_qced_data.compare(data).swaplevel(axis="columns")
-        auto_qced_data = df_compare["self"].reset_index().to_dict("records")
+        auto_qced_data = df_compare["self"]
 
-    return manually_selected_data, auto_qced_data
+    return _return_json(manually_selected_data), _return_json(auto_qced_data)
 
 
 @callback(
