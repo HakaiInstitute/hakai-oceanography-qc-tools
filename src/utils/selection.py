@@ -167,7 +167,7 @@ selection_interface = html.Div(
     State("selection-interface", "is_open"),
     Input({"type": "graph", "page": ALL}, "selectedData"),
 )
-def show_selection_interace(
+def show_selection_interface(
     selected_data_table, show_selection, is_open, graph_selection
 ):
     trigger = ctx.triggered_id
