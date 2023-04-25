@@ -272,7 +272,7 @@ def apply_to_selection(
     if action in ("Flag", "Quality Level") and to == "selection":
         logger.debug("Apply '%s'=%s to selection", action, apply_value)
         manually_selected_data = add_flag_selection(
-            graph_selected.assign(flag_var=apply_value).set_index(["hakai_id"]),
+            graph_selected.assign(**{flag_var:apply_value}).set_index(["hakai_id"]),
             pd.DataFrame(manually_selected_data) if manually_selected_data else None,
             ['hakai_id']
         )
