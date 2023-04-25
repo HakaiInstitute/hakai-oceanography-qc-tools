@@ -241,8 +241,17 @@ def apply_to_selection(
     auto_qced_data,
 ):
     def _add_flag_selection(df_new, df_previous):
+        logger.debug(
+            "Update len(%s)\n%s \n\n len(%s)\n%s",
+            len(df_new) if df_new is not None else None,
+            df_new,
+            len(df_previous) if df_previous is not None else None,
+            df_previous,
+        )
         if df_previous is not None:
             return update_dataframe(df_previous, df_new, on=on)
+        elif df_new is None or df_new.empty:
+            return df_previous
         return df_new
 
     def _return_json(df):
@@ -259,14 +268,20 @@ def apply_to_selection(
     if graph_selected.empty and to == "selection":
         logger.debug("no selection")
         return manually_selected_data, auto_qced_data
+    elif not graph_selected.empty:
+        graph_selected = graph_selected.set_index(on)
     logger.debug("Data selected = %s", len(graph_selected))
 
     # Update data with already selected data
     data = pd.DataFrame(data).set_index(["hakai_id"])
     manually_selected_data = (
-        pd.DataFrame(manually_selected_data) if manually_selected_data else None
+        pd.DataFrame(manually_selected_data).set_index(["hakai_id"])
+        if manually_selected_data
+        else None
     )
-    auto_qced_data = pd.DataFrame(auto_qced_data) if auto_qced_data else None
+    auto_qced_data = (
+        pd.DataFrame(auto_qced_data).set_index(["hakai_id"]) if auto_qced_data else None
+    )
     if manually_selected_data is not None:
         data = update_dataframe(data, manually_selected_data, on=["hakai_id"])
     if auto_qced_data is not None:
@@ -286,10 +301,12 @@ def apply_to_selection(
             "Filter data by %s and apply %s=%s", filter_by, flag_var, apply_value
         )
         selected_data = data.query(filter_by).assign(**{flag_var: apply_value})
-        logger.debug("Selected %s records", len(selected_data))
-        manually_selected_data = _add_flag_selection(
-            selected_data[flag_var], manually_selected_data
-        )
+        if not selected_data.empty:
+            manually_selected_data = _add_flag_selection(
+                selected_data[flag_var], manually_selected_data
+            )
+        else:
+            logger.debug("Filter returned no data")
 
     elif action == "Automated QC":
         logger.debug("Run Automated QC")
