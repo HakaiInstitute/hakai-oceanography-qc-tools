@@ -34,3 +34,24 @@
     align-content: center;
     display:flex;
   }
+
+  .selection-area {
+    max-width: 750px;
+    margin: 5px;
+    vertical-align: center;
+    height: 60px;
+    border: 1px lightgray solid;
+    border-radius: 10px;
+    place-items: left;
+    position:relative;
+    padding: 5px;
+  }
+  .selection-action {
+    min-width: 130px;
+  }
+  .selection-apply {
+    min-width: 200px;
+  }
+  .selection-to {
+    min-width: 130px;
+  }

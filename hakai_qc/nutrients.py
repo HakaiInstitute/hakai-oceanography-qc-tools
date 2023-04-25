@@ -70,10 +70,12 @@ nutrients_qc_bdl = {
 
 def run_nutrient_qc(
     df,
-    config=nutrients_qc_configs,
+    config=None,
     groupby=["site_id", "line_out_depth"],
     overwrite_existing_flags=False,
 ):
+    if config is None:
+        config = nutrients_qc_configs
     """Run Hakai Nutrient automated QC"""
     # Run QARTOD tests
     original_columns = df.columns

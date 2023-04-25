@@ -16,6 +16,7 @@ from utils.tools import load_config
 
 config = load_config()
 variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
+nutrient_variables_flags = [get_hakai_variable_flag(var) for var in nutrient_variables]
 quality_levels = [
     "Raw",
     "Technician",
@@ -62,118 +63,105 @@ selection_table = dash_table.DataTable(
     ],
     style_table={"minWidth": "200px", "float": "center"},
 )
-selection_interface = html.Div(
+selection_interface = dbc.Collapse(
     [
-        dbc.Collapse(
-            [
-                dbc.Card(
-                    dbc.CardBody(
-                        [
-                            dbc.Row(
-                                [
-                                    dbc.Col(
-                                        [
-                                            html.H5("Apply flag to selection"),
-                                            dbc.Select(
-                                                options=["AV", "SVC", "SVD"],
-                                                value="AV",
-                                                id="selection-flag",
-                                            ),
-                                            dbc.Button(
-                                                "Apply Flag",
-                                                id="apply-selection-flag",
-                                                outline=True,
-                                                color="primary",
-                                            ),
-                                        ],
-                                        className="d-grid gap-2 col-3 mx-auto",
-                                    ),
-                                    dbc.Col(
-                                        [
-                                            html.H5("Apply Quality Level"),
-                                            dbc.Select(
-                                                options=quality_levels,
-                                                value="Technicianmr",
-                                                id="quality-level-selector",
-                                            ),
-                                            dbc.ButtonGroup(
-                                                [
-                                                    dbc.Button(
-                                                        "Apply to all",
-                                                        id="apply-quality-level-all",
-                                                        outline=True,
-                                                        color="primary",
-                                                    ),
-                                                ],
-                                                className="me-1",
-                                            ),
-                                        ],
-                                        className="d-grid gap-2 col-3 mx-auto",
-                                    ),
-                                    dbc.Col(
-                                        [
-                                            html.H5("Run QC on"),
-                                            dbc.Select(
-                                                options=["unknown", "selection", "all"],
-                                                value="unknonn",
-                                                id="run-auto-qc-type",
-                                            ),
-                                            dbc.ButtonGroup(
-                                                [
-                                                    dbc.Button(
-                                                        "Apply to all",
-                                                        id="run-nutrient-auto-qc",
-                                                        outline=True,
-                                                        color="primary",
-                                                    ),
-                                                ],
-                                                className="me-1",
-                                            ),
-                                        ],
-                                        className="d-grid gap-2 col-3 mx-auto",
-                                    ),
-                                ]
-                            ),
-                        ],
+        dbc.Form(
+            dbc.Row(
+                [
+                    dbc.Label("Apply", width="auto"),
+                    dbc.Col(
+                        dcc.Dropdown(
+                            options=[
+                                "Flag",
+                                "Quality Level",
+                                "Automated QC",
+                            ],
+                            value="Flag",
+                            id="selection-action",
+                            clearable=False,
+                            className="selection-action",
+                        ),
                     ),
-                    className="apply-flag-section",
-                ),
-                dbc.Button(
-                    html.Div(
-                        [
-                            "Download .xlsx",
-                            dbc.Spinner(
-                                html.Div(id="hakai-excel-load-spinner"),
-                                size="lg",
-                            ),
-                        ]
+                    dbc.Label("=", width="auto"),
+                    dbc.Col(
+                        dcc.Dropdown(
+                            id="selection-apply",
+                            clearable=False,
+                            className="selection-apply",
+                        ),
                     ),
-                    id="download-qc-excel-button",
-                ),
-                dcc.Download(id="download-qc-excel"),
-                selection_table,
-            ],
-            is_open=True,
-            id="selection-interface",
+                    dbc.Label("to all", width="auto"),
+                    dbc.Col(
+                        dcc.Dropdown(
+                            id="selection-to", clearable=False, className="selection-to"
+                        ),
+                    ),
+                    dbc.Col(
+                        dbc.Button(
+                            "Apply",
+                            id="selection-apply-button",
+                            color="primary",
+                        ),
+                        width="auto",
+                    ),
+                ],
+                className="g-2 selection-area",
+            )
         ),
-    ]
+        dbc.Button(
+            html.Div(
+                [
+                    "Download .xlsx",
+                    dbc.Spinner(
+                        html.Div(id="hakai-excel-load-spinner"),
+                        size="lg",
+                    ),
+                ]
+            ),
+            id="download-qc-excel-button",
+        ),
+        dcc.Download(id="download-qc-excel"),
+        selection_table,
+    ],
+    is_open=True,
+    id="selection-interface",
 )
 
 
 @callback(
-    Output("selection-interface", "is_open"),
-    Input("selected-data-table", "data"),
-    Input("show-selection", "n_clicks"),
-    State("selection-interface", "is_open"),
+    Output("selection-apply", "options"),
+    Output("selection-apply", "value"),
+    Output("selection-to", "value"),
+    Output("selection-to", "options"),
+    Input("selection-action", "value"),
     Input({"type": "graph", "page": ALL}, "selectedData"),
 )
-def show_selection_interface(
-    selected_data_table, show_selection, is_open, graph_selection
-):
-    trigger = ctx.triggered_id
-    if trigger == "show-selection":
-        return not is_open
-    return bool(selected_data_table) or bool(graph_selection)
+def set_selection_apply_options(action, dataSelected):
+    no_selection = not bool([selected for selected in dataSelected if selected])
+    apply_to = [
+        {
+            "label": "Selection",
+            "value": "selection",
+            "disabled": no_selection,
+        },
+    ]
+    if action == "Flag":
+        apply_to += [{"label": "Unknown", "value": "UKN"}]
+        return (
+            ["AV", "SVC", "SVD"],
+            "AV",
+            "UKN" if no_selection else "selection",
+            apply_to,
+        )
+    elif action == "Quality Level":
+        apply_to += [{"label": ql, "value": ql} for ql in quality_levels]
+        return quality_levels, quality_levels[0], "raw", apply_to
+    else:
+        apply_to += [
+            {"label": "Unknown", "value": "UKN"},
+            {"label": "All", "value": "all"},
+        ]
+        return [], None, "UKN" if no_selection else "selection", apply_to
 
 
 @callback(
@@ -184,18 +172,9 @@ def show_selection_interface(
             Input({"id": "selected-data", "source": "figure"}, "data"),
             Input({"id": "selected-data", "source": "auto-qc"}, "data"),
         ],
-        Input("apply-quality-level-all", "n_clicks"),
-        Input("quality-level-selector", "value"),
     ],
 )
-def update_selected_data(
-    selected_data, newly_selected, apply_quality_level, quality_level
-):
-    if apply_quality_level and ctx.triggered_id == "apply-quality-level-all":
-        df = pd.DataFrame(selected_data)
-        df["quality_level"] = quality_level
-        return df.to_dict("records")
-
+def update_selected_data(selected_data, newly_selected):
     logger.debug(
         "updated selection data: selected=%s, newly_selected=%s",
         selected_data,
@@ -223,79 +202,122 @@ def update_selected_data(
     return df.to_dict("records")
 
 
-@callback(
-    Output({"id": "selected-data", "source": "auto-qc"}, "data"),
-    Output("auto-qc-nutrient-spinner", "data"),
-    State("dataframe", "data"),
-    State("selected-data-table", "data"),
-    Input("run-nutrient-auto-qc", "n_clicks"),
-)
-def run_nutrient_auto_qc(data, selected_data, n_clicks):
-    logger.debug("Run nutrient auto qc")
-    if data is None:
-        logger.debug("No data to qc")
-        return [], None
-    df = pd.DataFrame(data).dropna(subset=nutrient_variables)
-    # Convert collected to datetime object and ignore timezone
-    df["collected"] = pd.to_datetime(df["collected"], utc=True).dt.tz_localize(None)
-    pre_qc_df = df.copy()
+def add_flag_selection(df_new, df_previous, on):
+    if df_previous:
+        df_new = update_dataframe(df_previous, df_new, on=on)
+    return df_new.reset_index().to_dict("records")
 
-    if selected_data:
-        df = update_dataframe(
-            df, pd.DataFrame(selected_data), on="hakai_id", how="left"
-        )
-    nutrient_variables_flags = [
-        get_hakai_variable_flag(var) for var in nutrient_variables
-    ]
-    # Run QC
-    df = run_nutrient_qc(df, overwrite_existing_flags=False)
 
-    # Standardize flag tables
-    df = df[["hakai_id"] + nutrient_variables_flags].groupby("hakai_id").first()
-    pre_qc_df = (
-        pre_qc_df[["hakai_id"] + nutrient_variables_flags].groupby("hakai_id").first()
-    )
-
-    # Compare prior and after qc results
-    df_compare = df.compare(pre_qc_df).swaplevel(axis="columns")["self"]
-
-    # Return just the flags that have been updated
-    return (
-        df_compare[nutrient_variables_flags].reset_index().to_dict("records"),
-        None,
+def get_selected_records_from_graph(graph_selected, custom_data_variables):
+    available_selection = [graph for graph in graph_selected if graph]
+    if not available_selection:
+        return pd.DataFrame()
+    return pd.DataFrame(
+        [
+            point["customdata"][: len(custom_data_variables)]
+            for graph in available_selection
+            for point in graph["points"]
+        ],
+        columns=custom_data_variables,
     )
 
 
 @callback(
     Output({"id": "selected-data", "source": "figure"}, "data"),
-    Input("apply-selection-flag", "n_clicks"),
+    Output({"id": "selected-data", "source": "auto-qc"}, "data"),
+    Input("selection-apply-button", "n_clicks"),
+    State("selection-action", "value"),
+    State("selection-apply", "value"),
+    State("selection-to", "value"),
     State({"type": "graph", "page": ALL}, "selectedData"),
-    State("selected-data-table", "data"),
-    State("selection-flag", "value"),
     State("variable", "value"),
+    State("dataframe", "data"),
+    State({"id": "selected-data", "source": "figure"}, "data"),
+    State({"id": "selected-data", "source": "auto-qc"}, "data"),
 )
-def add_flag_selection(
-    click, graphs_selected_flag, previously_selected_flag, flag_to_apply, variable
+def apply_to_selection(
+    apply,
+    action,
+    apply_value,
+    to,
+    graph_selections,
+    variable,
+    data,
+    manually_selected_data,
+    auto_qced_data,
 ):
-    graphs_selected_flag = [graph for graph in graphs_selected_flag if graph]
-    if not graphs_selected_flag:
-        return previously_selected_flag
+    if not variable:
+        return auto_qced_data, manually_selected_data
 
-    df = pd.DataFrame(
-        [
-            {
-                "hakai_id": point["customdata"][0],
-                variables_flag_mapping.get(variable, variable + "_flag"): flag_to_apply,
-            }
-            for graph in graphs_selected_flag
-            for point in graph["points"]
-        ]
-    ).set_index("hakai_id")
+    flag_var = get_flag_var(variable) if action == "Flag" else "quality_level"
 
-    if previously_selected_flag:
-        df_previous = pd.DataFrame(previously_selected_flag).set_index("hakai_id")
-        df = update_dataframe(df_previous, df, on=["hakai_id"])
-    return df.reset_index().to_dict("records")
+    # Get record list selected
+    graph_selected = get_selected_records_from_graph(graph_selections, ["hakai_id"])
+    if graph_selected.empty and to == "selection":
+        logger.debug("no selection")
+        return manually_selected_data, auto_qced_data
+    logger.debug("Data selected = %s", len(graph_selected))
+
+    # Update data with already selected data
+    data = pd.DataFrame(data).set_index(["hakai_id"])
+    if manually_selected_data:
+        data = update_dataframe(
+            data, pd.DataFrame(manually_selected_data), on=["hakai_id"]
+        )
+    if auto_qced_data:
+        data = update_dataframe(data, pd.DataFrame(auto_qced_data), on=["hakai_id"])
+
+    # Apply action
+    logger.debug("Apply %s to data[%s=='%s'] = %s", action, flag_var, to, apply_value)
+    if action in ("Flag", "Quality Level") and to == "selection":
+        logger.debug("Apply '%s'=%s to selection", action, apply_value)
+        manually_selected_data = add_flag_selection(
+            graph_selected.assign(flag_var=apply_value).set_index(["hakai_id"]),
+            pd.DataFrame(manually_selected_data) if manually_selected_data else None,
+            ['hakai_id']
+        )
+    elif action in ("Flag", "Quality Level"):
+        logger.debug("to=%s", to)
+        filter_by = f"{flag_var} == '{to}'" if to != "UKN" else f"{flag_var}.isna()"
+        logger.debug("Filter data by %s", filter_by)
+        selected_data = data.query(filter_by)
+        if selected_data.empty:
+            return manually_selected_data, auto_qced_data
+        selected_data.loc[selected_data.index, flag_var] = apply_value
+        logger.debug("Selected %s records", len(selected_data))
+        if manually_selected_data:
+            manually_selected_data = update_dataframe(
+                manually_selected_data,
+                selected_data[flag_var],
+                on=["hakai_id"],
+            )
+            manually_selected_data = manually_selected_data.reset_index().to_dict(
+                "records"
+            )
+        else:
+            manually_selected_data = (
+                selected_data[flag_var].reset_index().to_dict("records")
+            )
+    elif action == "Automated QC":
+        logger.debug("Run Automated QC")
+        data = data.dropna(subset=nutrient_variables).reset_index()
+        data["collected"] = pd.to_datetime(data["collected"], utc=True).dt.tz_localize(
+            None
+        )
+        auto_qced_data = run_nutrient_qc(data, overwrite_existing_flags=True)
+        # Standardize flag tables
+        auto_qced_data = (
+            auto_qced_data[["hakai_id"] + nutrient_variables_flags]
+            .groupby("hakai_id")
+            .first()
+        )
+        data = data[["hakai_id"] + nutrient_variables_flags].groupby("hakai_id").first()
+
+        # Compare prior and after qc results
+        df_compare = auto_qced_data.compare(data).swaplevel(axis="columns")
+        auto_qced_data = df_compare["self"].reset_index().to_dict("records")
+
+    return manually_selected_data, auto_qced_data
 
 
 @callback(

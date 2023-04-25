@@ -169,6 +169,9 @@ def generate_figure(
     fig.update_layout(
         height=600,
     )
+    fig.for_each_trace(
+        lambda t: t.update(name=config["VARIABLES_LABEL"].get(t.name, t.name))
+    )
     fig.update_layout(modebar=dict(color=config["NAVBAR_COLOR"]), dragmode="select")
     return fig, None
 

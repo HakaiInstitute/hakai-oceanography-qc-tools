@@ -29,4 +29,10 @@ VARIABLES_LABEL:
     'no2_no3_um': 'NO2 NO3 (uM)',
     'line_out_depth': 'Bottle Target Depth (m)',
     'collected': 'Collection Time',
+    'AV': 'Accepted Value',
+    'UKN': 'Unknown',
+    'NA': 'Not Available',
+    'SVC': 'Suspicious Value Careful',
+    'SVD': 'Suspicious Value Discard',
+    'BDL': 'Below Detection Limit',
   }
