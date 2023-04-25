@@ -8,12 +8,9 @@ import plotly.graph_objects as go
 from dash import ALL, Input, Output, State, callback, ctx, dcc, html
 
 logger = logging.getLogger(__name__)
-dash.register_page(__name__)
 
-from hakai_qc.flags import flag_color_map, get_hakai_variable_flag
+from hakai_qc.flags import flag_color_map
 from hakai_qc.nutrients import (
-    run_nutrient_qc,
-    nutrient_variables,
     variables_flag_mapping,
 )
 from utils.tools import load_config, update_dataframe

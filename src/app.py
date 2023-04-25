@@ -15,6 +15,8 @@ from utils import hakai
 from utils.hakai_plotly_template import hakai_template
 from utils.tools import load_config
 
+from figure import *
+
 # load hakai template
 pio.templates["hakai"] = hakai_template
 pio.templates.default = "hakai"
@@ -47,8 +49,8 @@ logger.addHandler(fileHandler)
 app = Dash(
     config["APP_NAME"],
     external_stylesheets=[dbc.themes.BOOTSTRAP],
-    use_pages=True,
-    pages_folder="src/pages",
+    # use_pages=True,
+    # pages_folder="src/pages",
     assets_folder="src/assets",
 )
 
@@ -72,22 +74,10 @@ stores = html.Div(
 navbar = dbc.NavbarSimple(
     children=[
         stores,
-        *[
-            dbc.NavItem(dbc.NavLink(page["name"], href=page["relative_path"]))
-            for page in dash.page_registry.values()
-        ],
-        dbc.DropdownMenu(
-            children=[
-                dbc.DropdownMenuItem("Query", href="#query"),
-                dbc.DropdownMenuItem(
-                    "Show Selection", href="#selection", id="show-selection"
-                ),
-                dbc.DropdownMenuItem("Log In", id="log-in"),
-            ],
-            nav=True,
-            in_navbar=True,
-            label="More",
-        ),
+        dbc.NavItem(dbc.NavLink("Nutrients", href="/nutrients")),
+        dbc.NavItem(dbc.NavLink("CTD", href="/ctd", disabled=True)),
+        dbc.NavItem(dbc.NavLink("Chlorophyll", href="/chlorophyll", disabled=True)),
+        dbc.NavItem(dbc.NavLink("Log in", id="log-in")),
     ],
     brand="Hakai Quality Control",
     brand_href="#",
@@ -121,7 +111,17 @@ app.layout = html.Div(
     [
         navbar,
         data_interface,
-        dash.page_container,
+        dbc.Row(
+            [
+                dbc.Col(plot_inputs, width=2),
+                dbc.Col(
+                    figure_radio_buttons,
+                    className="radio-group col-5 mx-auto",
+                ),
+                dbc.Col(width=2),
+            ]
+        ),
+        dcc.Graph(id={"type": "graph", "page": "nutrients"}, figure={}),
         selection.selection_interface,
         hakai.hakai_api_credentials_modal,
         dcc.Location(id="location"),
