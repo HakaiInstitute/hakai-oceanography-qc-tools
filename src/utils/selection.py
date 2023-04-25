@@ -325,7 +325,21 @@ def apply_to_selection(
 
         # Compare prior and after qc results
         df_compare = auto_qced_data.compare(data).swaplevel(axis="columns")
-        auto_qced_data = df_compare["self"]
+        if to == "selection":
+            logger.debug("Apply qc to selection: %s", graph_selected.index.values)
+            auto_qced_data = df_compare["self"].query(
+                "hakai_id in @graph_selected.index.values"
+            )[nutrient_variables_flags]
+            logger.debug("Qc update %s records", len(auto_qced_data))
+        elif to == "UKN":
+            logger.debug("Apply qc to unknown %s", nutrient_variables_flags)
+            auto_qced_data = df_compare.loc[
+                df_compare["other"][nutrient_variables_flags].isna().all(axis="columns")
+            ]["self"][nutrient_variables_flags]
+            logger.debug("Qc update %s records", len(auto_qced_data))
+        elif to == "all":
+            logger.debug("Apply ")
+            auto_qced_data = df_compare["self"][nutrient_variables_flags]
 
     return _return_json(manually_selected_data), _return_json(auto_qced_data)
 
