@@ -18,10 +18,6 @@ from utils.tools import load_config, update_dataframe
 config = load_config()
 
 
-def get_flag_var(var):
-    return variables_flag_mapping.get(var, var + "_flag")
-
-
 figure_radio_buttons = dbc.RadioItems(
     id="figure-type-selector",
     className="btn-group",
@@ -79,6 +75,10 @@ layout = html.Div(
 )
 
 
+def get_color_range(var, prc=[0.02, 0.98]):
+    return var.quantile(prc).values
+
+
 @callback(
     Output({"type": "graph", "page": "nutrients"}, "figure"),
     Output("main-graph-spinner", "data"),
@@ -90,6 +90,7 @@ layout = html.Div(
     Input({"type": "dataframe-subset", "subset": ALL}, "value"),
     Input("nutrients-facet-columns", "value"),
     Input("nutrients-facet-rows", "value"),
+    Input("location", "pathname"),
 )
 def generate_figure(
     data,
@@ -100,17 +101,36 @@ def generate_figure(
     subsets,
     facet_col,
     facet_row,
+    path,
 ):
+    def get_flag_var(var):
+        if var + "_flag_level_1" in df:
+            return variables_flag_mapping.get(var, var + "_flag_level_1")
+        return variables_flag_mapping.get(var, var + "_flag")
+
     if not data or not variable:
         logger.debug("no data or variable available")
         return {}, None
-
+    if path == "/nutrients":
+        coords = dict(time="collected", z="line_out_depth")
+        hover_data = ["hakai_id", "line_out_depth"]
+    elif path == "/ctd":
+        coords = dict(time="start_dt", z="pressure")
+        hover_data = ["hakai_id"]
+    else:
+        raise "Unknown pathname"
     # transform data for plotting
     logger.info(
         "Generating %s figure for subsets=%s", variable, zip(subset_vars, subsets)
     )
     df = pd.DataFrame(data)
-    px_kwargs = {"facet_col": facet_col, "facet_row": facet_row}
+    px_kwargs = {
+        "hover_data": hover_data,
+        "facet_col": facet_col,
+        "facet_row": facet_row,
+        "labels": config["VARIABLES_LABEL"],
+        "color_discrete_map": flag_color_map,
+    }
     px_kwargs = {
         key: value if value != "" else None for key, value in px_kwargs.items()
     }
@@ -133,7 +153,7 @@ def generate_figure(
         )
 
     df.loc[:, get_flag_var(variable)] = df.loc[:, get_flag_var(variable)].fillna("UKN")
-    df.loc[:, "time"] = pd.to_datetime(df["collected"])
+    df.loc[:, "time"] = pd.to_datetime(df[coords["time"]])
     df.loc[:, "year"] = df["time"].dt.year
 
     # select plot to present based on triggered_id
@@ -146,21 +166,17 @@ def generate_figure(
     elif figure_type == "timeseries-profiles":
         fig = get_timeseries_plot(
             df,
-            y="line_out_depth",
+            x=coords["time"],
+            y=coords["z"],
             color=variable,
-            facet_col=px_kwargs["facet_col"],
-            facet_row=px_kwargs["facet_row"],
+            **px_kwargs,
         )
     elif figure_type == "contour":
-        fig = get_contour(df, x="collected", y="line_out_depth", color=variable)
+        fig = get_contour(df, x=coords["time"], y=coords["z"], color=variable)
     else:
         logger.debug("get default time series plot for %s", figure_type)
         fig = get_timeseries_plot(
-            df,
-            y=variable,
-            color=get_flag_var(variable),
-            facet_col=px_kwargs["facet_col"],
-            facet_row=px_kwargs["facet_row"],
+            df, x=coords["time"], y=variable, color=get_flag_var(variable), **px_kwargs
         )
 
     fig.update_layout(
@@ -179,10 +195,6 @@ def get_red_field_plot(df, var, slope_limit, max_depth, px_kwargs):
         x=var,
         y="no2_no3_um",
         color="line_out_depth",
-        hover_data=["hakai_id", "date"],
-        template="simple_white",
-        title=config["VARIABLES_LABEL"][var],
-        labels=config["VARIABLES_LABEL"],
         **px_kwargs,
     )
 
@@ -202,15 +214,14 @@ def get_red_field_plot(df, var, slope_limit, max_depth, px_kwargs):
 
 
 def get_timeseries_plot(df, **kwargs):
-    default_inputs = dict(
-        x="collected",
-        color_discrete_map=flag_color_map,
-        hover_data=["hakai_id", "line_out_depth"],
-        labels=config["VARIABLES_LABEL"],
-    )
-    default_inputs.update(kwargs)
+    if "flag" in kwargs.get("color", ""):
+        df[kwargs["color"]] = df[kwargs["color"]].astype(str)
+    elif "color" in kwargs:
+        min_range, max_range = get_color_range(df[kwargs["color"]])
+        kwargs["range_color"] = [min_range, max_range]
+
     logger.debug("Plot figure kwargs: %s", kwargs)
-    fig = px.scatter(df, **default_inputs)
+    fig = px.scatter(df, **kwargs)
 
     for trace in fig.data:
         if "AV" not in trace["name"] and "UN" not in trace["name"]:
@@ -228,6 +239,7 @@ def get_contour(df, x, y, color, x_interp_limit=3, y_interp_limit=4):
         .sort_index(axis=1)
         .interpolate(axis="columns", limit=y_interp_limit)
     )
+    min_color, max_color = get_color_range(df[color])
     fig = go.Figure(
         data=go.Contour(
             z=df_pivot.values,
@@ -235,7 +247,11 @@ def get_contour(df, x, y, color, x_interp_limit=3, y_interp_limit=4):
             y=df_pivot.index.values,
             colorbar=dict(title=color, titleside="right"),
             colorscale="RdYlGn",
-            ncontours=10,
+            contours=dict(
+                start=min_color,
+                end=max_color,
+                size=(max_color - min_color) / 10,
+            ),
             contours_coloring="heatmap"
             # ,connectgaps=True
         )
@@ -273,11 +289,11 @@ def get_plot_types(path):
         ], "timeseries"
     elif path == "/ctd":
         return [
-            {"label": "Time Series", "value": "timeseries"},
             {
                 "label": "Time Series Profiles",
                 "value": "timeseries-profiles",
             },
+            {"label": "Time Series", "value": "timeseries"},
             {"label": "Contour Profiles", "value": "contour"},
-        ], "timeseries"
+        ], "timeseries-profiles"
     return []

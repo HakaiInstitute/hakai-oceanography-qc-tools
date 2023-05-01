@@ -75,7 +75,7 @@ navbar = dbc.NavbarSimple(
     children=[
         stores,
         dbc.NavItem(dbc.NavLink("Nutrients", href="/nutrients")),
-        dbc.NavItem(dbc.NavLink("CTD", href="/ctd", disabled=True)),
+        dbc.NavItem(dbc.NavLink("CTD", href="/ctd")),
         dbc.NavItem(dbc.NavLink("Chlorophyll", href="/chlorophyll", disabled=True)),
         dbc.NavItem(dbc.NavLink("Log in", id="log-in")),
     ],

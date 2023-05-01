@@ -43,8 +43,6 @@ def _test_hakai_api_credentials(creds):
         )
 
 
-location_endpoint_mapping = {"/nutrients": "eims/views/output/nutrients"}
-
 hakai_api_credentials_modal = dbc.Modal(
     [
         dbc.ModalHeader(dbc.ModalTitle("Hakai API Crendentials"), close_button=True),
@@ -148,7 +146,10 @@ def get_hakai_data(path, query, credentials):
     client = Client(credentials=credentials)
     if "limit=" not in query:
         query += "&limit=-1"
-    url = f"{client.api_root}/{location_endpoint_mapping[path]}?{query[1:]}"
+    endpoint = config["pages"][path][0]["endpoint"]
+    if "fields" in config["pages"][path][0]:
+        query += "&fields=" + ",".join(config["pages"][path][0]["fields"])
+    url = f"{client.api_root}/{endpoint}?{query[1:]}"
     logger.debug("run hakai query: %s", url)
 
     response = client.get(url)
@@ -166,8 +167,11 @@ def get_hakai_data(path, query, credentials):
     df = pd.DataFrame(result)
     if path == "/nutrients":
         subset_variables = ["site_id", "line_out_depth"]
+    elif path == "/ctd":
+        subset_variables = ["station", "direction_flag"]
     else:
         subset_variables = {}
+
     subsets = {var: df[var].unique() for var in subset_variables}
     subset_selection = [
         dcc.Dropdown(
@@ -183,7 +187,7 @@ def get_hakai_data(path, query, credentials):
     variables = [
         {"label": config["VARIABLES_LABEL"].get(var, var), "value": var}
         for var in df.columns
-        if var in config["PRIMARY_VARIABLES"]
+        if var in config["PRIMARY_VARIABLES"][path[1:]]
     ]
     logger.debug("variables available %s", variables)
     logger.debug("subsets available %s", subset_variables)

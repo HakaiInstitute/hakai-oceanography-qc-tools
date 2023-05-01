@@ -5,6 +5,14 @@ flag_color_map = {
     "SVD": "#FF4136",
     "MV": "#FFDC00",
     "BDL": "pink",
+    1: "#2ECC40",
+    3: "#FF851B",
+    4: "#FF4136",
+    9: "#FFDC00",
+    "1": "#2ECC40",
+    "3": "#FF851B",
+    "4": "#FF4136",
+    "9": "#FFDC00",
 }
 flag_qartod_to_hakai = {
     1: "AV",
