@@ -64,6 +64,28 @@ pages:
           'dissolved_oxygen_ml_l',
           'dissolved_oxygen_ml_l_flag_level_1',
         ]
+    - endpoint: 'eims/views/output/ctd_qc'
+      fields:
+        [
+          hakai_id,
+          collected,
+          work_area,
+          survey,
+          site_id,
+          depth_flag,
+          pressure_flag,
+          conductivity_flag,
+          salinity_flag,
+          temperature_flag,
+          dissolved_oxygen_ml_l_flag,
+          dissolved_oxygen_percent_flag,
+          rinko_do_ml_l_flag,
+          par_flag,
+          flc_flag,
+          turbidity_flag,
+          c_star_at_flag,
+          comments,
+        ]
   /ctd_temp:
     - endpoint: ctd/views/file/cast/data
       fields:

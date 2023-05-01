@@ -3,6 +3,7 @@ import logging
 import re
 import webbrowser
 from time import time
+from urllib.parse import unquote
 
 import dash_bootstrap_components as dbc
 import pandas as pd
@@ -125,6 +126,7 @@ def review_input_credentials(credentials):
     Output("variable", "options"),
     Output("dataframe-subsets", "children"),
     Output("toast-container", "children"),
+    Output({"id": "selected-data", "source": "flags"}, "data"),
     Input("location", "pathname"),
     Input("location", "search"),
     Input("credentials", "data"),
@@ -139,29 +141,55 @@ def get_hakai_data(path, query, credentials):
             style={"position": "fixed", "top": 66, "right": 10},
         )
 
-    logger.info("Load hakai data")
-    if not credentials or not query:
-        logger.info("No query or credentials available")
-        return None, None, None, None
-    client = Client(credentials=credentials)
-    if "limit=" not in query:
-        query += "&limit=-1"
-    endpoint = config["pages"][path][0]["endpoint"]
-    if "fields" in config["pages"][path][0]:
-        query += "&fields=" + ",".join(config["pages"][path][0]["fields"])
-    url = f"{client.api_root}/{endpoint}?{query[1:]}"
-    logger.debug("run hakai query: %s", url)
+    def _get_data(url, fields=None):
+        url += "&limit=-1" if "limit" not in url else ""
+        url += "&fields=" + ",".join(fields) if fields else ""
+        response = client.get(url)
+        if response.status_code != 200:
+            logger.debug("failed hakai query: %s", response.text)
+            response_parsed = json.loads(response.text)
+            return None, _make_toast_error(response_parsed["hint"])
+        result = response.json()
+        return (
+            (result, None) if result else (None, _make_toast_error("No Data Retrieved"))
+        )
 
-    response = client.get(url)
-    if response.status_code != 200:
-        logger.debug("failed hakai query: %s", response.text)
-        response_parsed = json.loads(response.text)
-        return None, None, None, _make_toast_error(response_parsed["hint"])
-    # No data  available
-    result = response.json()
-    if not result:
-        return None, None, None, _make_toast_error("No data available")
+    endpoints = config["pages"][path]
+    main_endpoint = endpoints[0]
+    client = Client(credentials=credentials)
+    query = unquote(query)
+    url = f"{client.api_root}/{main_endpoint['endpoint']}?{query[1:]}"
+    logger.debug("run hakai query: %s", url)
+    result, toast_error = _get_data(url, main_endpoint.get("fields"))
+    if toast_error:
+        return (
+            None,
+            None,
+            None,
+            toast_error or _make_toast_error("No data available"),
+            None,
+        )
+
     logger.debug("result: %s", pd.DataFrame(result).head())
+    # Load auxiliary data
+    if path == "/ctd":
+        flag_filters = re.findall("(station|start_dt)(=|<|>|>=|<=)([^&]*)", url)
+        url_flags = f"{client.api_root}/{endpoints[1]['endpoint']}?{'&'.join([''.join(item).replace('station','site_id').replace('start_dt','collected') for item in flag_filters])}"
+        logger.debug("Retrieve CTD flags: %s", url_flags)
+        result_flags, toast_error = _get_data(url_flags, endpoints[1].get("fields"))
+        if toast_error:
+            logger.debug("failed to get ctd flag data")
+            return (
+                None,
+                None,
+                None,
+                toast_error or _make_toast_error("No data available"),
+                None,
+            )
+        logger.debug("CTD flag downloaded")
+    else:
+        logger.debug("no auxiliary data retrieved")
+        result_flags = None
 
     # Extract subsets
     df = pd.DataFrame(result)
@@ -191,4 +219,4 @@ def get_hakai_data(path, query, credentials):
     ]
     logger.debug("variables available %s", variables)
     logger.debug("subsets available %s", subset_variables)
-    return result, variables, subset_selection, None
+    return result, variables, subset_selection, None, result_flags

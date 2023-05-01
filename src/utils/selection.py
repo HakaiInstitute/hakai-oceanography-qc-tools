@@ -8,7 +8,7 @@ import pandas as pd
 from dash import ALL, Dash, Input, Output, State, callback, ctx, dash_table, dcc, html
 
 from hakai_qc.qc import update_dataframe
-from hakai_qc.flags import flag_color_map, get_hakai_variable_flag
+from hakai_qc.flags import flag_color_map, get_hakai_variable_flag, flags_conventions
 from hakai_qc.nutrients import nutrient_variables, run_nutrient_qc
 
 # from pages.nutrients import get_flag_var
@@ -165,12 +165,19 @@ def set_selection_apply_options(action, dataSelected):
 
 
 @callback(
-    output=Output("selected-data-table", "data"),
+    dict(
+        data=Output("selected-data-table", "data"),
+        columns=Output("selected-data-table", "columns"),
+        dropdown=Output("selected-data-table", "dropdown"),
+        hidden_columns=Output("selected-data-table", "hidden_columns"),
+        style_data_conditional=Output("selected-data-table", "style_data_conditional"),
+    ),
     inputs=[
         State("selected-data-table", "data"),
         [
             Input({"id": "selected-data", "source": "figure"}, "data"),
             Input({"id": "selected-data", "source": "auto-qc"}, "data"),
+            Input({"id": "selected-data", "source": "flags"}, "data"),
         ],
     ],
 )
@@ -187,10 +194,16 @@ def update_selected_data(selected_data, newly_selected):
     ]
     if not selected_data and not newly_selected:
         logger.debug("no selection exist")
-        return []
+        return {
+            "data": None,
+            "columns": None,
+            "dropdown": None,
+            "hidden_columns": None,
+            "style_data_conditional": None,
+        }
     if not selected_data:
         logger.debug("add a new selection to an empty list %s", newly_selected)
-        return pd.concat(newly_selected).to_dict("records")
+        return generate_qc_table_style(pd.concat(newly_selected))
 
     df = pd.DataFrame(selected_data)
     # logger.debug("append to a selection %s",df)
@@ -199,7 +212,91 @@ def update_selected_data(selected_data, newly_selected):
         df_newly_selected = pd.DataFrame(source)
         logger.debug("append selection source %s", source)
         df = update_dataframe(df, df_newly_selected, on=["hakai_id"], how="outer")
-    return df.to_dict("records")
+
+    return generate_qc_table_style(df)
+
+
+def generate_qc_table_style(data):
+    if data.empty:
+        return {
+            "data": None,
+            "columns": None,
+            "dropdown": None,
+            "hidden_columns": None,
+            "style_data_conditional": None,
+        }
+    columns = [
+        {
+            "name": i,
+            "id": i,
+            "selectable": i.endswith("_flag"),
+            "editable": i.endswith("_flag"),
+            "hideable": i != "hakai_id",
+            "presentation": "dropdown" if i.endswith("_flag") else None,
+        }
+        for i in data.columns
+    ] + [dict(name="id", id="id")]
+    flag_columns = [col for col in data.columns if col.endswith("_flag")]
+    logger.debug("QC columns: %s", columns)
+    color_conditional = (
+        {
+            "if": {"column_id": col, "filter_query": "{%s} = '%s'" % (col, flag)},
+            "backgroundColor": flag_color,
+            "color": "white",
+        }
+        for col in flag_columns
+        for flag, flag_color in flag_color_map.items()
+    )
+    blank_conditional = (
+        {
+            "if": {"column_id": col, "filter_query": "{%s} = ''" % col},
+            "backgroundColor": "light_grey",
+            "color": "black",
+        }
+        for col in flag_columns
+    )
+    selection_conditional = [
+        {
+            "if": {"state": "active"},
+            "fontSize": "18px",
+            "fontWeight": "bold",
+            "border": "2px solid black",
+            "backgroundColor": "hotpink",
+        }
+    ]
+    return dict(
+        data=data.assign(id=data["hakai_id"]).to_dict("records"),
+        columns=columns,
+        dropdown={col: {"options": flags_conventions["Hakai"]} for col in flag_columns},
+        hidden_columns=[
+            "action",
+            "date",
+            "target_depth_m",
+            "start_depth",
+            "bottom_depth",
+            "latitude",
+            "longitude",
+            "bottle_drop",
+            "drop",
+            "survey",
+            "work_area",
+            "site_id",
+            "descent_rate_flag",
+            "density_flag",
+            "absolute_salinity_flag",
+            "conservative_temperature_flag",
+            "sos_un_flag",
+            "spec_cond_flag",
+            "depth_flag",
+            "pressure_flag",
+            "id",
+        ],
+        style_data_conditional=(
+            *color_conditional,
+            *blank_conditional,
+            *selection_conditional,
+        ),
+    )
 
 
 def get_selected_records_from_graph(graph_selected, custom_data_variables):
@@ -228,6 +325,7 @@ def get_selected_records_from_graph(graph_selected, custom_data_variables):
     State("dataframe", "data"),
     State({"id": "selected-data", "source": "figure"}, "data"),
     State({"id": "selected-data", "source": "auto-qc"}, "data"),
+    State({"id": "selected-data", "source": "flags"}, "data"),
 )
 def apply_to_selection(
     apply,
@@ -239,6 +337,7 @@ def apply_to_selection(
     data,
     manually_selected_data,
     auto_qced_data,
+    flag_data,
 ):
     def _add_flag_selection(df_new, df_previous):
         logger.debug(
@@ -269,19 +368,27 @@ def apply_to_selection(
         logger.debug("no selection")
         return manually_selected_data, auto_qced_data
     elif not graph_selected.empty:
-        graph_selected = graph_selected.set_index(on)
+        graph_selected = graph_selected.groupby(on).first()
     logger.debug("Data selected = %s", len(graph_selected))
 
     # Update data with already selected data
-    data = pd.DataFrame(data).set_index(["hakai_id"])
+    data = pd.DataFrame(data).groupby(["hakai_id"]).first()
     manually_selected_data = (
-        pd.DataFrame(manually_selected_data).set_index(["hakai_id"])
+        pd.DataFrame(manually_selected_data).groupby(["hakai_id"]).first()
         if manually_selected_data
         else None
     )
     auto_qced_data = (
-        pd.DataFrame(auto_qced_data).set_index(["hakai_id"]) if auto_qced_data else None
+        pd.DataFrame(auto_qced_data).groupby(["hakai_id"]).first()
+        if auto_qced_data
+        else None
     )
+    flag_data = (
+        pd.DataFrame(flag_data).groupby(["hakai_id"]).first() if flag_data else None
+    )
+
+    if flag_data is not None:
+        data = update_dataframe(data, flag_data, on=["hakai_id"])
     if manually_selected_data is not None:
         data = update_dataframe(data, manually_selected_data, on=["hakai_id"])
     if auto_qced_data is not None:
@@ -300,7 +407,10 @@ def apply_to_selection(
         logger.debug(
             "Filter data by %s and apply %s=%s", filter_by, flag_var, apply_value
         )
-        selected_data = data.query(filter_by).assign(**{flag_var: apply_value})
+
+        selected_data = data.query(filter_by if flag_var in data else None).assign(
+            **{flag_var: apply_value}
+        )
         if not selected_data.empty:
             manually_selected_data = _add_flag_selection(
                 selected_data[flag_var], manually_selected_data

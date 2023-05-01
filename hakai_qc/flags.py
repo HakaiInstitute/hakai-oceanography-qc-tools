@@ -21,6 +21,21 @@ flag_qartod_to_hakai = {
     4: "SVD",
     9: "MV",
 }
+flags_conventions = {
+    "Hakai": [
+        {"label": "Acceptable Value", "value": "AV"},
+        {"label": "Suspicious Value Cautious", "value": "SVC"},
+        {"label": "Suspicious Value Discard", "value": "SVD"},
+        {"label": "Below Detection Limit", "value": "BDL"},
+    ],
+    "QARTOD": [
+        {"label": "GOOD", "value": 1},
+        {"label": "UNKNOWN", "value": 2},
+        {"label": "SUSPECT", "value": 3},
+        {"label": "FAIL", "value": 4},
+        {"label": "MISSING", "value": 9},
+    ],
+}
 
 flag_mapping = {"no2_no3_um": "no2_no3_flag"}
 
