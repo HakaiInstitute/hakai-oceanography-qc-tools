@@ -17,6 +17,7 @@ from utils.tools import load_config
 
 from figure import *
 from navbar import get_navbar
+from tooltips import tooltips
 
 # load hakai template
 pio.templates["hakai"] = hakai_template
@@ -108,6 +109,7 @@ app.layout = html.Div(
         hakai.hakai_api_credentials_modal,
         dcc.Location(id="location"),
         html.Div(id="toast-container"),
+        tooltips,
     ]
 )
 
