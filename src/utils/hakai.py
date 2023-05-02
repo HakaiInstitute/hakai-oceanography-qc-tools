@@ -94,7 +94,7 @@ def review_stored_credentials(
     if triggered_id == "log-in":
         logger.debug("clicked on log-in")
         return credentials_stored, True
-    elif triggered_id == "credentials-input":
+    elif triggered_id == "credentials-input" or valid_credentials_input:
         if valid_credentials_input:
             logger.debug("save valid credentials input")
             return credential_input, False
