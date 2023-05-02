@@ -40,28 +40,37 @@ selection_table = dash_table.DataTable(
     row_deletable=True,
     style_header={
         "fontWeight": "bold",
-        "fontSize": "15px",
+        "fontSize": "14px",
         "backgroundColor": config["NAVBAR_COLOR"],
         "color": "white",
         "textAlign": "center",
     },
     style_cell={
         # all three widths are needed
-        "overflow": "hidden",
-        "textOverflow": "ellipsis",
-        "width": 150,
+        "maxWidth": 250,
+        "minWidth": 100,
         "textAlign": "center",
-        "fontSize": "14px",
+        "fontSize": "12px",
     },
+    style_data={"whiteSpace": "normal", "height": "auto", "lineHeight": "15px"},
     style_cell_conditional=[
         {
             "if": {"column_id": "hakai_id"},
             "textAlign": "left",
             "backgroundColor": config["NAVBAR_COLOR"],
             "color": "white",
-        }
+        },
+        {
+            "if": {"column_id": "comments"},
+            "textAlign": "left",
+            "color": "#B52026",
+        },
     ],
-    style_table={"minWidth": "200px", "float": "center"},
+    style_table={
+        "maxWidth": "100%",
+        "float": "center",
+        "overflowX": "auto",
+    },
 )
 selection_interface = dbc.Collapse(
     [
@@ -238,6 +247,7 @@ def generate_qc_table_style(data):
     ] + [dict(name="id", id="id")]
     flag_columns = [col for col in data.columns if col.endswith("_flag")]
     logger.debug("QC columns: %s", columns)
+    logger.debug("Flag columns: %s", flag_columns)
     color_conditional = (
         {
             "if": {"column_id": col, "filter_query": "{%s} = '%s'" % (col, flag)},
@@ -258,16 +268,18 @@ def generate_qc_table_style(data):
     selection_conditional = [
         {
             "if": {"state": "active"},
-            "fontSize": "18px",
             "fontWeight": "bold",
             "border": "2px solid black",
-            "backgroundColor": "hotpink",
         }
     ]
+    dropdown_menus = {
+        col: {"options": flags_conventions["Hakai"]} for col in flag_columns
+    }
+    logger.debug("Dropdown menus: %s", dropdown_menus)
     return dict(
         data=data.assign(id=data["hakai_id"]).to_dict("records"),
         columns=columns,
-        dropdown={col: {"options": flags_conventions["Hakai"]} for col in flag_columns},
+        dropdown=dropdown_menus,
         hidden_columns=[
             "action",
             "date",

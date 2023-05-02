@@ -12,47 +12,52 @@
     padding-left: 0;
     padding-top: 2px;
     padding-bottom: 2px;
-  }
-  
-  .radio-group .btn-group > .form-check:not(:last-child) > .btn {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    margin-left: auto;
-  }
-  
-  .radio-group .btn-group > .form-check:not(:first-child) > .btn {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    margin-left: -1px;
-  }
+}
 
-  .apply-flag-selector {
-    width: 100px;
-  }
+.radio-group .btn-group > .form-check:not(:last-child) > .btn {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-left: auto;
+}
 
-  .apply-flag-section {
-    align-content: center;
-    display:flex;
-  }
+.radio-group .btn-group > .form-check:not(:first-child) > .btn {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: -1px;
+}
 
-  .selection-area {
-    width: 70%;
-    max-width: 900px;
-    min-width: 400px;
-    margin: 5px;
-    vertical-align: center;
-    border: 1px lightgray solid;
-    border-radius: 10px;
-    place-items: left;
-    position:relative;
-    padding: 5px;
-  }
-  .selection-action {
-    min-width: 130px;
-  }
-  .selection-apply {
-    min-width: 200px;
-  }
-  .selection-to {
-    min-width: 130px;
-  }
+.apply-flag-selector {
+  width: 100px;
+}
+
+.apply-flag-section {
+  align-content: center;
+  display:flex;
+}
+
+.selection-area {
+  width: 70%;
+  max-width: 900px;
+  min-width: 400px;
+  margin: 5px;
+  vertical-align: center;
+  border: 1px lightgray solid;
+  border-radius: 10px;
+  place-items: left;
+  position:relative;
+  padding: 5px;
+}
+.selection-action {
+  min-width: 130px;
+}
+.selection-apply {
+  min-width: 200px;
+}
+.selection-to {
+  min-width: 130px;
+}
+
+.Select-menu-outer {
+  display : block !important;
+  margin-bottom: 3rem !important;
+}
