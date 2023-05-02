@@ -49,9 +49,7 @@ logger.addHandler(fileHandler)
 
 app = Dash(
     config["APP_NAME"],
-    external_stylesheets=[dbc.themes.BOOTSTRAP,dbc.icons.BOOTSTRAP],
-    # use_pages=True,
-    # pages_folder="src/pages",
+    external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],
     assets_folder="src/assets",
 )
 
@@ -63,8 +61,17 @@ data_interface = dbc.Collapse(
     ],
     id="data-selection-interface",
     className="data-selection-interface",
-    is_open=True,
+    is_open=False,
 )
+
+
+@callback(
+    Output("data-selection-interface", "is_open"),
+    Input("filter-by", "n_clicks"),
+    Input("data-selection-interface", "is_open"),
+)
+def showfilter_by_section(n_clicks, is_in):
+    return not is_in if n_clicks else False
 
 
 @callback(
