@@ -29,14 +29,14 @@ navbar_menu = dbc.Nav(
         dbc.NavItem(dbc.NavLink("CTD", href="/ctd")),
         dbc.NavItem(
             dbc.NavLink(
-                "Chlorophyll", href="/chlorophyll", disabled=True, className="me-2"
+                "Chlorophyll", href="/chlorophyll", disabled=True, className="me-1"
             )
         ),
         dbc.NavItem(
-            dbc.NavLink(className="bi bi-filter-circle-fill me-2", id="filter-by")
+            dbc.NavLink(className="bi bi-filter-circle-fill me-1", id="filter-by")
         ),
-        dbc.NavItem(dbc.NavLink(className="bi-gear-fill me-2", id="figure-settings")),
-        dbc.NavItem(dbc.NavLink(className="bi bi-person-circle me-2", id="log-in")),
+        dbc.NavItem(dbc.NavLink(className="bi-gear-fill me-1", id="figure-settings")),
+        dbc.NavItem(dbc.NavLink(className="bi bi-person-circle me-1", id="log-in")),
     ],
     className="ms-auto",
     # align="center",
@@ -61,7 +61,7 @@ def get_navbar(color, dark):
                     # Use row and col to control vertical alignment of logo / brand
                     dbc.Row(
                         [
-                            dbc.Col(html.Img(src="assets/logo.jpg", height="30px")),
+                            dbc.Col(html.Img(src="assets/logo.png", height="40px")),
                             dbc.Col(
                                 dbc.NavbarBrand("Quality Control"), className="ms-2"
                             ),
@@ -74,6 +74,7 @@ def get_navbar(color, dark):
                             ),
                             stores,
                         ],
+                        align="center",
                         className="g-0 align-middle",
                     ),
                     href="#",
