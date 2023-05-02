@@ -136,7 +136,7 @@ def generate_figure(
     }
     filter_subsets = " and ".join(
         [
-            f"{subset_var} in {subset}"
+            f"{subset_var} in {subset}" if subset_var != "Filter data ..." else subset
             for subset_var, subset in zip(subset_vars, subsets)
             if subset
         ]

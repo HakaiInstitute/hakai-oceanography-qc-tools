@@ -202,14 +202,27 @@ def get_hakai_data(path, query, credentials):
 
     subsets = {var: df[var].unique() for var in subset_variables}
     subset_selection = [
-        dcc.Dropdown(
-            id={"type": "dataframe-subset", "subset": key},
-            options=options,
-            multi=True,
-            className="selection-box",
-            placeholder=key,
+        dbc.Col(
+            dcc.Dropdown(
+                id={"type": "dataframe-subset", "subset": key},
+                options=options,
+                multi=True,
+                className="selection-box",
+                placeholder=key,
+            ),
+            md=4,
         )
         for key, options in subsets.items()
+    ] + [
+        dbc.Col(
+            dbc.Input(
+                id={"type": "dataframe-subset", "subset": "query"},
+                placeholder="Filter data ...",
+                type="text",
+                debounce=True,
+            ),
+            md=4,
+        )
     ]
 
     variables = [

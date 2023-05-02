@@ -55,10 +55,14 @@ app = Dash(
 
 
 data_interface = dbc.Collapse(
-    [
-        # dcc.Dropdown(id="variable", clearable=False, className="selection-box"),
-        html.Div(id="dataframe-subsets"),
-    ],
+    dbc.Card(
+        [
+            dbc.CardHeader("Filter data by"),
+            dbc.CardBody(
+                dbc.Row(id="dataframe-subsets", align="center", justify="center")
+            ),
+        ]
+    ),
     id="data-selection-interface",
     className="data-selection-interface",
     is_open=False,
