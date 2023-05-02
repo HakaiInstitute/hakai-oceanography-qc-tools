@@ -16,6 +16,7 @@ from utils.hakai_plotly_template import hakai_template
 from utils.tools import load_config
 
 from figure import *
+from navbar import get_navbar
 
 # load hakai template
 pio.templates["hakai"] = hakai_template
@@ -48,47 +49,16 @@ logger.addHandler(fileHandler)
 
 app = Dash(
     config["APP_NAME"],
-    external_stylesheets=[dbc.themes.BOOTSTRAP],
+    external_stylesheets=[dbc.themes.BOOTSTRAP,dbc.icons.BOOTSTRAP],
     # use_pages=True,
     # pages_folder="src/pages",
     assets_folder="src/assets",
 )
 
 
-stores = html.Div(
-    dbc.Spinner(
-        [
-            dcc.Store(id="dataframe"),
-            dcc.Store(id="selected-data"),
-            dcc.Store(id={"id": "selected-data", "source": "auto-qc"}),
-            dcc.Store(id={"id": "selected-data", "source": "figure"}),
-            dcc.Store(id={"id": "selected-data", "source": "flags"}),
-            dcc.Store(id="main-graph-spinner"),
-            dcc.Store(id="auto-qc-nutrient-spinner"),
-        ],
-        color="light",
-        spinner_style={"width": "3rem", "height": "3rem"},
-    ),
-    style={"width": "50px", "float": "center", "text-align": "center"},
-)
-
-navbar = dbc.NavbarSimple(
-    children=[
-        stores,
-        dbc.NavItem(dbc.NavLink("Nutrients", href="/nutrients")),
-        dbc.NavItem(dbc.NavLink("CTD", href="/ctd")),
-        dbc.NavItem(dbc.NavLink("Chlorophyll", href="/chlorophyll", disabled=True)),
-        dbc.NavItem(dbc.NavLink("Log in", id="log-in")),
-    ],
-    brand="Hakai Quality Control",
-    brand_href="#",
-    color=config["NAVBAR_COLOR"],
-    dark=config["NAVBAR_DARK"],
-)
-
 data_interface = dbc.Collapse(
     [
-        dcc.Dropdown(id="variable", clearable=False, className="selection-box"),
+        # dcc.Dropdown(id="variable", clearable=False, className="selection-box"),
         html.Div(id="dataframe-subsets"),
     ],
     id="data-selection-interface",
@@ -110,7 +80,7 @@ def define_variable(value, options):
 
 app.layout = html.Div(
     [
-        navbar,
+        get_navbar(config["NAVBAR_COLOR"], config["NAVBAR_DARK"]),
         data_interface,
         dbc.Row(
             [

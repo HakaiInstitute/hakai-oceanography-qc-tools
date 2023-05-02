@@ -53,6 +53,9 @@
 .selection-apply {
   min-width: 200px;
 }
+.selection-box{
+  min-width: 200px;
+}
 .selection-to {
   min-width: 130px;
 }
