@@ -55,7 +55,7 @@ app = Dash(
 )
 
 
-data_interface = dbc.Collapse(
+data_filter_interface = dbc.Collapse(
     dbc.Card(
         [
             dbc.CardHeader("Filter data by"),
@@ -80,6 +80,15 @@ def showfilter_by_section(n_clicks, is_in):
 
 
 @callback(
+    Output("selection-interface", "is_open"),
+    Input("qc-button", "n_clicks"),
+    Input("selection-interface", "is_open"),
+)
+def showfilter_by_section(n_clicks, is_in):
+    return not is_in if n_clicks else False
+
+
+@callback(
     Output("variable", "value"),
     State("variable", "value"),
     Input("variable", "options"),
@@ -93,7 +102,7 @@ def define_variable(value, options):
 app.layout = html.Div(
     [
         get_navbar(config["NAVBAR_COLOR"], config["NAVBAR_DARK"]),
-        data_interface,
+        data_filter_interface,
         dbc.Row(
             [
                 dbc.Col(plot_inputs, width=2),

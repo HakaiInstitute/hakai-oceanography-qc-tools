@@ -8,8 +8,8 @@ tooltips = html.Div(
             target="filter-by",
         ),
         dbc.Tooltip(
-            "Settings",
-            target="figure-settings",
+            "Open/Close QC Flags Section",
+            target="qc-button",
         ),
         dbc.Tooltip(
             "Hakai Login",
