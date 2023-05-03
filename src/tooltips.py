@@ -15,5 +15,6 @@ tooltips = html.Div(
             "Hakai Login",
             target="log-in",
         ),
+        dbc.Tooltip("Figure menu", target="figure-menu-button"),
     ]
 )

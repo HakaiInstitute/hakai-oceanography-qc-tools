@@ -3,7 +3,6 @@
 import logging
 import os
 
-import dash
 import dash_bootstrap_components as dbc
 import plotly.io as pio
 import sentry_sdk
@@ -15,9 +14,9 @@ from utils import hakai
 from utils.hakai_plotly_template import hakai_template
 from utils.tools import load_config
 
-from figure import *
 from navbar import get_navbar
 from tooltips import tooltips
+from figure_menu import figure_menu, figure_radio_buttons
 
 # load hakai template
 pio.templates["hakai"] = hakai_template
@@ -103,17 +102,9 @@ app.layout = html.Div(
     [
         get_navbar(config["NAVBAR_COLOR"], config["NAVBAR_DARK"]),
         data_filter_interface,
-        dbc.Row(
-            [
-                dbc.Col(plot_inputs, width=2),
-                dbc.Col(
-                    figure_radio_buttons,
-                    className="radio-group col-5 mx-auto",
-                ),
-                dbc.Col(width=2),
-            ]
-        ),
-        dcc.Graph(id={"type": "graph", "page": "nutrients"}, figure={}),
+        figure_radio_buttons,
+        figure_menu,
+        dcc.Graph(id={"type": "graph", "page": "main"}, figure={}),
         selection.selection_interface,
         hakai.hakai_api_credentials_modal,
         dcc.Location(id="location"),
