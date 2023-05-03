@@ -22,7 +22,16 @@ HAKAI_ENDPOINTS: 'ctd/views/file/cast'
 
 PRIMARY_VARIABLES:
   nutrients: [sio2, po4, no2_no3_um]
-  ctd: [temperature, salinity, dissolved_oxygen_ml_l, turbidity, flc]
+  ctd:
+    [
+      temperature,
+      salinity,
+      dissolved_oxygen_ml_l,
+      turbidity,
+      flc,
+      par,
+      cdom_ppb,
+    ]
 
 VARIABLES_LABEL:
   {
@@ -50,19 +59,37 @@ pages:
           'station',
           'start_dt',
           'direction_flag',
-          'conductivity',
-          'conductivity_flag_level_1',
-          'temperature',
-          'temperature_flag_level_1',
           'depth',
           'pressure',
+          'conductivity',
+          'conductivity_flag',
+          'conductivity_flag_level_1',
+          'temperature',
+          'temperature_flag',
+          'temperature_flag_level_1',
           'turbidity',
+          'turbidity_flag',
           'turbidity_flag_level_1',
           'salinity',
           'salinity_flag',
           'salinity_flag_level_1',
           'dissolved_oxygen_ml_l',
           'dissolved_oxygen_ml_l_flag_level_1',
+          'dissolved_oxygen_percent',
+          'dissolved_oxygen_percent_flag',
+          'dissolved_oxygen_percent_flag_level_1',
+          'par',
+          'par_flag',
+          'par_flag_level_1',
+          'flc',
+          'flc_flag',
+          'flc_flag_level_1',
+          'c_star_at',
+          'c_star_at_flag',
+          'c_star_at_flag_level_1',
+          'cdom_ppb',
+          'cdom_ppb_flag',
+          'cdom_ppb_flag_level_1',
         ]
     - endpoint: 'eims/views/output/ctd_qc'
       fields:
