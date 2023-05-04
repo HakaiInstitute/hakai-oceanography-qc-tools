@@ -1,5 +1,6 @@
 import logging
 import re
+import json
 import pandas as pd
 import dash_bootstrap_components as dbc
 import plotly.express as px
@@ -174,42 +175,6 @@ figure_menu = dbc.Offcanvas(
         html.Br(),
         dbc.Row(
             [
-                dbc.Col(dbc.Label("Hori. Line"), width=2),
-                dbc.Col(
-                    dbc.Input(
-                        id={
-                            "item": "hline",
-                            "group": "graph",
-                            "options": "str",
-                            "type": "input",
-                        },
-                        type="char",
-                        debounce=True,
-                    ),
-                    width=10,
-                ),
-            ]
-        ),
-        dbc.Row(
-            [
-                dbc.Col(dbc.Label("Vert. Line"), width=2),
-                dbc.Col(
-                    dbc.Input(
-                        id={
-                            "item": "vline",
-                            "group": "graph",
-                            "options": "str",
-                            "type": "input",
-                        },
-                        debounce=True,
-                        type="char",
-                    ),
-                    width=10,
-                ),
-            ]
-        ),
-        dbc.Row(
-            [
                 dbc.Col(dbc.Label("Extra traces"), width=2),
                 dbc.Col(
                     dbc.Input(
@@ -315,6 +280,13 @@ def get_flag_var(var, variables):
     Input("figure-menu-label-spinner", "data"),
 )
 def generate_figure(data, selected_data, subset_vars, subsets, form_inputs, *args):
+    def _add_extra_traces(extra_traces):
+        if extra_traces is None:
+            return
+        for go_object, trace in json.loads(extra_traces):
+            if go_object == "Scatter":
+                fig.add_trace(go.Scatter(**trace))
+
     # transform data for plotting
     if data is None or not any(form_inputs.get("default")):
         logger.debug("do not generate plot yet")
@@ -341,16 +313,17 @@ def generate_figure(data, selected_data, subset_vars, subsets, form_inputs, *arg
         .replace({"None": None})
     )
     logger.debug("form inputs=\n%s", form_inputs)
+    inputs = form_inputs["output"]
 
-    px_kwargs = form_inputs.loc[px_kwargs_inputs]["output"].dropna().to_dict()
+    px_kwargs = inputs[px_kwargs_inputs].dropna().to_dict()
     if px_kwargs.get("x") is None or px_kwargs.get("y") is None:
         logger.debug("No x or y axis given: px_kwargs=%s", px_kwargs)
         return None, None
 
-    label = form_inputs["output"]["label"]
-    plot_type = form_inputs["output"]["type"]
-    if form_inputs["output"][["color_min", "color_max"]].notna().any():
-        range_color = form_inputs["output"][["color_min", "color_max"]].tolist()
+    label = inputs["label"]
+    plot_type = inputs["type"]
+    if inputs[["color_min", "color_max"]].notna().any():
+        range_color = inputs[["color_min", "color_max"]].tolist()
         logger.debug("set range color: %s", range_color)
         px_kwargs["range_color"] = range_color
 
@@ -530,15 +503,16 @@ figure_presets = {
         "PO4 red-field": {
             "type": "scatter",
             "x": "po4",
-            "y": "main_var",
+            "y": "no2_no3_um",
             "color": "main_var_flag",
+            "extra_traces": '[["Scatter",{"x": [0,2.1875],"y": [0,35], "name":"limit", "mode": "lines","line":{"color":"#de2323","dash":"dot"}}]]',
         },
         "SiO2 red-field": {
             "type": "scatter",
             "x": "sio2",
-            "y": "main_var",
+            "y": "no2_no3_um",
             "color": "main_var_flag",
-            "extra_traces": '[{"x": [0,20],"y": [0,20],"type": "line"}]',
+            "extra_traces": '[["Scatter",{"x": [0,32.8125],"y": [0,35],"name":"limit", "mode": "lines","line":{"color":"#de2323","dash":"dot"}}]]',
         },
     },
     "/ctd": {
