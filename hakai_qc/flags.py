@@ -5,6 +5,7 @@ flag_color_map = {
     "SVD": "#FF4136",
     "MV": "#FFDC00",
     "BDL": "pink",
+    "NA": "purple",
     1: "#2ECC40",
     3: "#FF851B",
     4: "#FF4136",
