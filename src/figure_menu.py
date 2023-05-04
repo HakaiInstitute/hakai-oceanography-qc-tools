@@ -34,7 +34,6 @@ figure_radio_buttons = dbc.Row(
     className="radio-group",
 )
 
-dropdown_items = ["x", "y", "color", "symbol"]
 figure_menu = dbc.Offcanvas(
     [
         html.H3("Figure Menu"),
@@ -67,7 +66,6 @@ figure_menu = dbc.Offcanvas(
                             "options": "predefined",
                             "type": "input",
                         },
-                        value="scatter",
                         options=[
                             {"label": key, "value": key}
                             for key in ["scatter", "contour"]
@@ -96,7 +94,7 @@ figure_menu = dbc.Offcanvas(
                 ],
                 align="center",
             )
-            for item in dropdown_items
+            for item in ["x", "y", "color", "symbol"]
         ],
         html.Br(),
         dbc.Row(
@@ -281,8 +279,8 @@ def get_flag_var(var, variables):
 @callback(
     Output({"type": "graph", "page": "main"}, "figure"),
     Output("main-graph-spinner", "data"),
-    Input("dataframe", "data"),
-    Input("variable", "value"),
+    State("dataframe", "data"),
+    State("variable", "value"),
     Input("selected-data-table", "data"),
     Input({"type": "dataframe-subset", "subset": ALL}, "placeholder"),
     Input({"type": "dataframe-subset", "subset": ALL}, "value"),
@@ -290,6 +288,7 @@ def get_flag_var(var, variables):
     State({"item": ALL, "group": "graph", "options": ALL, "type": ALL}, "value"),
     State({"item": ALL, "group": "graph", "options": ALL, "type": ALL}, "placeholder"),
     Input("update-figure", "n_clicks"),
+    Input("figure-menu-label-spinner", "data"),
 )
 def generate_figure(
     data,
@@ -301,8 +300,11 @@ def generate_figure(
     input_values,
     input_defaults,
     update_figure,
+    figure_menu_spinner,
 ):
     # transform data for plotting
+    if data is None:
+        return None, None
     logger.info(
         "Generating %s figure for subsets=%s", variable, zip(subset_vars, subsets)
     )
@@ -326,8 +328,8 @@ def generate_figure(
         )
     time_var = "collected" if "collected" in df else "start_dt"
     # df.loc[:, get_flag_var(variable)] = df.loc[:, get_flag_var(variable)].fillna("UKN")
-    df["time"] = pd.to_datetime(df[time_var])
-    df.loc[:, "year"] = df["time"].dt.year
+    df[time_var] = pd.to_datetime(df[time_var])
+    df.loc[:, "year"] = df[time_var].dt.year
 
     logger.debug("data to plot len(df)=%s", len(df))
     # Define plotly express parameters
@@ -339,8 +341,9 @@ def generate_figure(
             input_ids, input_values, input_defaults
         )
     }
-    if px_kwargs["x"] is None or px_kwargs["y"] is None:
-        logger.debug("No x or y axis given")
+
+    if px_kwargs.get("x") is None or px_kwargs.get("y") is None:
+        logger.debug("No x or y axis given: px_kwargs=%s", px_kwargs)
         return None, None
 
     label = px_kwargs.pop("label")
@@ -359,8 +362,9 @@ def generate_figure(
     }
 
     if plot_type == "scatter":
+        px_kwargs["labels"] = config["VARIABLES_LABEL"]
         if range_color[0] is not None and range_color[1] is not None:
-            logger.debug("apply range_color=%s",range_color)
+            logger.debug("apply range_color=%s", range_color)
             # px_kwargs["range_color"] = range_color
         logger.debug("Generate scatter: %s", str(px_kwargs))
         fig = px.scatter(df, **px_kwargs)
@@ -391,11 +395,15 @@ def generate_figure(
     State(
         {"item": ALL, "group": ALL, "options": "variables", "type": "input"}, "options"
     ),
-    Input("variable", "options"),
+    Input("dataframe-variables", "data"),
 )
-def define_all_variables_options(n, variables):
-    if variables in (None, False, "null"):
+def define_variables_options(n, variables):
+    if variables is None:
         return len(n) * [None]
+    variables = [
+        {"label": config["VARIABLES_LABEL"].get(variable, variable), "value": variable}
+        for variable in variables.split(",")
+    ]
     variables = [{"label": "None", "value": "None"}] + variables
     return len(n) * [variables]
 
@@ -438,18 +446,19 @@ def define_all_variables_options(n, variables):
             "placeholder",
         ),
     },
+    Output("figure-menu-label-spinner", "data"),
     Input(
         {"item": "label", "group": "graph", "options": "str", "type": "input"},
         "value",
     ),
-    Input("variable", "value"),
-    Input("variable", "options"),
+    State("variable", "value"),
+    State("dataframe-variables", "data"),
     State("location", "pathname"),
 )
 def define_graph_default_values(label, variable, variables, path):
     placeholders = dict(type=None, x=None, y=None, color=None, symbol=None)
     if variable is None or label is None:
-        return default_placeholders
+        return default_placeholders, None
 
     # Apply presets
     logger.debug("Find present for path=%s; label=%s", path, label)
@@ -459,13 +468,16 @@ def define_graph_default_values(label, variable, variables, path):
     # replace main_var
     variable_placeholers = {
         "main_var": variable,
-        "main_var_flag": get_flag_var(variable, variables),
+        "main_var_flag": get_flag_var(variable, variables.split(",")),
     }
-    logger.debug("variables presets: %s", variable_placeholers)
-    return {
+    placeholders = {
         key: variable_placeholers.get(value, value)
         for key, value in placeholders.items()
     }
+    logger.debug(
+        "Set presets: path=%s, label=%s, placeholders=%s", path, label, placeholders
+    )
+    return placeholders, None
 
 
 @callback(
@@ -479,15 +491,13 @@ def define_graph_default_values(label, variable, variables, path):
         "value",
     ),
     Input("figure-type-selector", "value"),
+    Input("dataframe-variables", "data"),
 )
-def get_label(label):
+def get_label(label, variables):
+    if variables is None:
+        return None
     logger.debug("Selected figure type preset: %s", label)
     return label
-
-
-@callback(Output("figure-menu", "is_open"), Input("figure-menu-button", "n_clicks"))
-def open_figure_menu(clicked):
-    return True if clicked else False
 
 
 @callback(
@@ -496,6 +506,8 @@ def open_figure_menu(clicked):
     Input("location", "pathname"),
 )
 def get_plot_types(path):
+    if path == "/":
+        return None, None
     presets = [
         {"label": item, "value": item} for item in figure_presets.get(path, {}).keys()
     ]

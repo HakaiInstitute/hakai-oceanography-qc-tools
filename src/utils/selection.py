@@ -475,9 +475,9 @@ def apply_to_selection(
 )
 def get_qc_excel(n_clicks, data, location):
     """Save file to an excel file format compatible with the Hakai Portal upload"""
-    logger.info("Generate excel file")
     if data is None:
         return None, None
+    logger.info("Generate excel file")
     df = pd.DataFrame(data).drop(
         columns=["id", "start_depth", "target_depth_m", "bottle_drop", "collected"],
         errors="ignore",

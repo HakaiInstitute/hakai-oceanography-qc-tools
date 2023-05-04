@@ -10,6 +10,7 @@ WEB_LOG_LEVEL: DEBUG
 SENTRY_LEVEL: INFO
 SENTRY_EVENT_LEVEL: ERROR
 SENTRY_DSN: https://d3e89a5a74d4466ab87439f260ade659@o56764.ingest.sentry.io/4504724090781696
+SENTRY_LOG_ACTIVE: false
 
 # App settings
 APP_NAME: Hakai Quality Control
@@ -21,8 +22,8 @@ HAKAI_DEFAULT_API_SERVER_ROOT: https://hecate.hakai.org/api
 HAKAI_ENDPOINTS: 'ctd/views/file/cast'
 
 PRIMARY_VARIABLES:
-  nutrients: [sio2, po4, no2_no3_um]
-  ctd:
+  /nutrients: [sio2, po4, no2_no3_um]
+  /ctd:
     [
       temperature,
       salinity,

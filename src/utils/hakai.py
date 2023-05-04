@@ -75,7 +75,7 @@ hakai_api_credentials_modal = dbc.Modal(
     ],
     id="credentials-modal",
     centered=True,
-    is_open=True,
+    is_open=False,
 )
 
 
@@ -123,7 +123,7 @@ def review_input_credentials(credentials):
 
 @callback(
     Output("dataframe", "data"),
-    Output("variable", "options"),
+    Output("dataframe-variables", "data"),
     Output("dataframe-subsets", "children"),
     Output("toast-container", "children"),
     Output({"id": "selected-data", "source": "flags"}, "data"),
@@ -154,6 +154,11 @@ def get_hakai_data(path, query, credentials):
             (result, None) if result else (None, _make_toast_error("No Data Retrieved"))
         )
 
+    # if viewing home page do not downloading anything
+    if path == "/":
+        logger.debug("do not load anything from front page path='/")
+        return None, None, None, None, None
+
     endpoints = config["pages"][path]
     main_endpoint = endpoints[0]
     client = Client(credentials=credentials)
@@ -169,8 +174,7 @@ def get_hakai_data(path, query, credentials):
             toast_error or _make_toast_error("No data available"),
             None,
         )
-
-    logger.debug("result: %s", pd.DataFrame(result).head())
+    logger.debug("data downloaded")
     # Load auxiliary data
     if path == "/ctd":
         flag_filters = re.findall("(station|start_dt)(=|<|>|>=|<=)([^&]*)", url)
@@ -225,11 +229,6 @@ def get_hakai_data(path, query, credentials):
         )
     ]
 
-    variables = [
-        {"label": config["VARIABLES_LABEL"].get(var, var), "value": var}
-        for var in df.columns
-        if var in config["PRIMARY_VARIABLES"][path[1:]]
-    ]
-    logger.debug("variables available %s", variables)
+    logger.debug("variables available %s", df.columns)
     logger.debug("subsets available %s", subset_variables)
-    return result, variables, subset_selection, None, result_flags
+    return result, ",".join(df.columns), subset_selection, None, result_flags
