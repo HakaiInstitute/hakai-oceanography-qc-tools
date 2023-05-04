@@ -10,7 +10,7 @@ import pandas as pd
 from dash import Input, Output, State, callback, ctx, dcc, html
 from hakai_api import Client
 
-from utils.tools import load_config
+from utils import load_config
 
 logger = logging.getLogger(__name__)
 config = load_config()

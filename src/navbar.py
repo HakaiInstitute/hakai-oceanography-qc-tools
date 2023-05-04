@@ -2,7 +2,7 @@ import logging
 
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, dcc, html
-from utils.tools import load_config
+from utils import load_config
 
 config = load_config()
 logger = logging.getLogger(__name__)

@@ -12,8 +12,8 @@ from hakai_qc.nutrients import (
 )
 from hakai_qc.flags import flag_mapping, flag_color_map
 
-from utils.tools import load_config, update_dataframe
-from utils.hakai import fill_hakai_flag_variables
+from utils import load_config, update_dataframe
+from download_hakai import fill_hakai_flag_variables
 
 config = load_config()
 

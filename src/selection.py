@@ -12,7 +12,7 @@ from hakai_qc.flags import flag_color_map, get_hakai_variable_flag, flags_conven
 from hakai_qc.nutrients import nutrient_variables, run_nutrient_qc
 
 # from pages.nutrients import get_flag_var
-from utils.tools import load_config
+from utils import load_config
 
 config = load_config()
 variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}

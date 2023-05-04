@@ -9,14 +9,14 @@ import sentry_sdk
 from dash import Dash, Input, Output, State, callback, dcc, html
 from sentry_sdk.integrations.logging import LoggingIntegration
 
-import utils.selection as selection
-from utils import hakai
-from utils.hakai_plotly_template import hakai_template
-from utils.tools import load_config
+import selection as selection
+from hakai_plotly_template import hakai_template
+from utils import load_config
 
+from download_hakai import hakai_api_credentials_modal
 from navbar import navbar, data_filter_interface
 from tooltips import tooltips
-from figure_menu import figure_menu, figure_radio_buttons
+from figure import figure_menu, figure_radio_buttons
 
 # load hakai template
 pio.templates["hakai"] = hakai_template
@@ -64,7 +64,7 @@ app.layout = html.Div(
         figure_menu,
         dcc.Graph(id={"type": "graph", "page": "main"}, figure={}),
         selection.selection_interface,
-        hakai.hakai_api_credentials_modal,
+        hakai_api_credentials_modal,
         dcc.Location(id="location"),
         html.Div(id="toast-container"),
         tooltips,
