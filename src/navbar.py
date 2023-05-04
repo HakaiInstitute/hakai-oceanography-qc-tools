@@ -1,7 +1,7 @@
 import logging
 
 import dash_bootstrap_components as dbc
-from dash import Input, Output, State, callback, dcc, html
+from dash import Input, Output, State, callback, dcc, html, ctx
 from utils import load_config
 
 config = load_config()
@@ -38,9 +38,7 @@ navbar_menu = dbc.Nav(
         dbc.NavItem(
             dbc.NavLink(className="bi bi-filter-circle-fill me-1", id="filter-by")
         ),
-        dbc.NavItem(
-            dbc.NavLink(href="#qc", className="bi bi-search me-1", id="qc-button")
-        ),
+        dbc.NavItem(dbc.NavLink(className="bi bi-search me-1", id="qc-button")),
         dbc.NavItem(
             dbc.NavLink(id="figure-menu-button", className="bi bi-file-bar-graph")
         ),
@@ -77,8 +75,11 @@ def showfilter_by_section(n_clicks, is_in):
     Output("selection-interface", "is_open"),
     Input("qc-button", "n_clicks"),
     Input("selection-interface", "is_open"),
+    Input("location", "hash"),
 )
-def show_qc_section(n_clicks, is_in):
+def show_qc_section(n_clicks, is_in, hash):
+    if "#qc" in hash:
+        return True
     return not is_in if n_clicks else False
 
 
