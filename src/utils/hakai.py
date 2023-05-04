@@ -79,6 +79,20 @@ hakai_api_credentials_modal = dbc.Modal(
 )
 
 
+def fill_hakai_flag_variables(df):
+    """Replace hakai flag variables empty values by (*_flag: "NA", *_flag_level_1:9)"""
+    fill_hakai_flags = {
+        col: "NA"
+        for col in df.columns
+        if col not in ("direction_flag") and re.match(".*_flag$", col)
+    }
+    fill_flags_level_1 = {
+        col: 9 for col in df.columns if re.match(".*_flag_level_1$", col)
+    }
+    logger.debug('Fill empty flag values: (*_flag: "NA", *_flag_level_1:9)')
+    return df.fillna({**fill_hakai_flags, **fill_flags_level_1})
+
+
 @callback(
     Output("credentials", "data"),
     Output("credentials-modal", "is_open"),

@@ -9,9 +9,10 @@ from dash import ALL, MATCH, Input, Output, State, callback, ctx, dcc, html
 from hakai_qc.nutrients import (
     variables_flag_mapping,
 )
-from hakai_qc.flags import flag_mapping
+from hakai_qc.flags import flag_mapping, flag_color_map
 
 from utils.tools import load_config, update_dataframe
+from utils.hakai import fill_hakai_flag_variables
 
 config = load_config()
 
@@ -120,10 +121,10 @@ figure_menu = dbc.Offcanvas(
         ),
         dbc.Row(
             [
-                dbc.Col(dbc.Label("Color Range"), width=2),
+                dbc.Col(dbc.Label("Range Color"), width=2),
+                dbc.Col(dbc.Label("Min"), width=1),
                 dbc.Col(
                     dbc.Input(
-                        placeholder="minimum",
                         type="number",
                         id={
                             "item": "color_min",
@@ -132,11 +133,11 @@ figure_menu = dbc.Offcanvas(
                             "type": "input",
                         },
                     ),
-                    width=5,
+                    width=4,
                 ),
+                dbc.Col(dbc.Label("Max"), width=1),
                 dbc.Col(
                     dbc.Input(
-                        placeholder="maximum",
                         type="number",
                         id={
                             "item": "color_max",
@@ -145,7 +146,7 @@ figure_menu = dbc.Offcanvas(
                             "type": "input",
                         },
                     ),
-                    width=5,
+                    width=4,
                 ),
             ],
             align="center",
@@ -196,6 +197,24 @@ figure_menu = dbc.Offcanvas(
                     dbc.Input(
                         id={
                             "item": "vline",
+                            "group": "graph",
+                            "options": "str",
+                            "type": "input",
+                        },
+                        debounce=True,
+                        type="char",
+                    ),
+                    width=10,
+                ),
+            ]
+        ),
+        dbc.Row(
+            [
+                dbc.Col(dbc.Label("Extra traces"), width=2),
+                dbc.Col(
+                    dbc.Input(
+                        id={
+                            "item": "extra_traces",
                             "group": "graph",
                             "options": "str",
                             "type": "input",
@@ -280,34 +299,64 @@ def get_flag_var(var, variables):
     Output({"type": "graph", "page": "main"}, "figure"),
     Output("main-graph-spinner", "data"),
     State("dataframe", "data"),
-    State("variable", "value"),
     Input("selected-data-table", "data"),
     Input({"type": "dataframe-subset", "subset": ALL}, "placeholder"),
     Input({"type": "dataframe-subset", "subset": ALL}, "value"),
-    State({"item": ALL, "group": "graph", "options": ALL, "type": ALL}, "id"),
-    State({"item": ALL, "group": "graph", "options": ALL, "type": ALL}, "value"),
-    State({"item": ALL, "group": "graph", "options": ALL, "type": ALL}, "placeholder"),
+    {
+        "id": State({"item": ALL, "group": "graph", "options": ALL, "type": ALL}, "id"),
+        "value": State(
+            {"item": ALL, "group": "graph", "options": ALL, "type": ALL}, "value"
+        ),
+        "default": State(
+            {"item": ALL, "group": "graph", "options": ALL, "type": ALL}, "placeholder"
+        ),
+    },
     Input("update-figure", "n_clicks"),
     Input("figure-menu-label-spinner", "data"),
 )
-def generate_figure(
-    data,
-    variable,
-    selected_data,
-    subset_vars,
-    subsets,
-    input_ids,
-    input_values,
-    input_defaults,
-    update_figure,
-    figure_menu_spinner,
-):
+def generate_figure(data, selected_data, subset_vars, subsets, form_inputs, *args):
     # transform data for plotting
-    if data is None:
+    if data is None or not any(form_inputs.get("default")):
+        logger.debug("do not generate plot yet")
         return None, None
-    logger.info(
-        "Generating %s figure for subsets=%s", variable, zip(subset_vars, subsets)
+
+    # Parse figure-menu inputs
+    px_kwargs_inputs = [
+        "x",
+        "y",
+        "color",
+        "symbol",
+        "facet_col",
+        "facet_row",
+        "color_continuous_scale",
+    ]
+    logger.debug("sort figure-menu form input")
+    form_inputs = pd.DataFrame(form_inputs)
+    form_inputs = (
+        form_inputs.assign(
+            name=form_inputs["id"].apply(lambda x: x["item"]),
+            output=form_inputs["value"].fillna(form_inputs["default"]),
+        )
+        .set_index("name")
+        .replace({"None": None})
     )
+    logger.debug("form inputs=\n%s", form_inputs)
+
+    px_kwargs = form_inputs.loc[px_kwargs_inputs]["output"].dropna().to_dict()
+    if px_kwargs.get("x") is None or px_kwargs.get("y") is None:
+        logger.debug("No x or y axis given: px_kwargs=%s", px_kwargs)
+        return None, None
+
+    label = form_inputs["output"]["label"]
+    plot_type = form_inputs["output"]["type"]
+    if form_inputs["output"][["color_min", "color_max"]].notna().any():
+        range_color = form_inputs["output"][["color_min", "color_max"]].tolist()
+        logger.debug("set range color: %s", range_color)
+        px_kwargs["range_color"] = range_color
+
+    logger.debug("px_kwarkgs= %s", px_kwargs)
+    # Get Data and filter by given subset
+    logger.info("Generating figure for subsets=%s", list(zip(subset_vars, subsets)))
     df = pd.DataFrame(data)
     filter_subsets = " and ".join(
         [
@@ -326,46 +375,22 @@ def generate_figure(
         df = update_dataframe(
             df, pd.DataFrame(selected_data), on="hakai_id", how="left"
         )
+
+    # tranform data
+    df = fill_hakai_flag_variables(df)
     time_var = "collected" if "collected" in df else "start_dt"
-    # df.loc[:, get_flag_var(variable)] = df.loc[:, get_flag_var(variable)].fillna("UKN")
     df[time_var] = pd.to_datetime(df[time_var])
     df.loc[:, "year"] = df[time_var].dt.year
-
     logger.debug("data to plot len(df)=%s", len(df))
-    # Define plotly express parameters
-    placeholder_to_null = {"minimum": None, "maximum": None}
-    px_kwargs = {
-        key["item"]: input_value
-        or placeholder_to_null.get(input_default, input_default)
-        for key, input_value, input_default in zip(
-            input_ids, input_values, input_defaults
-        )
-    }
 
-    if px_kwargs.get("x") is None or px_kwargs.get("y") is None:
-        logger.debug("No x or y axis given: px_kwargs=%s", px_kwargs)
-        return None, None
-
-    label = px_kwargs.pop("label")
-    plot_type = px_kwargs.pop("type")
-
-    # Sort range_color
-    range_color = [
-        px_kwargs.pop("color_min"),
-        px_kwargs.pop("color_max"),
-    ]
-
-    vline = px_kwargs.pop("vline")
-    hline = px_kwargs.pop("hline")
-    px_kwargs = {
-        key: value for key, value in px_kwargs.items() if value not in (None, "None")
-    }
-
+    # Generate plot
     if plot_type == "scatter":
         px_kwargs["labels"] = config["VARIABLES_LABEL"]
-        if range_color[0] is not None and range_color[1] is not None:
-            logger.debug("apply range_color=%s", range_color)
-            # px_kwargs["range_color"] = range_color
+        if "flag" in px_kwargs.get("color"):
+            logger.debug("assign color map for object")
+            df[px_kwargs["color"]] = df[px_kwargs["color"]].astype(str)
+            px_kwargs["color_discrete_map"] = flag_color_map
+
         logger.debug("Generate scatter: %s", str(px_kwargs))
         fig = px.scatter(df, **px_kwargs)
     elif plot_type == "contour":
@@ -409,75 +434,41 @@ def define_variables_options(n, variables):
 
 
 @callback(
-    {
-        "type": Output(
-            {
-                "item": "type",
-                "group": "graph",
-                "options": "predefined",
-                "type": "input",
-            },
-            "placeholder",
-        ),
-        "x": Output(
-            {"item": "x", "group": "graph", "options": "variables", "type": "input"},
-            "placeholder",
-        ),
-        "y": Output(
-            {"item": "y", "group": "graph", "options": "variables", "type": "input"},
-            "placeholder",
-        ),
-        "color": Output(
-            {
-                "item": "color",
-                "group": "graph",
-                "options": "variables",
-                "type": "input",
-            },
-            "placeholder",
-        ),
-        "symbol": Output(
-            {
-                "item": "symbol",
-                "group": "graph",
-                "options": "variables",
-                "type": "input",
-            },
-            "placeholder",
-        ),
-    },
-    Output("figure-menu-label-spinner", "data"),
+    Output(
+        {
+            "item": MATCH,
+            "group": "graph",
+            "options": MATCH,
+            "type": "input",
+        },
+        "placeholder",
+    ),
+    State("location", "pathname"),
     Input(
-        {"item": "label", "group": "graph", "options": "str", "type": "input"},
+        "figure-type-selector",
         "value",
     ),
-    State("variable", "value"),
+    State(
+        {
+            "item": MATCH,
+            "group": "graph",
+            "options": MATCH,
+            "type": "input",
+        },
+        "id",
+    ),
+    Input("variable", "value"),
     State("dataframe-variables", "data"),
-    State("location", "pathname"),
 )
-def define_graph_default_values(label, variable, variables, path):
-    placeholders = dict(type=None, x=None, y=None, color=None, symbol=None)
+def define_graph_default_values(path, label, parameter, variable, variables):
     if variable is None or label is None:
-        return default_placeholders, None
-
-    # Apply presets
-    logger.debug("Find present for path=%s; label=%s", path, label)
-    if path in figure_presets and label in figure_presets[path]:
-        logger.debug("Apply figure preset: %s -> %s", path, label)
-        placeholders.update(figure_presets[path][label])
-    # replace main_var
-    variable_placeholers = {
-        "main_var": variable,
-        "main_var_flag": get_flag_var(variable, variables.split(",")),
-    }
-    placeholders = {
-        key: variable_placeholers.get(value, value)
-        for key, value in placeholders.items()
-    }
-    logger.debug(
-        "Set presets: path=%s, label=%s, placeholders=%s", path, label, placeholders
-    )
-    return placeholders, None
+        return None
+    placeholder = figure_presets[path].get(label).get(parameter["item"])
+    if placeholder == "main_var":
+        return variable
+    elif placeholder == "main_var_flag":
+        return get_flag_var(variable, variables.split(","))
+    return placeholder
 
 
 @callback(
@@ -490,14 +481,15 @@ def define_graph_default_values(label, variable, variables, path):
         },
         "value",
     ),
+    Output("figure-menu-label-spinner", "data"),
     Input("figure-type-selector", "value"),
-    Input("dataframe-variables", "data"),
+    Input("variable", "value"),
 )
-def get_label(label, variables):
-    if variables is None:
-        return None
+def get_label(label, variable):
+    if variable is None:
+        return None, None
     logger.debug("Selected figure type preset: %s", label)
-    return label
+    return label, None
 
 
 @callback(
@@ -514,7 +506,6 @@ def get_plot_types(path):
     return presets, presets[0]["value"]
 
 
-default_placeholders = dict(type=None, x=None, y=None, color=None, symbol=None)
 figure_presets = {
     "/nutrients": {
         "Time Series": {
@@ -547,6 +538,7 @@ figure_presets = {
             "x": "sio2",
             "y": "main_var",
             "color": "main_var_flag",
+            "extra_traces": '[{"x": [0,20],"y": [0,20],"type": "line"}]',
         },
     },
     "/ctd": {
