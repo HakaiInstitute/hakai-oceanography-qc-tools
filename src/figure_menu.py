@@ -153,6 +153,24 @@ figure_menu = dbc.Offcanvas(
             align="center",
         ),
         html.Br(),
+        dbc.Row(
+            [
+                dbc.Col(dbc.Label("Hover data"), width=2),
+                dbc.Col(
+                    dcc.Dropdown(
+                        id={
+                            "item": "hover_data",
+                            "group": "graph",
+                            "options": "variables",
+                            "type": "input",
+                        },
+                        multi=True,
+                    ),
+                    width=10,
+                ),
+            ],
+            align="center",
+        ),
         *[
             dbc.Row(
                 [
@@ -301,6 +319,7 @@ def generate_figure(data, selected_data, subset_vars, subsets, form_inputs, *arg
         "facet_col",
         "facet_row",
         "color_continuous_scale",
+        "hover_data",
     ]
     logger.debug("sort figure-menu form input")
     form_inputs = pd.DataFrame(form_inputs)
@@ -316,6 +335,11 @@ def generate_figure(data, selected_data, subset_vars, subsets, form_inputs, *arg
     inputs = form_inputs["output"]
 
     px_kwargs = inputs[px_kwargs_inputs].dropna().to_dict()
+    px_kwargs["hover_data"] = (
+        px_kwargs["hover_data"].split(",")
+        if isinstance(px_kwargs["hover_data"], str)
+        else px_kwargs["hover_data"]
+    )
     if px_kwargs.get("x") is None or px_kwargs.get("y") is None:
         logger.debug("No x or y axis given: px_kwargs=%s", px_kwargs)
         return None, None
@@ -486,6 +510,7 @@ figure_presets = {
             "x": "collected",
             "y": "main_var",
             "color": "main_var_flag",
+            "hover_data": "hakai_id",
         },
         "Time Series Profiles": {
             "type": "scatter",
@@ -493,18 +518,21 @@ figure_presets = {
             "y": "line_out_depth",
             "color": "main_var",
             "symbol": "main_var_flag",
+            "hover_data": "hakai_id",
         },
         "Contour Profiles": {
             "type": "contour",
             "x": "collected",
             "y": "line_out_depth",
             "color": "main_var",
+            "hover_data": "hakai_id",
         },
         "PO4 red-field": {
             "type": "scatter",
             "x": "po4",
             "y": "no2_no3_um",
             "color": "main_var_flag",
+            "hover_data": "hakai_id",
             "extra_traces": '[["Scatter",{"x": [0,2.1875],"y": [0,35], "name":"limit", "mode": "lines","line":{"color":"#de2323","dash":"dot"}}]]',
         },
         "SiO2 red-field": {
@@ -512,6 +540,7 @@ figure_presets = {
             "x": "sio2",
             "y": "no2_no3_um",
             "color": "main_var_flag",
+            "hover_data": "hakai_id",
             "extra_traces": '[["Scatter",{"x": [0,32.8125],"y": [0,35],"name":"limit", "mode": "lines","line":{"color":"#de2323","dash":"dot"}}]]',
         },
     },
@@ -522,18 +551,21 @@ figure_presets = {
             "y": "depth",
             "color": "main_var",
             "symbol": "main_var_flag",
+            "hover_data": "hakai_id",
         },
         "Time Series": {
             "type": "scatter",
             "x": "start_dt",
             "y": "main_var",
             "color": "main_var_flag",
+            "hover_data": "hakai_id",
         },
         "Contour Profiles": {
             "type": "contour",
             "x": "start_dt",
             "y": "pressure",
             "color": "main_var",
+            "hover_data": "hakai_id",
         },
     },
 }
