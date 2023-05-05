@@ -108,9 +108,14 @@ def show_qc_section(n_clicks, is_open, hash):
     return (not data_filter_interface, not data_filter_interface, hash)
 
 
-@callback(Output("figure-menu", "is_open"), Input("figure-menu-button", "n_clicks"))
-def open_figure_menu(clicked):
-    return True if clicked else False
+@callback(
+    Output("figure-menu", "is_open"),
+    Output("figure-menu-button", "active"),
+    Input("figure-menu-button", "n_clicks"),
+    State("figure-menu", "is_open"),
+)
+def open_figure_menu(clicked, is_open):
+    return (not is_open, not is_open) if clicked else (False, False)
 
 
 @callback(
