@@ -49,9 +49,7 @@ navbar_menu = dbc.Nav(
         dbc.NavItem(
             dbc.NavLink(
                 className="bi bi-search me-1",
-                href="#qc",
                 id="qc-button",
-                active="partial",
             )
         ),
         dbc.NavItem(
@@ -67,7 +65,16 @@ data_filter_interface = dbc.Collapse(
         [
             dbc.CardHeader("Filter data by"),
             dbc.CardBody(
-                dbc.Row(id="dataframe-subsets", align="center", justify="center")
+                [
+                    dbc.Row(id="dataframe-subsets", align="center", justify="center"),
+                    html.Div(
+                        dbc.Button(
+                            "Apply filter",
+                            id="apply-subset-filetr",
+                            className="d-grid gap-2 col-6 mx-auto update-figure-button",
+                        )
+                    ),
+                ]
             ),
         ]
     ),
@@ -88,8 +95,8 @@ def showfilter_by_section(n_clicks, is_open):
 
 
 @callback(
-    Output("selection-interface", "is_open"),
     Output("qc-button", "active"),
+    Output("selection-interface", "is_open"),
     Output("location", "hash"),
     Input("qc-button", "n_clicks"),
     Input("selection-interface", "is_open"),
@@ -103,9 +110,13 @@ def show_qc_section(n_clicks, is_open, hash):
         is_open,
         hash,
     )
-    if "#qc" in hash:
+    if "#qc" in hash and ctx.triggered_id == "location":
         return True, True, hash
-    return (not data_filter_interface, not data_filter_interface, hash)
+    return (
+        not is_open,
+        not is_open,
+        hash.replace("#qc", "") if is_open else hash + "#qc",
+    )
 
 
 @callback(
