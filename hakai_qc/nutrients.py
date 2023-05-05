@@ -1,6 +1,8 @@
 from hakai_qc.flags import flag_qartod_to_hakai, get_hakai_variable_flag
 from hakai_qc.qc import qartod_compare, qc_dataframe
 
+variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
+nutrient_variables = ["no2_no3_um", "sio2", "po4"]
 nutrients_qc_configs = {
     "-5 < line_out_depth < 50": """
         contexts:
@@ -68,10 +70,12 @@ nutrients_qc_bdl = {
 
 def run_nutrient_qc(
     df,
-    config=nutrients_qc_configs,
+    config=None,
     groupby=["site_id", "line_out_depth"],
     overwrite_existing_flags=False,
 ):
+    if config is None:
+        config = nutrients_qc_configs
     """Run Hakai Nutrient automated QC"""
     # Run QARTOD tests
     original_columns = df.columns

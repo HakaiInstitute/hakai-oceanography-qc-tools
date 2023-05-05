@@ -1,36 +1,70 @@
 .data-selection-interface {
-    padding-top:5px;
-    padding-bottom:5px;
-    width:90%;
-    text-align: center;
-    align-content: center;
-    margin:auto;
+    padding: 5px;
 }
 
-/* restyle radio items */
+.figure-menu-column {
+  margin: 10px;
+}
+.update-figure-button {
+  margin: 10px;
+}
+
+/* plot preset selection tool*/
 .radio-group .form-check {
     padding-left: 0;
-    padding-top: 2px;
-    padding-bottom: 2px;
-  }
-  
-  .radio-group .btn-group > .form-check:not(:last-child) > .btn {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    margin-left: auto;
-  }
-  
-  .radio-group .btn-group > .form-check:not(:first-child) > .btn {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    margin-left: -1px;
-  }
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
 
-  .apply-flag-selector {
-    width: 100px;
-  }
+.radio-group .btn-group > .form-check:not(:last-child) > .btn {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-left: auto;
+  border-color: #B52026;
+}
 
-  .apply-flag-section {
-    align-content: center;
-    display:flex;
-  }
+.radio-group .btn-group > .form-check:not(:first-child) > .btn {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: -1px;
+  border-color: #B52026;
+}
+
+.qc-table-extra-buttons {
+  display: flex;
+  width: 30%;
+  align-items: center;
+  align-self: center;
+}
+.qc-menu {
+  padding:10px;
+  background-color: aliceblue;
+}
+.selection-area {
+  width: 70%;
+  max-width: 900px;
+  min-width: 400px;
+  margin: 5px;
+  vertical-align: center;
+  place-items: left;
+  position:relative;
+  padding: 5px;
+}
+.selection-action {
+  min-width: 130px;
+}
+.selection-apply {
+  min-width: 200px;
+}
+.selection-box{
+  min-width: 200px;
+}
+.selection-to {
+  min-width: 130px;
+}
+
+/* drop down flag menu in qc table */
+.Select-menu-outer {
+  display : block !important;
+  margin-bottom: 3rem !important;
+}

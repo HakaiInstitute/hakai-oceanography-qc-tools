@@ -14,4 +14,4 @@ jobs:
       - name: Install Caprover CLI
         run: npm install -g caprover
       - name: Tell Caprover server to deploy development
-        run: caprover deploy --caproverUrl https://captain.server.hak4i.org --appToken ${{ secrets.CAPROVER_TOKEN }} --branch 'main' --appName quality-control-data
+        run: caprover deploy --caproverUrl https://captain.server.hak4i.org --appToken ${{ secrets.CAPROVER_TOKEN }} --branch 'development' --appName quality-control-data

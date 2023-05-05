@@ -1,0 +1,88 @@
+{
+  "nutrients": {
+    "Time Series": {
+      "type": "scatter",
+      "x": "collected",
+      "y": "main_var",
+      "color": "main_var_flag",
+      "hover_data": "hakai_id"
+    },
+    "Time Series Profiles": {
+      "type": "scatter",
+      "x": "collected",
+      "y": "line_out_depth",
+      "color": "main_var",
+      "symbol": "main_var_flag",
+      "hover_data": "hakai_id"
+    },
+    "Contour Profiles": {
+      "type": "contour",
+      "x": "collected",
+      "y": "line_out_depth",
+      "color": "main_var",
+      "hover_data": "hakai_id"
+    },
+    "PO4 red-field": {
+      "type": "scatter",
+      "x": "po4",
+      "y": "no2_no3_um",
+      "color": "main_var_flag",
+      "hover_data": "hakai_id",
+      "extra_traces": [
+        [
+          "Scatter",
+          {
+            "x": [0, 2.1875],
+            "y": [0, 35],
+            "name": "limit",
+            "mode": "lines",
+            "line": { "color": "#de2323", "dash": "dot" }
+          }
+        ]
+      ]
+    },
+    "SiO2 red-field": {
+      "type": "scatter",
+      "x": "sio2",
+      "y": "no2_no3_um",
+      "color": "main_var_flag",
+      "hover_data": "hakai_id",
+      "extra_traces": [
+        [
+          "Scatter",
+          {
+            "x": [0, 32.8125],
+            "y": [0, 35],
+            "name": "limit",
+            "mode": "lines",
+            "line": { "color": "#de2323", "dash": "dot" }
+          }
+        ]
+      ]
+    }
+  },
+  "ctd": {
+    "Time Series Profiles": {
+      "type": "scatter",
+      "x": "start_dt",
+      "y": "depth",
+      "color": "main_var",
+      "symbol": "main_var_flag",
+      "hover_data": "hakai_id"
+    },
+    "Time Series": {
+      "type": "scatter",
+      "x": "start_dt",
+      "y": "main_var",
+      "color": "main_var_flag",
+      "hover_data": "hakai_id"
+    },
+    "Contour Profiles": {
+      "type": "contour",
+      "x": "start_dt",
+      "y": "pressure",
+      "color": "main_var",
+      "hover_data": "hakai_id"
+    }
+  }
+}

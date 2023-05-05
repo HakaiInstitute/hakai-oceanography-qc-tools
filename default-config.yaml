@@ -10,6 +10,7 @@ WEB_LOG_LEVEL: DEBUG
 SENTRY_LEVEL: INFO
 SENTRY_EVENT_LEVEL: ERROR
 SENTRY_DSN: https://d3e89a5a74d4466ab87439f260ade659@o56764.ingest.sentry.io/4504724090781696
+SENTRY_LOG_ACTIVE: false
 
 # App settings
 APP_NAME: Hakai Quality Control
@@ -20,7 +21,18 @@ NAVBAR_DARK: true
 HAKAI_DEFAULT_API_SERVER_ROOT: https://hecate.hakai.org/api
 HAKAI_ENDPOINTS: 'ctd/views/file/cast'
 
-PRIMARY_VARIABLES: [sio2, po4, no2_no3_um]
+PRIMARY_VARIABLES:
+  nutrients: [sio2, po4, no2_no3_um]
+  ctd:
+    [
+      temperature,
+      salinity,
+      dissolved_oxygen_ml_l,
+      turbidity,
+      flc,
+      par,
+      cdom_ppb,
+    ]
 
 VARIABLES_LABEL:
   {
@@ -29,4 +41,76 @@ VARIABLES_LABEL:
     'no2_no3_um': 'NO2 NO3 (uM)',
     'line_out_depth': 'Bottle Target Depth (m)',
     'collected': 'Collection Time',
+    'AV': 'Accepted Value',
+    'UKN': 'Unknown',
+    'NA': 'Not Available',
+    'SVC': 'Suspicious Value Careful',
+    'SVD': 'Suspicious Value Discard',
+    'BDL': 'Below Detection Limit',
   }
+
+pages:
+  nutrients:
+    - endpoint: 'eims/views/output/nutrients'
+  ctd:
+    - endpoint: ctd/views/file/cast/data
+      fields:
+        [
+          'hakai_id',
+          'station',
+          'start_dt',
+          'direction_flag',
+          'depth',
+          'pressure',
+          'conductivity',
+          'conductivity_flag',
+          'conductivity_flag_level_1',
+          'temperature',
+          'temperature_flag',
+          'temperature_flag_level_1',
+          'turbidity',
+          'turbidity_flag',
+          'turbidity_flag_level_1',
+          'salinity',
+          'salinity_flag',
+          'salinity_flag_level_1',
+          'dissolved_oxygen_ml_l',
+          'dissolved_oxygen_ml_l_flag_level_1',
+          'dissolved_oxygen_percent',
+          'dissolved_oxygen_percent_flag',
+          'dissolved_oxygen_percent_flag_level_1',
+          'par',
+          'par_flag',
+          'par_flag_level_1',
+          'flc',
+          'flc_flag',
+          'flc_flag_level_1',
+          'c_star_at',
+          'c_star_at_flag',
+          'c_star_at_flag_level_1',
+          'cdom_ppb',
+          'cdom_ppb_flag',
+          'cdom_ppb_flag_level_1',
+        ]
+    - endpoint: 'eims/views/output/ctd_qc'
+      fields:
+        [
+          hakai_id,
+          collected,
+          work_area,
+          survey,
+          site_id,
+          depth_flag,
+          pressure_flag,
+          conductivity_flag,
+          salinity_flag,
+          temperature_flag,
+          dissolved_oxygen_ml_l_flag,
+          dissolved_oxygen_percent_flag,
+          rinko_do_ml_l_flag,
+          par_flag,
+          flc_flag,
+          turbidity_flag,
+          c_star_at_flag,
+          comments,
+        ]
