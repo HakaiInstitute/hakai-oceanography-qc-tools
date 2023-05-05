@@ -18,6 +18,7 @@ from navbar import navbar, data_filter_interface
 from tooltips import tooltips
 from figure import figure_menu, figure_radio_buttons
 
+
 # load hakai template
 pio.templates["hakai"] = hakai_template
 pio.templates.default = "hakai"
@@ -63,7 +64,7 @@ app.layout = html.Div(
         figure_radio_buttons,
         figure_menu,
         dcc.Graph(id={"type": "graph", "page": "main"}, figure={}),
-        selection.selection_interface,
+        selection.qc_section,
         hakai_api_credentials_modal,
         dcc.Location(id="location"),
         html.Div(id="toast-container"),

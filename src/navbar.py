@@ -28,17 +28,32 @@ stores = dbc.Col(
 )
 navbar_menu = dbc.Nav(
     [
-        dbc.NavItem(dbc.NavLink("Nutrients", href="/nutrients", className="ms-auto")),
-        dbc.NavItem(dbc.NavLink("CTD", href="/ctd")),
         dbc.NavItem(
             dbc.NavLink(
-                "Chlorophyll", href="/chlorophyll", disabled=True, className="me-1"
+                "Nutrients", href="/nutrients", className="ms-auto", active="partial"
+            )
+        ),
+        dbc.NavItem(dbc.NavLink("CTD", href="/ctd", active="partial")),
+        dbc.NavItem(
+            dbc.NavLink(
+                "Chlorophyll",
+                href="/chlorophyll",
+                disabled=True,
+                className="me-1",
+                active="partial",
             )
         ),
         dbc.NavItem(
             dbc.NavLink(className="bi bi-filter-circle-fill me-1", id="filter-by")
         ),
-        dbc.NavItem(dbc.NavLink(className="bi bi-search me-1", id="qc-button")),
+        dbc.NavItem(
+            dbc.NavLink(
+                className="bi bi-search me-1",
+                href="#qc",
+                id="qc-button",
+                active="partial",
+            )
+        ),
         dbc.NavItem(
             dbc.NavLink(id="figure-menu-button", className="bi bi-file-bar-graph")
         ),
@@ -64,23 +79,33 @@ data_filter_interface = dbc.Collapse(
 
 @callback(
     Output("data-selection-interface", "is_open"),
+    Output("filter-by", "active"),
     Input("filter-by", "n_clicks"),
-    Input("data-selection-interface", "is_open"),
+    State("data-selection-interface", "is_open"),
 )
-def showfilter_by_section(n_clicks, is_in):
-    return not is_in if n_clicks else False
+def showfilter_by_section(n_clicks, is_open):
+    return 2 * [not is_open] if n_clicks else (False, False)
 
 
 @callback(
     Output("selection-interface", "is_open"),
+    Output("qc-button", "active"),
+    Output("location", "hash"),
     Input("qc-button", "n_clicks"),
     Input("selection-interface", "is_open"),
-    Input("location", "hash"),
+    State("location", "hash"),
 )
-def show_qc_section(n_clicks, is_in, hash):
+def show_qc_section(n_clicks, is_open, hash):
+    logger.debug(
+        "trigger qc section: trigger=%s, click=%s,is_open=%s,hash=%s",
+        ctx.triggered_id,
+        n_clicks,
+        is_open,
+        hash,
+    )
     if "#qc" in hash:
-        return True
-    return not is_in if n_clicks else False
+        return True, True, hash
+    return (not data_filter_interface, not data_filter_interface, hash)
 
 
 @callback(Output("figure-menu", "is_open"), Input("figure-menu-button", "n_clicks"))

@@ -72,62 +72,92 @@ selection_table = dash_table.DataTable(
         "overflowX": "auto",
     },
 )
-selection_interface = dbc.Collapse(
+selection_interface = dbc.Row(
     [
-        dbc.Form(
-            dbc.Row(
-                [
-                    dbc.Label("Apply", width="auto"),
-                    dbc.Col(
-                        dcc.Dropdown(
-                            options=[
-                                "Flag",
-                                "Quality Level",
-                                "Automated QC",
-                            ],
-                            value="Flag",
-                            id="selection-action",
-                            clearable=False,
-                            className="selection-action",
-                        ),
-                    ),
-                    dbc.Label("=", width="auto"),
-                    dbc.Col(
-                        dcc.Dropdown(
-                            id="selection-apply",
-                            clearable=False,
-                            className="selection-apply",
-                        ),
-                    ),
-                    dbc.Label("to all", width="auto"),
-                    dbc.Col(
-                        dcc.Dropdown(
-                            id="selection-to", clearable=False, className="selection-to"
-                        ),
-                    ),
-                    dbc.Col(
-                        dbc.Button(
-                            "Apply",
-                            id="selection-apply-button",
-                            color="primary",
-                        ),
-                        width="auto",
-                    ),
+        dbc.Label("Apply", width="auto"),
+        dbc.Col(
+            dcc.Dropdown(
+                options=[
+                    "Flag",
+                    "Quality Level",
+                    "Automated QC",
                 ],
-                className="g-2 selection-area",
+                value="Flag",
+                id="selection-action",
+                clearable=False,
+                className="selection-action",
+            ),
+        ),
+        dbc.Label("=", width="auto"),
+        dbc.Col(
+            dcc.Dropdown(
+                id="selection-apply",
+                clearable=False,
+                className="selection-apply",
+            ),
+        ),
+        dbc.Label("to all", width="auto"),
+        dbc.Col(
+            dcc.Dropdown(
+                id="selection-to",
+                clearable=False,
+                className="selection-to",
+            ),
+        ),
+        dbc.Col(
+            dbc.Button(
+                "Apply",
+                id="selection-apply-button",
+                color="primary",
+            ),
+            width="auto",
+        ),
+    ],
+    className="g-2 selection-area",
+)
+
+table_extra_buttons = html.Div(
+    [
+        dbc.Col(
+            dbc.Button(
+                html.Div(
+                    [
+                        "Download",
+                        dbc.Spinner(
+                            html.Div(id="hakai-excel-load-spinner"),
+                            size="lg",
+                        ),
+                    ]
+                ),
+                id="download-qc-excel-button",
             )
         ),
-        dbc.Button(
-            html.Div(
-                [
-                    "Download .xlsx",
-                    dbc.Spinner(
-                        html.Div(id="hakai-excel-load-spinner"),
-                        size="lg",
-                    ),
-                ]
-            ),
-            id="download-qc-excel-button",
+        dbc.Col(
+            dbc.Button(
+                html.Div(
+                    [
+                        "Upload",
+                        dbc.Spinner(
+                            html.Div(id="hakai-upload-to-hakai-spinner"),
+                            size="lg",
+                        ),
+                    ]
+                ),
+                id="upload-to-hakai-button",
+                disabled=True,
+            )
+        ),
+    ],
+    className="qc-table-extra-buttons",
+)
+
+qc_section = dbc.Collapse(
+    [
+        dbc.Row(
+            [table_extra_buttons, selection_interface],
+            justify="between",
+            align="center",
+            className="qc-menu",
         ),
         dcc.Download(id="download-qc-excel"),
         selection_table,
