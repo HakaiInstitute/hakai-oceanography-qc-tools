@@ -171,6 +171,9 @@ def get_hakai_data(path, query, credentials):
     if path == "/":
         logger.debug("do not load anything from front page path='/")
         return None, None, None, None, None
+    elif not query:
+        logger.debug("no query given")
+        return None, None, None, None, None
 
     path = path.split("/")[1]
     logger.debug("Load from path=%s", path)
