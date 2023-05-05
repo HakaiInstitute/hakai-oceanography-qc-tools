@@ -118,35 +118,36 @@ selection_interface = dbc.Row(
 
 table_extra_buttons = html.Div(
     [
-        dbc.Col(
-            dbc.Button(
-                html.Div(
-                    [
-                        "Download",
-                        dbc.Spinner(
-                            html.Div(id="hakai-excel-load-spinner"),
-                            size="lg",
-                        ),
-                    ]
+        dbc.ButtonGroup(
+            [
+                dbc.Button(
+                    html.Div(
+                        [
+                            "Download",
+                            dbc.Spinner(
+                                html.Div(id="hakai-excel-load-spinner"),
+                                size="lg",
+                            ),
+                        ]
+                    ),
+                    id="download-qc-excel-button",
                 ),
-                id="download-qc-excel-button",
-            )
-        ),
-        dbc.Col(
-            dbc.Button(
-                html.Div(
-                    [
-                        "Upload",
-                        dbc.Spinner(
-                            html.Div(id="hakai-upload-to-hakai-spinner"),
-                            size="lg",
-                        ),
-                    ]
+                dbc.Button(
+                    html.Div(
+                        [
+                            "Upload",
+                            dbc.Spinner(
+                                html.Div(id="hakai-upload-to-hakai-spinner"),
+                                size="lg",
+                            ),
+                        ]
+                    ),
+                    id="upload-to-hakai-button",
+                    disabled=True,
                 ),
-                id="upload-to-hakai-button",
-                disabled=True,
-            )
-        ),
+            ],
+            className="me-1",
+        )
     ],
     className="qc-table-extra-buttons",
 )
