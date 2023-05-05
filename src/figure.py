@@ -6,6 +6,7 @@ import dash_bootstrap_components as dbc
 import plotly.express as px
 import plotly.graph_objects as go
 from dash import ALL, MATCH, Input, Output, State, callback, ctx, dcc, html
+import os
 
 from hakai_qc.nutrients import (
     variables_flag_mapping,
@@ -16,7 +17,11 @@ from utils import load_config, update_dataframe
 from download_hakai import fill_hakai_flag_variables
 
 config = load_config()
-
+figure_presets_path = os.path.join(
+    os.path.dirname(__file__), "assets/figure_presets.json"
+)
+with open(figure_presets_path) as file_handle:
+    figure_presets = json.load(file_handle)
 
 logger = logging.getLogger(__name__)
 FIGURE_GROUPS = ["Timeseries Profiles", "Profile"]
@@ -322,7 +327,9 @@ def generate_figure(data, selected_data, subset_vars, subsets, form_inputs, *arg
     def _add_extra_traces(extra_traces):
         if extra_traces is None:
             return
-        for go_object, trace in json.loads(extra_traces):
+        for go_object, trace in (
+            json.loads(extra_traces) if isinstance(extra_traces, str) else extra_traces
+        ):
             if go_object == "Scatter":
                 fig.add_trace(go.Scatter(**trace))
 
@@ -528,75 +535,11 @@ def get_plot_types(path):
         for item in figure_presets.get(location_items[1], {}).keys()
     }
     default_figure = list(presets.values())[0]["value"]
-    if len(location_items) > 3:
-        location_preset = presets.get(location_items[3])
-        
-    return list(presets.values()), location_preset["value"] if location_preset else default_figure
+    location_preset = (
+        presets.get(location_items[3]) if len(location_items) > 3 else None
+    )
 
-
-figure_presets = {
-    "nutrients": {
-        "Time Series": {
-            "type": "scatter",
-            "x": "collected",
-            "y": "main_var",
-            "color": "main_var_flag",
-            "hover_data": "hakai_id",
-        },
-        "Time Series Profiles": {
-            "type": "scatter",
-            "x": "collected",
-            "y": "line_out_depth",
-            "color": "main_var",
-            "symbol": "main_var_flag",
-            "hover_data": "hakai_id",
-        },
-        "Contour Profiles": {
-            "type": "contour",
-            "x": "collected",
-            "y": "line_out_depth",
-            "color": "main_var",
-            "hover_data": "hakai_id",
-        },
-        "PO4 red-field": {
-            "type": "scatter",
-            "x": "po4",
-            "y": "no2_no3_um",
-            "color": "main_var_flag",
-            "hover_data": "hakai_id",
-            "extra_traces": '[["Scatter",{"x": [0,2.1875],"y": [0,35], "name":"limit", "mode": "lines","line":{"color":"#de2323","dash":"dot"}}]]',
-        },
-        "SiO2 red-field": {
-            "type": "scatter",
-            "x": "sio2",
-            "y": "no2_no3_um",
-            "color": "main_var_flag",
-            "hover_data": "hakai_id",
-            "extra_traces": '[["Scatter",{"x": [0,32.8125],"y": [0,35],"name":"limit", "mode": "lines","line":{"color":"#de2323","dash":"dot"}}]]',
-        },
-    },
-    "ctd": {
-        "Time Series Profiles": {
-            "type": "scatter",
-            "x": "start_dt",
-            "y": "depth",
-            "color": "main_var",
-            "symbol": "main_var_flag",
-            "hover_data": "hakai_id",
-        },
-        "Time Series": {
-            "type": "scatter",
-            "x": "start_dt",
-            "y": "main_var",
-            "color": "main_var_flag",
-            "hover_data": "hakai_id",
-        },
-        "Contour Profiles": {
-            "type": "contour",
-            "x": "start_dt",
-            "y": "pressure",
-            "color": "main_var",
-            "hover_data": "hakai_id",
-        },
-    },
-}
+    return (
+        list(presets.values()),
+        location_preset["value"] if location_preset else default_figure,
+    )
