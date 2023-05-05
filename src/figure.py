@@ -177,6 +177,7 @@ figure_menu = dbc.Collapse(
                                                 "type": "input",
                                             },
                                             multi=True,
+                                            clearable=True,
                                         ),
                                         width=10,
                                     ),
