@@ -21,19 +21,22 @@ config = load_config()
 logger = logging.getLogger(__name__)
 FIGURE_GROUPS = ["Timeseries Profiles", "Profile"]
 
-figure_radio_buttons = dbc.Row(
-    [
-        dbc.RadioItems(
-            id="figure-type-selector",
-            className="btn-group",
-            inputClassName="btn-check",
-            labelClassName="btn btn-outline-primary",
-            labelCheckedClassName="active",
-        ),
-    ],
-    justify="center",
-    align="center",
-    className="radio-group",
+figure_radio_buttons = html.Div(
+    dbc.Row(
+        [
+            dbc.RadioItems(
+                id="figure-type-selector",
+                className="btn-group",
+                inputClassName="btn-check",
+                labelClassName="btn btn-outline-primary",
+                labelCheckedClassName="active",
+                label_checked_style={"background-color": "#B52026", "color":"white"},
+                label_style={"color": "#B52026"},
+            ),
+        ],
+        className="radio-group",
+    ),
+    style=dict(display="flex", justifyContent="center"),
 )
 
 figure_menu = dbc.Offcanvas(
