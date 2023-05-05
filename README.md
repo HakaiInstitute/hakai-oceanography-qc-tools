@@ -71,7 +71,7 @@ Go to the project directory
   cd hakai-oceanography-qc-tools
 ```
 
-Install dependencies with poetry
+Install dependencies
 
 ```shell
     pip install -e .
