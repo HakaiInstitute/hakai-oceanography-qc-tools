@@ -1,4 +1,4 @@
-name: Deploy main to hak4i.org
+name: Deploy development to hak4i.org
 on:
   push:
     branches:
