@@ -30,7 +30,7 @@ figure_radio_buttons = html.Div(
                 inputClassName="btn-check",
                 labelClassName="btn btn-outline-primary",
                 labelCheckedClassName="active",
-                label_checked_style={"background-color": "#B52026", "color":"white"},
+                label_checked_style={"background-color": "#B52026", "color": "white"},
                 label_style={"color": "#B52026"},
             ),
         ],
@@ -400,6 +400,8 @@ def generate_figure(data, selected_data, subset_vars, subsets, form_inputs, *arg
     else:
         logger.error("unknown plot_type=%s", plot_type)
         return None, None
+
+    _add_extra_traces(inputs["extra_traces"] or "[]")
 
     fig.for_each_trace(
         lambda t: t.update(name=config["VARIABLES_LABEL"].get(t.name, t.name))
