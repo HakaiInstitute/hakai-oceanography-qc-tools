@@ -22,8 +22,8 @@ HAKAI_DEFAULT_API_SERVER_ROOT: https://hecate.hakai.org/api
 HAKAI_ENDPOINTS: 'ctd/views/file/cast'
 
 PRIMARY_VARIABLES:
-  /nutrients: [sio2, po4, no2_no3_um]
-  /ctd:
+  nutrients: [sio2, po4, no2_no3_um]
+  ctd:
     [
       temperature,
       salinity,
@@ -50,9 +50,9 @@ VARIABLES_LABEL:
   }
 
 pages:
-  /nutrients:
+  nutrients:
     - endpoint: 'eims/views/output/nutrients'
-  /ctd:
+  ctd:
     - endpoint: ctd/views/file/cast/data
       fields:
         [

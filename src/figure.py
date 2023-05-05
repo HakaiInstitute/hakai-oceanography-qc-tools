@@ -484,6 +484,7 @@ def define_variables_options(n, variables):
 def define_graph_default_values(path, label, parameter, variable, variables):
     if variable is None or label is None:
         return None
+    path = path.split("/")[1]
     placeholder = figure_presets[path].get(label).get(parameter["item"])
     if placeholder == "main_var":
         return variable
@@ -521,14 +522,20 @@ def get_label(label, variable):
 def get_plot_types(path):
     if path == "/":
         return None, None
-    presets = [
-        {"label": item, "value": item} for item in figure_presets.get(path, {}).keys()
-    ]
-    return presets, presets[0]["value"]
+    location_items = path.split("/")
+    presets = {
+        item.lower().replace(" ", "_").replace("-", ""): {"label": item, "value": item}
+        for item in figure_presets.get(location_items[1], {}).keys()
+    }
+    default_figure = list(presets.values())[0]["value"]
+    if len(location_items) > 3:
+        location_preset = presets.get(location_items[3])
+        
+    return list(presets.values()), location_preset["value"] if location_preset else default_figure
 
 
 figure_presets = {
-    "/nutrients": {
+    "nutrients": {
         "Time Series": {
             "type": "scatter",
             "x": "collected",
@@ -568,7 +575,7 @@ figure_presets = {
             "extra_traces": '[["Scatter",{"x": [0,32.8125],"y": [0,35],"name":"limit", "mode": "lines","line":{"color":"#de2323","dash":"dot"}}]]',
         },
     },
-    "/ctd": {
+    "ctd": {
         "Time Series Profiles": {
             "type": "scatter",
             "x": "start_dt",

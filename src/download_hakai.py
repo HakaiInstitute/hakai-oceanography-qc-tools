@@ -156,8 +156,10 @@ def get_hakai_data(path, query, credentials):
             return None, _make_toast_error(f"Failed to retrieve hakai data:\n{err}")
         if response.status_code == 500:
             hint = json.loads(response.text)["hint"]
+            logger.debug("Hakai 500: %s", hint)
             return None, _make_toast_error(f"Failed to retrieve: {hint}")
         elif response.status_code != 200:
+            logger.debug("Hakai Error= %s : %s", response.status_code, response.text)
             return None, _make_toast_error(f"Failed to download data: {response}")
 
         result = response.json()
@@ -170,6 +172,8 @@ def get_hakai_data(path, query, credentials):
         logger.debug("do not load anything from front page path='/")
         return None, None, None, None, None
 
+    path = path.split("/")[1]
+    logger.debug("Load from path=%s", path)
     endpoints = config["pages"][path]
     main_endpoint = endpoints[0]
     client = Client(credentials=credentials)
@@ -187,7 +191,7 @@ def get_hakai_data(path, query, credentials):
         )
     logger.debug("data downloaded")
     # Load auxiliary data
-    if path == "/ctd":
+    if path == "ctd":
         flag_filters = re.findall("(station|start_dt)(=|<|>|>=|<=)([^&]*)", url)
         url_flags = f"{client.api_root}/{endpoints[1]['endpoint']}?{'&'.join([''.join(item).replace('station','site_id').replace('start_dt','collected') for item in flag_filters])}"
         logger.debug("Retrieve CTD flags: %s", url_flags)
@@ -208,9 +212,9 @@ def get_hakai_data(path, query, credentials):
 
     # Extract subsets
     df = pd.DataFrame(result)
-    if path == "/nutrients":
+    if path == "nutrients":
         subset_variables = ["site_id", "line_out_depth"]
-    elif path == "/ctd":
+    elif path == "ctd":
         subset_variables = ["station", "direction_flag"]
     else:
         subset_variables = {}

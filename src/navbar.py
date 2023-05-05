@@ -139,12 +139,18 @@ def open_figure_menu(clicked, is_open):
 def get_variable_list(value, options, path):
     if options is None:
         return None, None
+    location_items = path.split("/")
     logger.debug("dataframe-variables=%s", options)
     options = [
         {"label": config["VARIABLES_LABEL"].get(option, option), "value": option}
         for option in options.split(",")
-        if option in config["PRIMARY_VARIABLES"][path]
+        if option in config["PRIMARY_VARIABLES"][location_items[1]]
     ]
+
+    # If value given in url use that
+    if len(location_items) > 2:
+        value = location_items[2]
+        logger.debug("variable value=%s from path=%s", value, path)
     return value or (options[0]["value"] if options else None), options
 
 
