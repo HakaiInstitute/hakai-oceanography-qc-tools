@@ -14,4 +14,4 @@ jobs:
       - name: Install Caprover CLI
         run: npm install -g caprover
       - name: Tell Caprover server to deploy main
-        run: caprover deploy --caproverUrl https://captain.server.hakai.app --appToken ${{ secrets.CAPROVER_TOKEN_MAIN }} --branch 'main' --appName hakai-samples-qc
+        run: caprover deploy --caproverUrl https://captain.server.hakai.app --appToken ${{ secrets.CAPROVER_TOKEN_MAIN }} --branch 'main' --appName quality-control-data
