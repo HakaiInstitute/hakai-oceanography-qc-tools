@@ -39,188 +39,205 @@ figure_radio_buttons = html.Div(
     style=dict(display="flex", justifyContent="center"),
 )
 
-figure_menu = dbc.Offcanvas(
-    [
-        html.H3("Figure Menu"),
-        dbc.Row(
-            [
-                dbc.Col(dbc.Label("Label"), width=2),
-                dbc.Col(
-                    dbc.Input(
-                        id={
-                            "item": "label",
-                            "group": "graph",
-                            "options": "str",
-                            "type": "input",
-                        },
-                        debounce=True,
-                    ),
-                    width=10,
-                ),
-            ],
-            align="center",
-        ),
-        dbc.Row(
-            [
-                dbc.Col(dbc.Label("Type"), width=2),
-                dbc.Col(
-                    dbc.Select(
-                        id={
-                            "item": "type",
-                            "group": "graph",
-                            "options": "predefined",
-                            "type": "input",
-                        },
-                        options=[
-                            {"label": key, "value": key}
-                            for key in ["scatter", "contour"]
-                        ],
-                    ),
-                    width=10,
-                ),
-            ],
-            align="center",
-        ),
-        *[
+figure_menu = dbc.Collapse(
+    dbc.Card(
+        [
+            dbc.CardHeader("Figure Menu"),
             dbc.Row(
                 [
-                    dbc.Col(dbc.Label(item.title()), width=2),
                     dbc.Col(
-                        dbc.Select(
-                            id={
-                                "item": item,
-                                "group": "graph",
-                                "options": "variables",
-                                "type": "input",
-                            }
-                        ),
-                        width=10,
-                    ),
-                ],
-                align="center",
-            )
-            for item in ["x", "y", "color", "symbol"]
-        ],
-        html.Br(),
-        dbc.Row(
-            [
-                dbc.Col(dbc.Label("Color Scale"), width=2),
-                dbc.Col(
-                    dbc.Select(
-                        id={
-                            "item": "color_continuous_scale",
-                            "group": "graph",
-                            "options": "color_continuous_scale",
-                            "type": "input",
-                        },
-                        options=[
-                            {"label": key, "value": key}
-                            for key in px.colors.named_colorscales()
+                        [
+                            dbc.Row(
+                                [
+                                    dbc.Col(dbc.Label("Label"), width=2),
+                                    dbc.Col(
+                                        dbc.Input(
+                                            id={
+                                                "item": "label",
+                                                "group": "graph",
+                                                "options": "str",
+                                                "type": "input",
+                                            },
+                                            debounce=True,
+                                        ),
+                                        width=10,
+                                    ),
+                                ],
+                                align="center",
+                            ),
+                            dbc.Row(
+                                [
+                                    dbc.Col(dbc.Label("Type"), width=2),
+                                    dbc.Col(
+                                        dbc.Select(
+                                            id={
+                                                "item": "type",
+                                                "group": "graph",
+                                                "options": "predefined",
+                                                "type": "input",
+                                            },
+                                            options=[
+                                                {"label": key, "value": key}
+                                                for key in ["scatter", "contour"]
+                                            ],
+                                        ),
+                                        width=10,
+                                    ),
+                                ],
+                                align="center",
+                            ),
+                            *[
+                                dbc.Row(
+                                    [
+                                        dbc.Col(dbc.Label(item.title()), width=2),
+                                        dbc.Col(
+                                            dbc.Select(
+                                                id={
+                                                    "item": item,
+                                                    "group": "graph",
+                                                    "options": "variables",
+                                                    "type": "input",
+                                                }
+                                            ),
+                                            width=10,
+                                        ),
+                                    ],
+                                    align="center",
+                                )
+                                for item in ["x", "y", "color", "symbol"]
+                            ],
                         ],
+                        className="figure-menu-column",
                     ),
-                    width=10,
-                ),
-            ],
-            align="center",
-        ),
-        dbc.Row(
-            [
-                dbc.Col(dbc.Label("Range Color"), width=2),
-                dbc.Col(dbc.Label("Min"), width=1),
-                dbc.Col(
-                    dbc.Input(
-                        type="number",
-                        id={
-                            "item": "color_min",
-                            "group": "graph",
-                            "options": "float",
-                            "type": "input",
-                        },
-                    ),
-                    width=4,
-                ),
-                dbc.Col(dbc.Label("Max"), width=1),
-                dbc.Col(
-                    dbc.Input(
-                        type="number",
-                        id={
-                            "item": "color_max",
-                            "group": "graph",
-                            "options": "float",
-                            "type": "input",
-                        },
-                    ),
-                    width=4,
-                ),
-            ],
-            align="center",
-        ),
-        html.Br(),
-        dbc.Row(
-            [
-                dbc.Col(dbc.Label("Hover data"), width=2),
-                dbc.Col(
-                    dcc.Dropdown(
-                        id={
-                            "item": "hover_data",
-                            "group": "graph",
-                            "options": "variables",
-                            "type": "input",
-                        },
-                        multi=True,
-                    ),
-                    width=10,
-                ),
-            ],
-            align="center",
-        ),
-        *[
-            dbc.Row(
-                [
-                    dbc.Col(dbc.Label(item.replace("_", " ").title()), width=2),
                     dbc.Col(
-                        dbc.Select(
-                            id={
-                                "item": item,
-                                "group": "graph",
-                                "options": "variables",
-                                "type": "input",
-                            }
-                        ),
-                        width=10,
+                        [
+                            dbc.Row(
+                                [
+                                    dbc.Col(dbc.Label("Color Scale"), width=2),
+                                    dbc.Col(
+                                        dbc.Select(
+                                            id={
+                                                "item": "color_continuous_scale",
+                                                "group": "graph",
+                                                "options": "color_continuous_scale",
+                                                "type": "input",
+                                            },
+                                            options=[
+                                                {"label": key, "value": key}
+                                                for key in px.colors.named_colorscales()
+                                            ],
+                                        ),
+                                        width=10,
+                                    ),
+                                ],
+                                align="center",
+                            ),
+                            dbc.Row(
+                                [
+                                    dbc.Col(dbc.Label("Range Color"), width=2),
+                                    dbc.Col(dbc.Label("Min"), width=1),
+                                    dbc.Col(
+                                        dbc.Input(
+                                            type="number",
+                                            id={
+                                                "item": "color_min",
+                                                "group": "graph",
+                                                "options": "float",
+                                                "type": "input",
+                                            },
+                                        ),
+                                        width=4,
+                                    ),
+                                    dbc.Col(dbc.Label("Max"), width=1),
+                                    dbc.Col(
+                                        dbc.Input(
+                                            type="number",
+                                            id={
+                                                "item": "color_max",
+                                                "group": "graph",
+                                                "options": "float",
+                                                "type": "input",
+                                            },
+                                        ),
+                                        width=4,
+                                    ),
+                                ],
+                                align="center",
+                            ),
+                            html.Br(),
+                            dbc.Row(
+                                [
+                                    dbc.Col(dbc.Label("Hover data"), width=2),
+                                    dbc.Col(
+                                        dcc.Dropdown(
+                                            id={
+                                                "item": "hover_data",
+                                                "group": "graph",
+                                                "options": "variables",
+                                                "type": "input",
+                                            },
+                                            multi=True,
+                                        ),
+                                        width=10,
+                                    ),
+                                ],
+                                align="center",
+                            ),
+                            *[
+                                dbc.Row(
+                                    [
+                                        dbc.Col(
+                                            dbc.Label(item.replace("_", " ").title()),
+                                            width=2,
+                                        ),
+                                        dbc.Col(
+                                            dbc.Select(
+                                                id={
+                                                    "item": item,
+                                                    "group": "graph",
+                                                    "options": "variables",
+                                                    "type": "input",
+                                                }
+                                            ),
+                                            width=10,
+                                        ),
+                                    ]
+                                )
+                                for item in ["facet_col", "facet_row"]
+                            ],
+                            html.Br(),
+                            dbc.Row(
+                                [
+                                    dbc.Col(dbc.Label("Extra traces"), width=2),
+                                    dbc.Col(
+                                        dbc.Input(
+                                            id={
+                                                "item": "extra_traces",
+                                                "group": "graph",
+                                                "options": "str",
+                                                "type": "input",
+                                            },
+                                            debounce=True,
+                                            type="char",
+                                        ),
+                                        width=10,
+                                    ),
+                                ]
+                            ),
+                        ],
+                        className="figure-menu-column",
                     ),
                 ]
-            )
-            for item in ["facet_col", "facet_row"]
+            ),
+            html.Div(
+                dbc.Button("Update Figure", id="update-figure"),
+                className="d-grid gap-2 col-6 mx-auto update-figure-button",
+            ),
         ],
-        html.Br(),
-        dbc.Row(
-            [
-                dbc.Col(dbc.Label("Extra traces"), width=2),
-                dbc.Col(
-                    dbc.Input(
-                        id={
-                            "item": "extra_traces",
-                            "group": "graph",
-                            "options": "str",
-                            "type": "input",
-                        },
-                        debounce=True,
-                        type="char",
-                    ),
-                    width=10,
-                ),
-            ]
-        ),
-        dbc.Button(
-            "Update",
-            color="primary",
-            id="update-figure",
-            className="me-1",
-        ),
-    ],
+    ),
     id="figure-menu",
     is_open=False,
+    className="data-selection-interface",
 )
 
 

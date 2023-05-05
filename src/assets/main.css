@@ -2,6 +2,14 @@
     padding:10px;
 }
 
+.figure-menu-column {
+  margin: 10px;
+}
+.update-figure-button {
+  margin-bottom: 10px;
+  color:#B52026;
+}
+
 /* plot preset selection tool*/
 .radio-group .form-check {
     padding-left: 0;
