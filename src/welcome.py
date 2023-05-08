@@ -30,7 +30,11 @@ welcome_title = dbc.Row(
 )
 welcome_section = dbc.Modal(
     [
-        dbc.ModalHeader(dbc.ModalTitle(welcome_title), className="welcome-header"),
+        dbc.ModalHeader(
+            dbc.ModalTitle(welcome_title),
+            className="welcome-header",
+            close_button=False,
+        ),
         dbc.ModalBody(
             [
                 dcc.Markdown(
@@ -43,7 +47,12 @@ welcome_section = dbc.Modal(
                     [
                         dbc.Select(
                             options=[
-                                {"label": item.title(), "value": item}
+                                {
+                                    "label": config["VARIABLES_LABEL"].get(
+                                        item, item.title()
+                                    ),
+                                    "value": item,
+                                }
                                 for item in config["pages"].keys()
                             ],
                             id="select-data-type",
@@ -99,13 +108,16 @@ def get_station_list(data_type, credentials, work_area):
     return [item[site_label] for item in response.json()], None
 
 
-# @callback(
-#     Output("hide-all-figure-area", "is_open"),
-#     Output("welcome-section", "is_open"),
-#     Input({"type": "graph", "page": "main"}, "figure"),
-# )
-# def show_all_figure(figure):
-#     return bool(figure), not bool(figure)
+@callback(
+    Output("select-data-type", "value"),
+    Input("location", "pathname"),
+    Input("welcome-section", "is_open"),
+)
+def get_datatype_from_pathname(pathname, welcome_is_open):
+    if not welcome_is_open:
+        return None
+    data_type = [item for item in config["pages"] if item in pathname]
+    return data_type[0] if data_type else None
 
 
 @callback(

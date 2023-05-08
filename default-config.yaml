@@ -47,6 +47,7 @@ VARIABLES_LABEL:
     'SVC': 'Suspicious Value Careful',
     'SVD': 'Suspicious Value Discard',
     'BDL': 'Below Detection Limit',
+    'ctd': 'CTD',
   }
 
 pages:
