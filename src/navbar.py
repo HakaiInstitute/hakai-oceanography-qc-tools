@@ -184,7 +184,7 @@ navbar = dbc.Navbar(
                     [
                         dbc.Col(
                             html.Img(
-                                src= "assets/logo.png",
+                                src="assets/logo.png",
                                 height="40px",
                             )
                         ),
