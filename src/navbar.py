@@ -52,9 +52,6 @@ navbar_menu = dbc.Nav(
                 id="qc-button",
             )
         ),
-        dbc.NavItem(
-            dbc.NavLink(id="figure-menu-button", className="bi bi-file-bar-graph")
-        ),
         dbc.NavItem(dbc.NavLink(className="bi bi-person-circle me-1", id="log-in")),
     ],
     className="ms-auto",

@@ -29,16 +29,27 @@ FIGURE_GROUPS = ["Timeseries Profiles", "Profile"]
 figure_radio_buttons = html.Div(
     dbc.Row(
         [
-            dbc.RadioItems(
-                id="figure-type-selector",
-                className="btn-group",
-                inputClassName="btn-check",
-                labelClassName="btn btn-outline-primary",
-                labelCheckedClassName="active",
-                label_checked_style={"background-color": "#B52026", "color": "white"},
-                label_style={"color": "#B52026"},
+            dbc.Col(
+                dbc.RadioItems(
+                    id="figure-type-selector",
+                    className="btn-group",
+                    inputClassName="btn-check",
+                    labelClassName="btn btn-outline-primary",
+                    labelCheckedClassName="active",
+                    label_checked_style={
+                        "background-color": "#B52026",
+                        "color": "white",
+                    },
+                    label_style={"color": "#B52026"},
+                ),
+                width="auto",
+            ),
+            dbc.Col(
+                dbc.Button(id="figure-menu-button", className="bi bi-plus figure-button"),
+                width=1,
             ),
         ],
+        align="center",
         className="radio-group",
     ),
     style=dict(display="flex", justifyContent="center"),
@@ -249,7 +260,7 @@ figure_menu = dbc.Collapse(
 
 def get_color_range(var, prc=[0.02, 0.98]):
     min_limit, max_limit = var.quantile(prc).values
-    return np.floor(10*min_limit)/10, np.ceil(10*max_limit)/10
+    return np.floor(10 * min_limit) / 10, np.ceil(10 * max_limit) / 10
 
 
 def get_contour(df, x, y, color, range_color=None, x_interp_limit=3, y_interp_limit=4):
