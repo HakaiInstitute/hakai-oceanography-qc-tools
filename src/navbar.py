@@ -31,10 +31,16 @@ navbar_menu = dbc.Nav(
     [
         dbc.NavItem(
             dbc.NavLink(
-                "Nutrients", href="/nutrients", className="ms-auto", active="partial"
+                "Nutrients",
+                href="/nutrients",
+                className="ms-auto",
+                active="partial",
+                external_link=True,
             )
         ),
-        dbc.NavItem(dbc.NavLink("CTD", href="/ctd", active="partial")),
+        dbc.NavItem(
+            dbc.NavLink("CTD", href="/ctd", active="partial", external_link=True)
+        ),
         dbc.NavItem(
             dbc.NavLink(
                 "Chlorophyll",

@@ -59,6 +59,13 @@
           }
         ]
       ]
+    },
+    "Map": {
+      "type": "scatter_mapbox",
+      "x": "gather_long",
+      "y": "gather_lat",
+      "color": "main_var",
+      "hover_data": "hakai_id,site_id"
     }
   },
   "ctd": {
@@ -83,6 +90,13 @@
       "y": "pressure",
       "color": "main_var",
       "hover_data": "hakai_id"
+    },
+    "Map": {
+      "type": "scatter_mapbox",
+      "x": "longitude",
+      "y": "latitude",
+      "color": "main_var",
+      "hover_data": "hakai_id,station"
     }
   }
 }

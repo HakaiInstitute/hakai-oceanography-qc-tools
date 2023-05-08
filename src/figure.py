@@ -26,34 +26,28 @@ logger = logging.getLogger(__name__)
 FIGURE_GROUPS = ["Timeseries Profiles", "Profile"]
 
 figure_radio_buttons = html.Div(
-    dbc.Row(
-        [
-            dbc.Col(
-                dbc.RadioItems(
-                    id="figure-type-selector",
-                    className="btn-group",
-                    inputClassName="btn-check",
-                    labelClassName="btn btn-outline-primary",
-                    labelCheckedClassName="active",
-                    label_checked_style={
-                        "background-color": "#B52026",
-                        "color": "white",
-                    },
-                    label_style={"color": "#B52026"},
-                ),
-                width="auto",
+    [
+        dbc.Col(
+            dbc.RadioItems(
+                id="figure-type-selector",
+                className="btn-group",
+                inputClassName="btn-check",
+                labelClassName="btn btn-outline-primary",
+                labelCheckedClassName="active",
+                label_checked_style={
+                    "background-color": "#B52026",
+                    "color": "white",
+                },
+                label_style={"color": "#B52026"},
             ),
-            dbc.Col(
-                dbc.Button(
-                    id="figure-menu-button", className="bi bi-plus figure-button"
-                ),
-                width=1,
-            ),
-        ],
-        align="center",
-        className="radio-group",
-    ),
-    style=dict(display="flex", justifyContent="center"),
+            width="auto",
+        ),
+        dbc.Col(
+            dbc.Button(id="figure-menu-button", className="bi bi-plus figure-button"),
+            width=1,
+        ),
+    ],
+    className="radio-group",
 )
 
 figure_menu = dbc.Collapse(
@@ -435,6 +429,17 @@ def generate_figure(data, selected_data, subset_vars, subsets, form_inputs, *arg
         hover_data = px_kwargs.pop("hover_data", None)
         logger.debug("Generate contour: %s", px_kwargs)
         fig = get_contour(df, **px_kwargs)
+    elif plot_type == "scatter_mapbox":
+        fig = px.scatter_mapbox(
+            df,
+            lat=px_kwargs.pop("y"),
+            lon=px_kwargs.pop("x"),
+            **px_kwargs,
+            size_max=15,
+            zoom=10,
+            height=600,
+        )
+        fig.update_layout(mapbox_style="open-street-map")
     else:
         logger.error("unknown plot_type=%s", plot_type)
         return None, None
