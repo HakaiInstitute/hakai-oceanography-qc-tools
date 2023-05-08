@@ -38,6 +38,8 @@ if config.get("ACTIVATE_SENTRY_LOG") in (True, "true", 1):
         integrations=[
             sentry_logging,
         ],
+        environment=config["ENVIRONMENT"],
+        server_name=os.uname()[1],
         traces_sample_rate=1.0,
     )
 
@@ -54,7 +56,8 @@ app = Dash(
     external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],
     assets_folder="src/assets",
 )
-
+app.title = config["APP_NAME"]
+app._favicon = "hakai_icon.png"
 
 app.layout = html.Div(
     [

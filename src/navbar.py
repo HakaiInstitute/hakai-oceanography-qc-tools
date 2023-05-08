@@ -144,7 +144,7 @@ def open_figure_menu(clicked, is_open):
     Output("variable", "options"),
     State("variable", "value"),
     Input("dataframe-variables", "data"),
-    State("location", "pathname"),
+    Input("location", "pathname"),
 )
 def get_variable_list(value, options, path):
     if options is None:
@@ -182,7 +182,12 @@ navbar = dbc.Navbar(
                 # Use row and col to control vertical alignment of logo / brand
                 dbc.Row(
                     [
-                        dbc.Col(html.Img(src="assets/logo.png", height="40px")),
+                        dbc.Col(
+                            html.Img(
+                                src="assets/logo.png",
+                                height="40px",
+                            )
+                        ),
                         dbc.Col(dbc.NavbarBrand("Quality Control"), className="ms-2"),
                         dbc.Col(
                             dcc.Dropdown(

@@ -5,6 +5,7 @@ DASH_PORT: 8050
 TEMP_FOLDER: './temp'
 
 # logging
+ENVIRONMENT: local
 LOG_LEVEL: DEBUG
 WEB_LOG_LEVEL: DEBUG
 SENTRY_LEVEL: INFO
@@ -13,7 +14,7 @@ SENTRY_DSN: https://d3e89a5a74d4466ab87439f260ade659@o56764.ingest.sentry.io/450
 SENTRY_LOG_ACTIVE: false
 
 # App settings
-APP_NAME: Hakai Quality Control
+APP_NAME: Hakai Data Viewer
 NAVBAR_COLOR: '#B52026'
 NAVBAR_DARK: true
 
@@ -23,16 +24,7 @@ HAKAI_ENDPOINTS: 'ctd/views/file/cast'
 
 PRIMARY_VARIABLES:
   nutrients: [sio2, po4, no2_no3_um]
-  ctd:
-    [
-      temperature,
-      salinity,
-      dissolved_oxygen_ml_l,
-      turbidity,
-      flc,
-      par,
-      cdom_ppb,
-    ]
+  ctd: [temperature, salinity, dissolved_oxygen_ml_l, turbidity, flc, par]
 
 VARIABLES_LABEL:
   {
@@ -71,9 +63,6 @@ pages:
           'temperature',
           'temperature_flag',
           'temperature_flag_level_1',
-          'turbidity',
-          'turbidity_flag',
-          'turbidity_flag_level_1',
           'salinity',
           'salinity_flag',
           'salinity_flag_level_1',
@@ -88,12 +77,12 @@ pages:
           'flc',
           'flc_flag',
           'flc_flag_level_1',
+          'turbidity',
+          'turbidity_flag',
+          'turbidity_flag_level_1',
           'c_star_at',
           'c_star_at_flag',
           'c_star_at_flag_level_1',
-          'cdom_ppb',
-          'cdom_ppb_flag',
-          'cdom_ppb_flag_level_1',
         ]
     - endpoint: 'eims/views/output/ctd_qc'
       fields:
