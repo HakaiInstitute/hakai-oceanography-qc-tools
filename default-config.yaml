@@ -31,7 +31,6 @@ PRIMARY_VARIABLES:
       turbidity,
       flc,
       par,
-      cdom_ppb,
     ]
 
 VARIABLES_LABEL:
@@ -71,9 +70,6 @@ pages:
           'temperature',
           'temperature_flag',
           'temperature_flag_level_1',
-          'turbidity',
-          'turbidity_flag',
-          'turbidity_flag_level_1',
           'salinity',
           'salinity_flag',
           'salinity_flag_level_1',
@@ -88,12 +84,12 @@ pages:
           'flc',
           'flc_flag',
           'flc_flag_level_1',
+          'turbidity',
+          'turbidity_flag',
+          'turbidity_flag_level_1',
           'c_star_at',
           'c_star_at_flag',
           'c_star_at_flag_level_1',
-          'cdom_ppb',
-          'cdom_ppb_flag',
-          'cdom_ppb_flag_level_1',
         ]
     - endpoint: 'eims/views/output/ctd_qc'
       fields:
