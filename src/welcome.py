@@ -120,7 +120,7 @@ def get_station_list(data_type, credentials, work_area):
     Input("welcome-section", "is_open"),
 )
 def get_datatype_from_pathname(pathname, welcome_is_open):
-    if not welcome_is_open:
+    if not welcome_is_open or pathname not in ("/", None):
         return None
     data_type = [item for item in config["pages"] if item in pathname]
     return data_type[0] if data_type else None
