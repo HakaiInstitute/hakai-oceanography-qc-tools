@@ -1,20 +1,19 @@
-import logging
-import re
 import json
-import pandas as pd
+import logging
+import os
+import re
+
 import dash_bootstrap_components as dbc
+import numpy as np
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from dash import ALL, MATCH, Input, Output, State, callback, ctx, dcc, html
-import os
-import numpy as np
-from hakai_qc.nutrients import (
-    variables_flag_mapping,
-)
-from hakai_qc.flags import flag_mapping, flag_color_map
 
-from utils import load_config, update_dataframe
 from download_hakai import fill_hakai_flag_variables
+from hakai_qc.flags import flag_color_map, flag_mapping
+from hakai_qc.nutrients import variables_flag_mapping
+from utils import load_config, update_dataframe
 
 config = load_config()
 figure_presets_path = os.path.join(
@@ -45,7 +44,9 @@ figure_radio_buttons = html.Div(
                 width="auto",
             ),
             dbc.Col(
-                dbc.Button(id="figure-menu-button", className="bi bi-plus figure-button"),
+                dbc.Button(
+                    id="figure-menu-button", className="bi bi-plus figure-button"
+                ),
                 width=1,
             ),
         ],

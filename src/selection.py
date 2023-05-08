@@ -5,12 +5,13 @@ from datetime import datetime
 
 import dash_bootstrap_components as dbc
 import pandas as pd
-from dash import ALL, Dash, Input, Output, State, callback, ctx, dash_table, dcc, html
+from dash import (ALL, Dash, Input, Output, State, callback, ctx, dash_table,
+                  dcc, html)
 
-from hakai_qc.qc import update_dataframe
-from hakai_qc.flags import flag_color_map, get_hakai_variable_flag, flags_conventions
+from hakai_qc.flags import (flag_color_map, flags_conventions,
+                            get_hakai_variable_flag)
 from hakai_qc.nutrients import nutrient_variables, run_nutrient_qc
-
+from hakai_qc.qc import update_dataframe
 # from pages.nutrients import get_flag_var
 from utils import load_config
 

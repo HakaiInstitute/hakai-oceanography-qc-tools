@@ -2,18 +2,17 @@ import json
 import logging
 import re
 import webbrowser
-from time import time
-from urllib.parse import unquote
 from datetime import datetime
-from time import mktime
+from time import mktime, time
+from urllib.parse import unquote
 
 import dash_bootstrap_components as dbc
 import pandas as pd
 from dash import Input, Output, State, callback, ctx, dcc, html
 from hakai_api import Client
 from requests.exceptions import HTTPError
-from utils import load_config
 
+from utils import load_config
 
 logger = logging.getLogger(__name__)
 config = load_config()

@@ -1,8 +1,10 @@
-from dash import Input, Output, State, callback, dcc, html, ctx
-import dash_bootstrap_components as dbc
-from datetime import date
-from hakai_api import Client
 import logging
+from datetime import date
+
+import dash_bootstrap_components as dbc
+from dash import Input, Output, State, callback, ctx, dcc, html
+from hakai_api import Client
+
 from utils import load_config
 
 logger = logging.getLogger(__name__)

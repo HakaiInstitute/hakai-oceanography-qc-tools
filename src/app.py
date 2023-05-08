@@ -10,15 +10,13 @@ from dash import Dash, Input, Output, State, callback, dcc, html
 from sentry_sdk.integrations.logging import LoggingIntegration
 
 import selection as selection
-from hakai_plotly_template import hakai_template
-from utils import load_config
-
 from download_hakai import hakai_api_credentials_modal
-from navbar import navbar, data_filter_interface
-from tooltips import tooltips
 from figure import figure_menu, figure_radio_buttons
+from hakai_plotly_template import hakai_template
+from navbar import data_filter_interface, navbar
+from tooltips import tooltips
+from utils import load_config
 from welcome import welcome_section
-
 
 # load hakai template
 pio.templates["hakai"] = hakai_template
