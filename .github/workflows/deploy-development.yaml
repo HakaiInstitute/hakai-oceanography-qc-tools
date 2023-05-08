@@ -8,6 +8,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: altinukshini/deployment-action@releases/v1
+        name: Create GitHub deployment
+        id: deployment
+        with:
+          token: '${{ github.token }}'
+          target_url: https://quality-control-data.server.hak4i.org/
+          environment: development
       - uses: actions/setup-node@v3
         with:
           node-version: 16
