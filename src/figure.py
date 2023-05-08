@@ -7,7 +7,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash import ALL, MATCH, Input, Output, State, callback, ctx, dcc, html
 import os
-
+import numpy as np
 from hakai_qc.nutrients import (
     variables_flag_mapping,
 )
@@ -248,7 +248,8 @@ figure_menu = dbc.Collapse(
 
 
 def get_color_range(var, prc=[0.02, 0.98]):
-    return var.quantile(prc).values
+    min_limit, max_limit = var.quantile(prc).values
+    return np.floor(10*min_limit)/10, np.ceil(10*max_limit)/10
 
 
 def get_contour(df, x, y, color, range_color=None, x_interp_limit=3, y_interp_limit=4):

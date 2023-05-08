@@ -68,3 +68,8 @@
   display : block !important;
   margin-bottom: 3rem !important;
 }
+
+.welcome-header {
+  background-color: #B52026;
+  color: white
+}

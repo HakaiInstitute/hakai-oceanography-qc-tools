@@ -155,9 +155,10 @@ def get_hakai_data(path, query, credentials):
         except Exception as err:
             return None, _make_toast_error(f"Failed to retrieve hakai data:\n{err}")
         if response.status_code == 500:
-            hint = json.loads(response.text)["hint"]
-            logger.debug("Hakai 500: %s", hint)
-            return None, _make_toast_error(f"Failed to retrieve: {hint}")
+            parsed_response = json.loads(response.text)
+            return None, _make_toast_error(
+                f"Failed data query: {parsed_response.get('hint') or response.text}"
+            )
         elif response.status_code != 200:
             logger.debug("Hakai Error= %s : %s", response.status_code, response.text)
             return None, _make_toast_error(f"Failed to download data: {response}")
@@ -168,14 +169,17 @@ def get_hakai_data(path, query, credentials):
         )
 
     # if viewing home page do not downloading anything
-    if path == "/":
+    path = path.split("/")[1]
+    if path == ["/"]:
         logger.debug("do not load anything from front page path='/")
+        return None, None, None, None, None
+    elif path not in config["pages"]:
+        logger.warning("Unknown data type")
         return None, None, None, None, None
     elif not query:
         logger.debug("no query given")
         return None, None, None, None, None
 
-    path = path.split("/")[1]
     logger.debug("Load from path=%s", path)
     endpoints = config["pages"][path]
     main_endpoint = endpoints[0]
