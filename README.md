@@ -96,11 +96,11 @@ To run tests, run the following command (no test available yet)
 ## Deploying
 
 The production branch is deployed at: 
-https://quality-control-data.server.hakai.app/ctd
+https://quality-control-data.server.hakai.app
 
 ---
 The testing branch is deployed at: 
-https://quality-control-data.server.hak4i.org/ctd
+https://quality-control-data.server.hak4i.org
 
 
 ---
