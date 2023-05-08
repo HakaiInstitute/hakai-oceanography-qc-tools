@@ -144,7 +144,7 @@ def open_figure_menu(clicked, is_open):
     Output("variable", "options"),
     State("variable", "value"),
     Input("dataframe-variables", "data"),
-    State("location", "pathname"),
+    Input("location", "pathname"),
 )
 def get_variable_list(value, options, path):
     if options is None:
