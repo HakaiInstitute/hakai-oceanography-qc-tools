@@ -24,15 +24,7 @@ HAKAI_ENDPOINTS: 'ctd/views/file/cast'
 
 PRIMARY_VARIABLES:
   nutrients: [sio2, po4, no2_no3_um]
-  ctd:
-    [
-      temperature,
-      salinity,
-      dissolved_oxygen_ml_l,
-      turbidity,
-      flc,
-      par,
-    ]
+  ctd: [temperature, salinity, dissolved_oxygen_ml_l, turbidity, flc, par]
 
 VARIABLES_LABEL:
   {

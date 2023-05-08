@@ -182,7 +182,12 @@ navbar = dbc.Navbar(
                 # Use row and col to control vertical alignment of logo / brand
                 dbc.Row(
                     [
-                        dbc.Col(html.Img(src="assets/logo.png", height="40px")),
+                        dbc.Col(
+                            html.Img(
+                                src= "assets/logo.png",
+                                height="40px",
+                            )
+                        ),
                         dbc.Col(dbc.NavbarBrand("Quality Control"), className="ms-2"),
                         dbc.Col(
                             dcc.Dropdown(
