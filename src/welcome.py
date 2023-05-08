@@ -169,17 +169,21 @@ def get_hakai_search_url(
     end_date,
     search,
 ):
-    if data_type is None or work_area is None or station is None:
+    if data_type is None or station is None:
         return []
 
     time_label = "start_dt" if data_type == "ctd" else "collected"
     site_label = "station" if data_type == "ctd" else "site_id"
     search = "&".join(
         [
-            f"work_area={work_area}",
-            f"{site_label}={station}",
-            f"{time_label}>{start_date}" if start_date else "",
-            f"{time_label}<{end_date}" if end_date else "",
+            item
+            for item in [
+                f"work_area={work_area}" if work_area else None,
+                f"{site_label}={station}",
+                f"{time_label}>{start_date}" if start_date else "",
+                f"{time_label}<{end_date}" if end_date else "",
+            ]
+            if item
         ]
     )
     link = f"/{data_type}?{search}"
