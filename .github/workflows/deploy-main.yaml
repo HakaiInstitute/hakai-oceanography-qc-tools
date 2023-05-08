@@ -8,6 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
       - uses: altinukshini/deployment-action@releases/v1
         name: Create GitHub deployment
         id: deployment
@@ -15,10 +18,26 @@ jobs:
           token: '${{ github.token }}'
           target_url: https://quality-control-data.server.hakai.app/
           environment: production
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
+
       - name: Install Caprover CLI
         run: npm install -g caprover
       - name: Tell Caprover server to deploy main
         run: caprover deploy --caproverUrl https://captain.server.hakai.app --appToken ${{ secrets.CAPROVER_TOKEN_MAIN }} --branch 'main' --appName quality-control-data
+
+      - name: Update deployment status (success)
+        if: success()
+        uses: altinukshini/deployment-status@releases/v1
+        with:
+          token: '${{ github.token }}'
+          target_url: https://quality-control-data.server.hakai.app/
+          state: 'success'
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+
+      - name: Update deployment status (failure)
+        if: failure()
+        uses: altinukshini/deployment-status@releases/v1
+        with:
+          token: '${{ github.token }}'
+          target_url: https://quality-control-data.server.hakai.app/
+          state: 'failure'
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
