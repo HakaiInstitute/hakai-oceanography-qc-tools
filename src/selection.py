@@ -2,14 +2,15 @@ import logging
 import os
 import shutil
 from datetime import datetime
+import math
 
 import dash_bootstrap_components as dbc
 import pandas as pd
-from dash import ALL, Dash, Input, Output, State, callback, ctx, dash_table, dcc, html
+from dash import ALL, Input, Output, State, callback, ctx, dash_table, dcc, html
 
-from hakai_qc.qc import update_dataframe
-from hakai_qc.flags import flag_color_map, get_hakai_variable_flag, flags_conventions
+from hakai_qc.flags import flag_color_map, flags_conventions, get_hakai_variable_flag
 from hakai_qc.nutrients import nutrient_variables, run_nutrient_qc
+from hakai_qc.qc import update_dataframe
 
 # from pages.nutrients import get_flag_var
 from utils import load_config
@@ -37,7 +38,6 @@ selection_table = dash_table.DataTable(
     id="selected-data-table",
     page_size=40,
     sort_action="native",
-    row_deletable=True,
     style_header={
         "fontWeight": "bold",
         "fontSize": "14px",
@@ -166,6 +166,61 @@ qc_section = dbc.Collapse(
     is_open=True,
     id="selection-interface",
 )
+
+
+@callback(
+    Output("selected-data-table", "active_cell"),
+    Output("selected-data-table", "page_current"),
+    Input(
+        {"type": "graph", "page": ALL},
+        "clickData",
+    ),
+    State("selected-data-table", "derived_virtual_data"),
+    State("selected-data-table", "hidden_columns"),
+    State("selected-data-table", "active_cell"),
+    State("variable", "value"),
+    State("selected-data-table", "page_current"),
+    State("selected-data-table", "page_size"),
+    State("selected-data-table", "selected_cells"),
+)
+def select_qc_table(
+    clicked,
+    qc_data,
+    hidden_qc_columns,
+    active_cell,
+    column,
+    current_page,
+    page_size,
+    selected_cells,
+):
+    trigger = ctx.triggered_id
+    if (
+        not clicked
+        or clicked[0] is None
+        or clicked[0]["points"][0].get("customdata") is None
+    ):
+        return active_cell, current_page
+    logger.debug("clicked=%s", clicked)
+    logger.debug("selected_cells=%s", selected_cells)
+    selected_hakai_id = clicked[0]["points"][0]["customdata"][0]
+    selected_row = [
+        id for id, row in enumerate(qc_data) if row["hakai_id"] == selected_hakai_id
+    ][0]
+    current_page = math.floor(selected_row / page_size)
+    selected_col = {
+        col: id
+        for id, col in enumerate(
+            col for col in qc_data[0].keys() if col not in hidden_qc_columns
+        )
+    }[column + "_flag"]
+    active_cell = {
+        "row": selected_row - current_page * page_size,
+        "column": selected_col,
+        "column_id": column,
+        "row_id": selected_hakai_id,
+    }
+    logger.debug("Select cell in qc-table from figure click %s", active_cell)
+    return active_cell, current_page
 
 
 @callback(
@@ -519,9 +574,7 @@ def get_qc_excel(n_clicks, data, location):
     )
     logger.debug("Make a copy from the %s template", location[1:])
     shutil.copy(
-        os.path.join(
-            MODULE_PATH, f"../assets/hakai-template-{location[1:]}-samples.xlsx"
-        ),
+        os.path.join(MODULE_PATH, f"assets/hakai-template-{location[1:]}-samples.xlsx"),
         temp_file,
     )
     logger.debug("Add data to qc excel file")

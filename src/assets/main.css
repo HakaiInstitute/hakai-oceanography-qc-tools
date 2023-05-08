@@ -9,6 +9,14 @@
   margin: 10px;
 }
 
+.radio-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  align-self: center;
+}
+
 /* plot preset selection tool*/
 .radio-group .form-check {
     padding-left: 0;
@@ -67,4 +75,15 @@
 .Select-menu-outer {
   display : block !important;
   margin-bottom: 3rem !important;
+}
+
+.welcome-header {
+  background-color: #B52026;
+  color: white
+}
+
+.figure-button {
+  background-color: #B52026;
+  color: white;
+  border: 0;
 }

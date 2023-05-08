@@ -47,6 +47,7 @@ VARIABLES_LABEL:
     'SVC': 'Suspicious Value Careful',
     'SVD': 'Suspicious Value Discard',
     'BDL': 'Below Detection Limit',
+    'ctd': 'CTD',
   }
 
 pages:
@@ -58,6 +59,8 @@ pages:
         [
           'hakai_id',
           'station',
+          'latitude',
+          'longitude',
           'start_dt',
           'direction_flag',
           'depth',

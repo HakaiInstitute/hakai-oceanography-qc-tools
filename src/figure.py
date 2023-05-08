@@ -1,20 +1,19 @@
-import logging
-import re
 import json
-import pandas as pd
+import logging
+import os
+import re
+
 import dash_bootstrap_components as dbc
+import numpy as np
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from dash import ALL, MATCH, Input, Output, State, callback, ctx, dcc, html
-import os
 
-from hakai_qc.nutrients import (
-    variables_flag_mapping,
-)
-from hakai_qc.flags import flag_mapping, flag_color_map
-
-from utils import load_config, update_dataframe
 from download_hakai import fill_hakai_flag_variables
+from hakai_qc.flags import flag_color_map, flag_mapping
+from hakai_qc.nutrients import variables_flag_mapping
+from utils import load_config, update_dataframe
 
 config = load_config()
 figure_presets_path = os.path.join(
@@ -27,21 +26,28 @@ logger = logging.getLogger(__name__)
 FIGURE_GROUPS = ["Timeseries Profiles", "Profile"]
 
 figure_radio_buttons = html.Div(
-    dbc.Row(
-        [
+    [
+        dbc.Col(
             dbc.RadioItems(
                 id="figure-type-selector",
                 className="btn-group",
                 inputClassName="btn-check",
                 labelClassName="btn btn-outline-primary",
                 labelCheckedClassName="active",
-                label_checked_style={"background-color": "#B52026", "color": "white"},
+                label_checked_style={
+                    "background-color": "#B52026",
+                    "color": "white",
+                },
                 label_style={"color": "#B52026"},
             ),
-        ],
-        className="radio-group",
-    ),
-    style=dict(display="flex", justifyContent="center"),
+            width="auto",
+        ),
+        dbc.Col(
+            dbc.Button(id="figure-menu-button", className="bi bi-plus figure-button"),
+            width=1,
+        ),
+    ],
+    className="radio-group",
 )
 
 figure_menu = dbc.Collapse(
@@ -248,7 +254,8 @@ figure_menu = dbc.Collapse(
 
 
 def get_color_range(var, prc=[0.02, 0.98]):
-    return var.quantile(prc).values
+    min_limit, max_limit = var.quantile(prc).values
+    return np.floor(10 * min_limit) / 10, np.ceil(10 * max_limit) / 10
 
 
 def get_contour(df, x, y, color, range_color=None, x_interp_limit=3, y_interp_limit=4):
@@ -422,6 +429,17 @@ def generate_figure(data, selected_data, subset_vars, subsets, form_inputs, *arg
         hover_data = px_kwargs.pop("hover_data", None)
         logger.debug("Generate contour: %s", px_kwargs)
         fig = get_contour(df, **px_kwargs)
+    elif plot_type == "scatter_mapbox":
+        fig = px.scatter_mapbox(
+            df,
+            lat=px_kwargs.pop("y"),
+            lon=px_kwargs.pop("x"),
+            **px_kwargs,
+            size_max=15,
+            zoom=10,
+            height=600,
+        )
+        fig.update_layout(mapbox_style="open-street-map")
     else:
         logger.error("unknown plot_type=%s", plot_type)
         return None, None

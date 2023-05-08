@@ -1,7 +1,8 @@
 import logging
 
 import dash_bootstrap_components as dbc
-from dash import Input, Output, State, callback, dcc, html, ctx
+from dash import Input, Output, State, callback, ctx, dcc, html
+
 from utils import load_config
 
 config = load_config()
@@ -30,10 +31,16 @@ navbar_menu = dbc.Nav(
     [
         dbc.NavItem(
             dbc.NavLink(
-                "Nutrients", href="/nutrients", className="ms-auto", active="partial"
+                "Nutrients",
+                href="/nutrients",
+                className="ms-auto",
+                active="partial",
+                external_link=True,
             )
         ),
-        dbc.NavItem(dbc.NavLink("CTD", href="/ctd", active="partial")),
+        dbc.NavItem(
+            dbc.NavLink("CTD", href="/ctd", active="partial", external_link=True)
+        ),
         dbc.NavItem(
             dbc.NavLink(
                 "Chlorophyll",
@@ -51,9 +58,6 @@ navbar_menu = dbc.Nav(
                 className="bi bi-search me-1",
                 id="qc-button",
             )
-        ),
-        dbc.NavItem(
-            dbc.NavLink(id="figure-menu-button", className="bi bi-file-bar-graph")
         ),
         dbc.NavItem(dbc.NavLink(className="bi bi-person-circle me-1", id="log-in")),
     ],
@@ -99,8 +103,8 @@ def showfilter_by_section(n_clicks, is_open):
     Output("selection-interface", "is_open"),
     Output("location", "hash"),
     Input("qc-button", "n_clicks"),
-    Input("selection-interface", "is_open"),
-    State("location", "hash"),
+    State("selection-interface", "is_open"),
+    Input("location", "hash"),
 )
 def show_qc_section(n_clicks, is_open, hash):
     logger.debug(
@@ -110,13 +114,19 @@ def show_qc_section(n_clicks, is_open, hash):
         is_open,
         hash,
     )
-    if "#qc" in hash and ctx.triggered_id == "location":
-        return True, True, hash
+    if ctx.triggered_id == "location":
+        logger.debug("qc section triggerd by location")
+        return "#qc" in hash, "#qc" in hash, hash
+    logger.debug("qc section triggered by button")
+    if n_clicks is None:
+        return is_open, is_open, hash
     return (
         not is_open,
         not is_open,
         hash.replace("#qc", "") if is_open else hash + "#qc",
     )
+
+    return (is_open, is_open, hash)
 
 
 @callback(
