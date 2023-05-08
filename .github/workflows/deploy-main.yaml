@@ -13,12 +13,12 @@ jobs:
           node-version: 16
       - uses: altinukshini/deployment-action@releases/v1
         name: Create GitHub deployment
-        id: main
+        id: deployment
         with:
           token: '${{ github.token }}'
           target_url: https://quality-control-data.server.hakai.app/
           environment: production
-          
+
       - name: Install Caprover CLI
         run: npm install -g caprover
       - name: Tell Caprover server to deploy main
