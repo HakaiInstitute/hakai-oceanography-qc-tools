@@ -56,7 +56,8 @@ app = Dash(
     external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],
     assets_folder="src/assets",
 )
-
+app.title = config["APP_NAME"]
+app._favicon = "hakai_icon.png"
 
 app.layout = html.Div(
     [

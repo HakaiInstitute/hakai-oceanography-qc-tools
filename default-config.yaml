@@ -14,7 +14,7 @@ SENTRY_DSN: https://d3e89a5a74d4466ab87439f260ade659@o56764.ingest.sentry.io/450
 SENTRY_LOG_ACTIVE: false
 
 # App settings
-APP_NAME: Hakai Quality Control
+APP_NAME: Hakai Data Viewer
 NAVBAR_COLOR: '#B52026'
 NAVBAR_DARK: true
 
