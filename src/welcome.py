@@ -67,6 +67,12 @@ welcome_section = dbc.Modal(
                             start_date=date(date.today().year - 1, 1, 1),
                             end_date=date.today(),
                         ),
+                        dbc.FormFloating(
+                            [
+                                dbc.Input(type="text", id="select-extra"),
+                                dbc.Label("Extra filter"),
+                            ]
+                        ),
                         html.Br(),
                         html.Div(id="run-search-selection"),
                     ],
@@ -152,6 +158,11 @@ def get_work_area_list(data_type, credentials):
     return [item["work_area"] for item in response.json()], None
 
 
+@callback(Output("select-extra", "value"), Input("select-data-type", "value"))
+def apply_default_extra_filters(data_type):
+    return "direction_flag=d" if data_type == "ctd" else None
+
+
 @callback(
     Output("run-search-selection", "children"),
     Input("select-data-type", "value"),
@@ -159,6 +170,7 @@ def get_work_area_list(data_type, credentials):
     Input("select-station", "value"),
     Input("select-date-range", "start_date"),
     Input("select-date-range", "end_date"),
+    Input("select-extra", "value"),
     Input("location", "search"),
 )
 def get_hakai_search_url(
@@ -167,6 +179,7 @@ def get_hakai_search_url(
     station,
     start_date,
     end_date,
+    extra,
     search,
 ):
     if data_type is None or station is None:
@@ -182,6 +195,7 @@ def get_hakai_search_url(
                 f"{site_label}={station}",
                 f"{time_label}>{start_date}" if start_date else "",
                 f"{time_label}<{end_date}" if end_date else "",
+                extra,
             ]
             if item
         ]
