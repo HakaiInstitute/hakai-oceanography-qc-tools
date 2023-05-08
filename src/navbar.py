@@ -103,8 +103,8 @@ def showfilter_by_section(n_clicks, is_open):
     Output("selection-interface", "is_open"),
     Output("location", "hash"),
     Input("qc-button", "n_clicks"),
-    Input("selection-interface", "is_open"),
-    State("location", "hash"),
+    State("selection-interface", "is_open"),
+    Input("location", "hash"),
 )
 def show_qc_section(n_clicks, is_open, hash):
     logger.debug(
@@ -114,13 +114,19 @@ def show_qc_section(n_clicks, is_open, hash):
         is_open,
         hash,
     )
-    if "#qc" in hash and ctx.triggered_id == "location":
-        return True, True, hash
+    if ctx.triggered_id == "location":
+        logger.debug("qc section triggerd by location")
+        return "#qc" in hash, "#qc" in hash, hash
+    logger.debug("qc section triggered by button")
+    if n_clicks is None:
+        return is_open, is_open, hash
     return (
         not is_open,
         not is_open,
         hash.replace("#qc", "") if is_open else hash + "#qc",
     )
+
+    return (is_open, is_open, hash)
 
 
 @callback(
