@@ -24,7 +24,18 @@ HAKAI_ENDPOINTS: 'ctd/views/file/cast'
 
 PRIMARY_VARIABLES:
   nutrients: [sio2, po4, no2_no3_um]
-  ctd: [temperature, salinity, dissolved_oxygen_ml_l, turbidity, flc, par]
+  ctd:
+    [
+      temperature,
+      salinity,
+      dissolved_oxygen_ml_l,
+      rinko_do_ml_l,
+      dissolved_oxygen_percent,
+      turbidity,
+      flc,
+      par,
+      c_star_at,
+    ]
 
 VARIABLES_LABEL:
   {
@@ -67,7 +78,11 @@ pages:
           'salinity_flag',
           'salinity_flag_level_1',
           'dissolved_oxygen_ml_l',
+          'dissolved_oxygen_ml_l_flag',
           'dissolved_oxygen_ml_l_flag_level_1',
+          'rinko_do_ml_l',
+          'rinko_do_ml_l_flag',
+          'rinko_do_ml_l_flag_level_1',
           'dissolved_oxygen_percent',
           'dissolved_oxygen_percent_flag',
           'dissolved_oxygen_percent_flag_level_1',
