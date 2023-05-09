@@ -74,7 +74,15 @@ selection_table = dash_table.DataTable(
 )
 selection_interface = dbc.Row(
     [
-        dbc.Label("Apply", width="auto"),
+        dbc.Label("To all", width="auto"),
+        dbc.Col(
+            dcc.Dropdown(
+                id="selection-to",
+                clearable=False,
+                className="selection-to",
+            ),
+        ),
+        dbc.Label(", apply", width="auto"),
         dbc.Col(
             dcc.Dropdown(
                 options=[
@@ -86,6 +94,8 @@ selection_interface = dbc.Row(
                 id="selection-action",
                 clearable=False,
                 className="selection-action",
+                persistence=True,
+                persistence_type="session",
             ),
         ),
         dbc.Label("=", width="auto"),
@@ -94,14 +104,8 @@ selection_interface = dbc.Row(
                 id="selection-apply",
                 clearable=False,
                 className="selection-apply",
-            ),
-        ),
-        dbc.Label("to all", width="auto"),
-        dbc.Col(
-            dcc.Dropdown(
-                id="selection-to",
-                clearable=False,
-                className="selection-to",
+                persistence=True,
+                persistence_type="session",
             ),
         ),
         dbc.Col(
@@ -230,10 +234,15 @@ def select_qc_table(
     Output("selection-to", "options"),
     Input("selection-action", "value"),
     Input({"type": "graph", "page": ALL}, "selectedData"),
+    State("selection-apply", "value"),
+    State("selection-to", "value"),
 )
-def set_selection_apply_options(action, dataSelected):
+def set_selection_apply_options(action, dataSelected, apply, to):
+    def _get_values(items):
+        return [item["value"] for item in items]
+
     no_selection = not bool([selected for selected in dataSelected if selected])
-    apply_to = [
+    apply_to_options = [
         {
             "label": "Selection",
             "value": "selection",
@@ -241,22 +250,29 @@ def set_selection_apply_options(action, dataSelected):
         },
     ]
     if action == "Flag":
-        apply_to += [{"label": "Unknown", "value": "UKN"}]
+        apply_to_options += [{"label": "Unknown", "value": "UKN"}]
         return (
-            ["AV", "SVC", "SVD"],
-            "AV",
-            "UKN" if no_selection else "selection",
-            apply_to,
+            flags_conventions["Hakai"],
+            apply if apply in _get_values(flags_conventions["Hakai"]) else "AV",
+            to or "UKN" if no_selection else "selection",
+            apply_to_options,
         )
     elif action == "Quality Level":
-        apply_to += [{"label": ql, "value": ql} for ql in quality_levels]
-        return quality_levels, quality_levels[0], "raw", apply_to
+        apply_to_options += [{"label": ql, "value": ql} for ql in quality_levels]
+        return (
+            quality_levels,
+            apply
+            if apply in _get_values(flags_conventions["Hakai"])
+            else "Technicianmr",
+            to or "raw" if no_selection else "selection",
+            apply_to_options,
+        )
     else:
-        apply_to += [
+        apply_to_options += [
             {"label": "Unknown", "value": "UKN"},
             {"label": "All", "value": "all"},
         ]
-        return [], None, "UKN" if no_selection else "selection", apply_to
+        return [], None, "UKN" if no_selection else "selection", apply_to_options
 
 
 @callback(
