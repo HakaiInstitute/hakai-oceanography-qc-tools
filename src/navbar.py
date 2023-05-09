@@ -126,8 +126,6 @@ def show_qc_section(n_clicks, is_open, hash):
         hash.replace("#qc", "") if is_open else hash + "#qc",
     )
 
-    return (is_open, is_open, hash)
-
 
 @callback(
     Output("figure-menu", "is_open"),
