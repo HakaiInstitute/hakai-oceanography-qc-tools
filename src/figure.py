@@ -258,7 +258,16 @@ def get_color_range(var, prc=[0.02, 0.98]):
     return np.floor(10 * min_limit) / 10, np.ceil(10 * max_limit) / 10
 
 
-def get_contour(df, x, y, color, range_color=None, x_interp_limit=3, y_interp_limit=4):
+def get_contour(
+    df,
+    x,
+    y,
+    color,
+    colorscale="RdYlGn",
+    range_color=None,
+    x_interp_limit=3,
+    y_interp_limit=4,
+):
     df_pivot = (
         pd.pivot_table(df, values=color, index=y, columns=x, aggfunc="mean")
         .interpolate(axis="index", limit=x_interp_limit)
@@ -277,13 +286,13 @@ def get_contour(df, x, y, color, range_color=None, x_interp_limit=3, y_interp_li
             x=df_pivot.columns,
             y=df_pivot.index.values,
             colorbar=dict(title=color, titleside="right"),
-            colorscale="RdYlGn",
+            colorscale=colorscale,
             contours=dict(
                 start=min_color,
                 end=max_color,
                 size=(max_color - min_color) / 10,
             ),
-            contours_coloring="heatmap"
+            contours_coloring="heatmap",
             # ,connectgaps=True
         )
     )
@@ -427,6 +436,7 @@ def generate_figure(data, selected_data, subset_vars, subsets, form_inputs, *arg
         fig = px.scatter(df, **px_kwargs)
     elif plot_type == "contour":
         hover_data = px_kwargs.pop("hover_data", None)
+        px_kwargs["colorscale"] = px_kwargs.pop("color_continuous_scale", None)
         logger.debug("Generate contour: %s", px_kwargs)
         fig = get_contour(df, **px_kwargs)
     elif plot_type == "scatter_mapbox":
