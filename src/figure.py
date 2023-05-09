@@ -373,7 +373,7 @@ def generate_figure(data, selected_data, subset_vars, subsets, form_inputs, *arg
     px_kwargs["hover_data"] = (
         px_kwargs["hover_data"].split(",")
         if isinstance(px_kwargs.get("hover_data"), str)
-        else px_kwargs["hover_data"]
+        else px_kwargs.get("hover_data")
     )
     if px_kwargs.get("x") is None or px_kwargs.get("y") is None:
         logger.debug("No x or y axis given: px_kwargs=%s", px_kwargs)
