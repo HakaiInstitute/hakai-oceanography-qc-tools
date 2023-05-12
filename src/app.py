@@ -41,6 +41,7 @@ if config.get("ACTIVATE_SENTRY_LOG") in (True, "true", 1):
         environment=config["ENVIRONMENT"],
         server_name=os.uname()[1],
         traces_sample_rate=1.0,
+        profiles_sample_rate=1.0,
     )
 
 logger = logging.getLogger()
