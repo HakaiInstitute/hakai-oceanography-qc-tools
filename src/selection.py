@@ -216,7 +216,7 @@ def select_qc_table(
         for id, col in enumerate(
             col for col in qc_data[0].keys() if col not in hidden_qc_columns
         )
-    }[column + "_flag"]
+    }[get_hakai_variable_flag(column)]
     active_cell = {
         "row": selected_row - current_page * page_size,
         "column": selected_col,
