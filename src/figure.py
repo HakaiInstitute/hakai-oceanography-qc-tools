@@ -489,6 +489,19 @@ def define_variables_options(n, variables):
     return len(n) * [variables]
 
 
+color_scale_mapping = {
+    "flag": None,
+    "temp": "thermal",
+    "oxy": "oxy",
+    "rinko": "oxy",
+    "flc": "algae",
+    "fluo": "algae",
+    "turb": "turbid",
+    "par": "haline",
+    "sal": "haline",
+}
+
+
 @callback(
     Output(
         {
@@ -525,6 +538,13 @@ def define_graph_default_values(path, label, parameter, variable, variables):
         return variable
     elif placeholder == "main_var_flag":
         return get_flag_var(variable, variables.split(","))
+    elif parameter["item"] == "color_continuous_scale" and placeholder is None:
+        default_color_scale = [
+            color_scale
+            for key, color_scale in color_scale_mapping.items()
+            if key in variable
+        ]
+        placeholder = default_color_scale[0] if default_color_scale else "thermal"
     return placeholder
 
 

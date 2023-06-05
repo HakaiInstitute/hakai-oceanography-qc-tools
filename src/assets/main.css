@@ -87,3 +87,7 @@
   color: white;
   border: 0;
 }
+
+.flag-progress-bar {
+  border-radius: 0px;
+}

@@ -165,6 +165,7 @@ qc_section = dbc.Collapse(
             className="qc-menu",
         ),
         dcc.Download(id="download-qc-excel"),
+        dbc.Progress(id="flag-progress-bar", className="flag-progress-bar"),
         selection_table,
     ],
     is_open=True,
@@ -216,7 +217,7 @@ def select_qc_table(
         for id, col in enumerate(
             col for col in qc_data[0].keys() if col not in hidden_qc_columns
         )
-    }[column + "_flag"]
+    }[get_hakai_variable_flag(column)]
     active_cell = {
         "row": selected_row - current_page * page_size,
         "column": selected_col,
@@ -382,29 +383,7 @@ def generate_qc_table_style(data):
         data=data.assign(id=data["hakai_id"]).to_dict("records"),
         columns=columns,
         dropdown=dropdown_menus,
-        hidden_columns=[
-            "action",
-            "date",
-            "target_depth_m",
-            "start_depth",
-            "bottom_depth",
-            "latitude",
-            "longitude",
-            "bottle_drop",
-            "drop",
-            "survey",
-            "work_area",
-            "site_id",
-            "descent_rate_flag",
-            "density_flag",
-            "absolute_salinity_flag",
-            "conservative_temperature_flag",
-            "sos_un_flag",
-            "spec_cond_flag",
-            "depth_flag",
-            "pressure_flag",
-            "id",
-        ],
+        hidden_columns=config["DEFAULT_HIDDEN_COLUMNS_IN_TABLE"],
         style_data_conditional=(
             *color_conditional,
             *blank_conditional,
@@ -600,3 +579,27 @@ def get_qc_excel(n_clicks, data, location):
         df.to_excel(writer, sheet_name="Hakai Data", index=False)
     logger.info("Upload Hakai QC excel file")
     return dcc.send_file(temp_file), None
+
+
+@callback(
+    Output("flag-progress-bar", "children"),
+    Input("selected-data-table", "data"),
+    Input("variable", "value"),
+)
+def update_progress_bar(data, variable):
+    if data is None:
+        return []
+    flags = {"green": 50, "warning": 20, "danger": 10.5, "grey": 20}
+    flag_variable = get_flag_var(variable)
+    df = pd.DataFrame(data)
+    if variable in df:
+        df = df.query(f"{variable}.notna()")
+
+    flag_column = df[flag_variable].replace(flag_color_map).replace({None: "grey"})
+    nrecs = len(flag_column)
+    flags = (flag_column.groupby(flag_column).count() / nrecs * 100).to_dict()
+    # logger.debug("Flag distribution=%s", dist)
+    return [
+        dbc.Progress(value=value, color=color, bar=True)
+        for color, value in flags.items()
+    ]

@@ -214,7 +214,7 @@ def get_hakai_data(path, query, credentials):
         logger.debug("CTD flag downloaded")
     else:
         logger.debug("no auxiliary data retrieved")
-        result_flags = None
+        result_flags = result
 
     # Extract subsets
     df = pd.DataFrame(result)
