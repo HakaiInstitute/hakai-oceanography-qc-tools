@@ -1,8 +1,8 @@
 # App settings
 DASH_DEBUG: false
-DASH_HOST: '0.0.0.0'
+DASH_HOST: "0.0.0.0"
 DASH_PORT: 8050
-TEMP_FOLDER: './temp'
+TEMP_FOLDER: "./temp"
 
 # logging
 ENVIRONMENT: local
@@ -15,12 +15,12 @@ SENTRY_LOG_ACTIVE: false
 
 # App settings
 APP_NAME: Hakai Data Viewer
-NAVBAR_COLOR: '#B52026'
+NAVBAR_COLOR: "#B52026"
 NAVBAR_DARK: true
 
 # Hakai endpoints
 HAKAI_DEFAULT_API_SERVER_ROOT: https://hecate.hakai.org/api
-HAKAI_ENDPOINTS: 'ctd/views/file/cast'
+HAKAI_ENDPOINTS: "ctd/views/file/cast"
 
 PRIMARY_VARIABLES:
   nutrients: [sio2, po4, no2_no3_um]
@@ -39,67 +39,67 @@ PRIMARY_VARIABLES:
 
 VARIABLES_LABEL:
   {
-    'sio2': 'SiO2 (uM)',
-    'po4': 'PO4 (uM)',
-    'no2_no3_um': 'NO2 NO3 (uM)',
-    'line_out_depth': 'Bottle Target Depth (m)',
-    'collected': 'Collection Time',
-    'AV': 'Accepted Value',
-    'UKN': 'Unknown',
-    'NA': 'Not Available',
-    'SVC': 'Suspicious Value Careful',
-    'SVD': 'Suspicious Value Discard',
-    'BDL': 'Below Detection Limit',
-    'ctd': 'CTD',
+    "sio2": "SiO2 (uM)",
+    "po4": "PO4 (uM)",
+    "no2_no3_um": "NO2 NO3 (uM)",
+    "line_out_depth": "Bottle Target Depth (m)",
+    "collected": "Collection Time",
+    "AV": "Accepted Value",
+    "UKN": "Unknown",
+    "NA": "Not Available",
+    "SVC": "Suspicious Value Careful",
+    "SVD": "Suspicious Value Discard",
+    "BDL": "Below Detection Limit",
+    "ctd": "CTD",
   }
 
 pages:
   nutrients:
-    - endpoint: 'eims/views/output/nutrients'
+    - endpoint: "eims/views/output/nutrients"
   ctd:
     - endpoint: ctd/views/file/cast/data
-      fields:
-        [
-          'hakai_id',
-          'station',
-          'latitude',
-          'longitude',
-          'start_dt',
-          'direction_flag',
-          'depth',
-          'pressure',
-          'conductivity',
-          'conductivity_flag',
-          'conductivity_flag_level_1',
-          'temperature',
-          'temperature_flag',
-          'temperature_flag_level_1',
-          'salinity',
-          'salinity_flag',
-          'salinity_flag_level_1',
-          'dissolved_oxygen_ml_l',
-          'dissolved_oxygen_ml_l_flag',
-          'dissolved_oxygen_ml_l_flag_level_1',
-          'rinko_do_ml_l',
-          'rinko_do_ml_l_flag',
-          'rinko_do_ml_l_flag_level_1',
-          'dissolved_oxygen_percent',
-          'dissolved_oxygen_percent_flag',
-          'dissolved_oxygen_percent_flag_level_1',
-          'par',
-          'par_flag',
-          'par_flag_level_1',
-          'flc',
-          'flc_flag',
-          'flc_flag_level_1',
-          'turbidity',
-          'turbidity_flag',
-          'turbidity_flag_level_1',
-          'c_star_at',
-          'c_star_at_flag',
-          'c_star_at_flag_level_1',
+      fields: [
+          "hakai_id",
+          "station",
+          "latitude",
+          "longitude",
+          "start_dt",
+          "direction_flag",
+          "depth",
+          "pressure",
+          "conductivity",
+          "conductivity_flag",
+          "conductivity_flag_level_1",
+          "temperature",
+          "temperature_flag",
+          "temperature_flag_level_1",
+          "salinity",
+          "salinity_flag",
+          "salinity_flag_level_1",
+          w
+          "dissolved_oxygen_ml_l",
+          "dissolved_oxygen_ml_l_flag",
+          "dissolved_oxygen_ml_l_flag_level_1",
+          "rinko_do_ml_l",
+          "rinko_do_ml_l_flag",
+          "rinko_do_ml_l_flag_level_1",
+          "dissolved_oxygen_percent",
+          "dissolved_oxygen_percent_flag",
+          "dissolved_oxygen_percent_flag_level_1",
+          "par",
+          "par_flag",
+          "par_flag_level_1",
+          "flc",
+          "flc_flag",
+          "flc_flag_level_1",
+          "turbidity",
+          "turbidity_flag",
+          "turbidity_flag_level_1",
+          "c_star_at",
+          "c_star_at_flag",
+          "c_star_at_flag_level_1",
         ]
-    - endpoint: 'eims/views/output/ctd_qc'
+    - endpoint: "eims/views/output/ctd_qc"
       fields:
         [
           hakai_id,
@@ -121,3 +121,68 @@ pages:
           c_star_at_flag,
           comments,
         ]
+DEFAULT_HIDDEN_COLUMNS_IN_TABLE:
+  [
+    "action",
+    "samping_bout",
+    "project_specific_id",
+    "source",
+    "collection_method",
+    "preserved",
+    "analyzed",
+    "no2_no3_um",
+    "rn",
+    "lat",
+    "long",
+    "gather_lat",
+    "gather_long",
+    "filtered",
+    "filter_type",
+    "volume",
+    "installed",
+    "nh4_",
+    "tp",
+    "tdp",
+    "tn",
+    "srp",
+    "po4filt",
+    "no3filt",
+    "po4punfl",
+    "no3nunfl",
+    "nh4nunfl",
+    "nh4_flag",
+    "tp_flag",
+    "tdp_flag",
+    "tn_flag",
+    "srp_flag",
+    "po4filt_flag",
+    "no3filt_flag",
+    "po4punfl_flag",
+    "no3nunfl_flag",
+    "nh4nunfl_flag",
+    "event_pk",
+    "rn",
+    "is_replicate",
+    "organization",
+    "action",
+    "date",
+    "target_depth_m",
+    "start_depth",
+    "bottom_depth",
+    "latitude",
+    "longitude",
+    "bottle_drop",
+    "drop",
+    "survey",
+    "work_area",
+    "site_id",
+    "descent_rate_flag",
+    "density_flag",
+    "absolute_salinity_flag",
+    "conservative_temperature_flag",
+    "sos_un_flag",
+    "spec_cond_flag",
+    "depth_flag",
+    "pressure_flag",
+    "id",
+  ]
