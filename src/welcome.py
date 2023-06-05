@@ -59,6 +59,7 @@ welcome_section = dbc.Modal(
                             placeholder="Data Type",
                         ),
                         dbc.Select(id="select-work-area", placeholder="Work Area"),
+                        dbc.Select(id="select-survey", placeholder="Survey"),
                         dbc.Select(id="select-station", placeholder="Station"),
                         dcc.DatePickerRange(
                             id="select-date-range",
@@ -89,37 +90,78 @@ welcome_section = dbc.Modal(
 )
 
 
+def list_to_select_dict(options: list):
+    return [{"label": option, "value": option} for option in options]
+
+
 @callback(
     Output("select-station", "options"),
     Output("load-sites", "children"),
     Input("select-data-type", "value"),
     State("credentials-input", "value"),
     Input("select-work-area", "value"),
+    Input("select-survey", "value"),
     State("select-date-range", "start_date"),
     State("select-date-range", "end_date"),
 )
-def get_station_list(data_type, credentials, work_area, start_date, end_date):
+def get_station_list(data_type, credentials, work_area, survey, start_date, end_date):
     if data_type is None:
         return None, None
 
     client = Client(credentials=credentials)
     logger.debug("Get station list for data_type=%s", data_type)
+
+    # Map variables to data_type
     if data_type == "ctd":
         site_label = "station"
         time_variable = "start_dt"
+        survey_variable = "cruise"
     else:
         site_label = "site_id"
         time_variable = "collected"
+        survey_variable = "survey"
+
     work_area_filter = f"work_area={work_area}&" if work_area else ""
+    survey_filter = f"{survey_variable}={survey}&" if survey else ""
     response = client.get(
         f"{client.api_root}/{config['pages'][data_type][0]['endpoint']}?"
-        f"{work_area_filter}"
+        f"{work_area_filter}{survey_filter}"
         f"fields={site_label}&sort={site_label}&limit=-1&distinct"
         f"&{time_variable}>={start_date}"
         f"&{time_variable}<={end_date}"
     )
-    logger.debug("resulting response=%s", response.text)
-    return [item[site_label] for item in response.json()], None
+    stations = [item[site_label] for item in response.json()]
+    logger.debug("station list response=%s", stations)
+    return list_to_select_dict(stations), None
+
+
+@callback(
+    Output("select-survey", "options"),
+    Input("select-data-type", "value"),
+    State("credentials-input", "value"),
+    Input("select-work-area", "value"),
+    State("select-date-range", "start_date"),
+    State("select-date-range", "end_date"),
+)
+def get_survey_list(data_type, credentials, work_area, start_date, end_date):
+    if data_type is None:
+        return None
+
+    client = Client(credentials=credentials)
+    logger.debug("Get survey list for data_type=%s", data_type)
+    time_variable = "start_dt" if data_type == "ctd" else "collected"
+    survey_variable = "cruise" if data_type == "ctd" else "survey"
+    work_area_filter = f"work_area={work_area}&" if work_area else ""
+    response = client.get(
+        f"{client.api_root}/{config['pages'][data_type][0]['endpoint']}?"
+        f"{work_area_filter}"
+        f"fields={survey_variable}&sort={survey_variable}&limit=-1&distinct"
+        f"&{time_variable}>={start_date}"
+        f"&{time_variable}<={end_date}"
+    )
+    surveys = [None] + [item[survey_variable] for item in response.json()]
+    logger.debug("survey response=%s", surveys)
+    return list_to_select_dict(surveys)
 
 
 @callback(
@@ -180,6 +222,7 @@ def apply_default_extra_filters(data_type):
     Output("run-search-selection", "children"),
     Input("select-data-type", "value"),
     Input("select-work-area", "value"),
+    Input("select-survey", "value"),
     Input("select-station", "value"),
     Input("select-date-range", "start_date"),
     Input("select-date-range", "end_date"),
@@ -189,6 +232,7 @@ def apply_default_extra_filters(data_type):
 def get_hakai_search_url(
     data_type,
     work_area,
+    survey,
     station,
     start_date,
     end_date,
@@ -200,11 +244,13 @@ def get_hakai_search_url(
 
     time_label = "start_dt" if data_type == "ctd" else "collected"
     site_label = "station" if data_type == "ctd" else "site_id"
+    survey_label = "cruise" if data_type == "ctd" else "survey"
     search = "&".join(
         [
             item
             for item in [
                 f"work_area={work_area}" if work_area else None,
+                f"{survey_label}={survey}" if survey else None,
                 f"{site_label}={station}",
                 f"{time_label}>{start_date}" if start_date else "",
                 f"{time_label}<{end_date}" if end_date else "",
