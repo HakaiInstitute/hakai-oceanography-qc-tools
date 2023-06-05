@@ -58,7 +58,8 @@ pages:
     - endpoint: "eims/views/output/nutrients"
   ctd:
     - endpoint: ctd/views/file/cast/data
-      fields: [
+      fields:
+        [
           "hakai_id",
           "station",
           "latitude",
@@ -76,7 +77,6 @@ pages:
           "salinity",
           "salinity_flag",
           "salinity_flag_level_1",
-          w
           "dissolved_oxygen_ml_l",
           "dissolved_oxygen_ml_l_flag",
           "dissolved_oxygen_ml_l_flag_level_1",
