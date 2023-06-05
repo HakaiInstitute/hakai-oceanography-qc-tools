@@ -95,8 +95,10 @@ welcome_section = dbc.Modal(
     Input("select-data-type", "value"),
     State("credentials-input", "value"),
     Input("select-work-area", "value"),
+    State("select-date-range", "start_date"),
+    State("select-date-range", "end_date"),
 )
-def get_station_list(data_type, credentials, work_area):
+def get_station_list(data_type, credentials, work_area, start_date, end_date):
     if data_type is None:
         return None, None
 
@@ -104,11 +106,17 @@ def get_station_list(data_type, credentials, work_area):
     logger.debug("Get station list for data_type=%s", data_type)
     if data_type == "ctd":
         site_label = "station"
+        time_variable = "start_dt"
     else:
         site_label = "site_id"
+        time_variable = "collected"
     work_area_filter = f"work_area={work_area}&" if work_area else ""
     response = client.get(
-        f"{client.api_root}/{config['pages'][data_type][0]['endpoint']}?{work_area_filter}fields={site_label}&sort={site_label}&limit=-1&distinct"
+        f"{client.api_root}/{config['pages'][data_type][0]['endpoint']}?"
+        f"{work_area_filter}"
+        f"fields={site_label}&sort={site_label}&limit=-1&distinct"
+        f"&{time_variable}>={start_date}"
+        f"&{time_variable}<={end_date}"
     )
     logger.debug("resulting response=%s", response.text)
     return [item[site_label] for item in response.json()], None
@@ -120,9 +128,10 @@ def get_station_list(data_type, credentials, work_area):
     Input("welcome-section", "is_open"),
 )
 def get_datatype_from_pathname(pathname, welcome_is_open):
-    if not welcome_is_open or pathname not in ("/", None):
+    if not welcome_is_open or pathname in ("/", None):
         return None
     data_type = [item for item in config["pages"] if item in pathname]
+    logger.info("Data type given by path: %s", data_type)
     return data_type[0] if data_type else None
 
 
@@ -135,8 +144,12 @@ def get_datatype_from_pathname(pathname, welcome_is_open):
 def show_welcome_page(path, search, valid_credentials):
     if not valid_credentials:
         return False
-    path = path.split("/")[1]
-    return path not in config["pages"] or len(search) < 10
+    data_type = path.split("/")[1]
+    logger.debug("show welcome for data_type=%s in path=%s", data_type, path)
+    no_search = len(search) < 10
+    unknown_datatype = data_type not in config["pages"]
+    logger.debug("no_search=%s or unknown_datatype= %s", no_search, unknown_datatype)
+    return unknown_datatype or no_search
 
 
 @callback(
