@@ -199,7 +199,15 @@ def get_hakai_data(path, query, credentials):
     # Load auxiliary data
     if path == "ctd":
         flag_filters = re.findall("(station|start_dt)(=|<|>|>=|<=)([^&]*)", url)
-        url_flags = f"{client.api_root}/{endpoints[1]['endpoint']}?{'&'.join([''.join(item).replace('station','site_id').replace('start_dt','collected') for item in flag_filters])}"
+        flag_filters = [
+            "".join(item).replace("station", "site_id").replace("start_dt", "collected")
+            for item in flag_filters
+        ]
+        url_flags = (
+            f"{client.api_root}/"
+            f"{endpoints[1]['endpoint']}?"
+            f"{'&'.join(flag_filters)}"
+        )
         logger.debug("Retrieve CTD flags: %s", url_flags)
         result_flags, toast_error = _get_data(url_flags, endpoints[1].get("fields"))
         if toast_error:
