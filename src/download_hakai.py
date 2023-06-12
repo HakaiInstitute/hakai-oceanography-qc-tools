@@ -184,7 +184,7 @@ def get_hakai_data(path, query, credentials):
     main_endpoint = endpoints[0]
     client = Client(credentials=credentials)
     query = unquote(query)
-    url = f"{client.api_root}/{main_endpoint['endpoint']}?{query[1:]}"
+    url = f"{config.get("HAKAI_DEFAULT_API_SERVER_ROOT") or client.api_root}/{main_endpoint['endpoint']}?{query[1:]}"
     logger.debug("run hakai query: %s", url)
     result, toast_error = _get_data(url, main_endpoint.get("fields"))
     if toast_error:
