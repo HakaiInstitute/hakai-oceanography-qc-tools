@@ -294,11 +294,6 @@ def set_selection_apply_options(action, dataSelected, apply, to):
     ],
 )
 def update_selected_data(selected_data, newly_selected):
-    logger.debug(
-        "updated selection data: selected=%s, newly_selected=%s",
-        selected_data,
-        newly_selected,
-    )
     newly_selected = [
         pd.DataFrame(source)
         for source in newly_selected
