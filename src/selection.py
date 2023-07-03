@@ -38,6 +38,7 @@ selection_table = dash_table.DataTable(
     id="selected-data-table",
     page_size=40,
     sort_action="native",
+    filter_action="native",
     style_header={
         "fontWeight": "bold",
         "fontSize": "14px",
@@ -294,11 +295,6 @@ def set_selection_apply_options(action, dataSelected, apply, to):
     ],
 )
 def update_selected_data(selected_data, newly_selected):
-    logger.debug(
-        "updated selection data: selected=%s, newly_selected=%s",
-        selected_data,
-        newly_selected,
-    )
     newly_selected = [
         pd.DataFrame(source)
         for source in newly_selected
@@ -563,11 +559,18 @@ def get_qc_excel(n_clicks, data, location):
         columns=["id", "start_depth", "target_depth_m", "bottle_drop", "collected"],
         errors="ignore",
     )
+    data_type = location.split("/")[1]
+    variable_output = config["pages"].get(data_type)[0].get("upload_fields")
+    logger.debug("Save excel file type:%s", data_type)
+    if variable_output:
+        logger.debug("Upload only varaibles=%s", variable_output)
+        df = df[variable_output]
+
     temp_file = os.path.join(
         config["TEMP_FOLDER"],
-        f"hakai-qc-{location[1:]}-{datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}.xlsx",
+        f"hakai-qc-{data_type}-{datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}.xlsx",
     )
-    logger.debug("Make a copy from the %s template", location[1:])
+    logger.debug("Make a copy from the %s template", data_type)
     shutil.copy(
         os.path.join(MODULE_PATH, f"assets/hakai-template-{location[1:]}-samples.xlsx"),
         temp_file,

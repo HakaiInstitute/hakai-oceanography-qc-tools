@@ -56,6 +56,49 @@ VARIABLES_LABEL:
 pages:
   nutrients:
     - endpoint: "eims/views/output/nutrients"
+      fields:
+        [
+          "work_area",
+          "organization",
+          "project",
+          "survey",
+          "date",
+          "sampling_bout",
+          "site_id",
+          "hakai_id",
+          "collected",
+          "lat",
+          "long",
+          "gather_lat",
+          "gather_long",
+          "line_out_depth",
+          "pressure_transducer_depth",
+          "lab_technician",
+          "no2_no3_ugl",
+          "no2_no3_units",
+          "po4",
+          "sio2",
+          "no2_no3_flag",
+          "po4_flag",
+          "sio2_flag",
+          "row_flag",
+          "metadata_qc_flag",
+          "quality_level",
+          "comments",
+          "quality_log",
+        ]
+      upload_fields:
+        [
+          "hakai_id",
+          "no2_no3_flag",
+          "po4_flag",
+          "sio2_flag",
+          "row_flag",
+          "metadata_qc_flag",
+          "quality_level",
+          "comments",
+          "quality_log",
+        ]
   ctd:
     - endpoint: ctd/views/file/cast/data
       fields:
