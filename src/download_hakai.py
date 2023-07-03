@@ -128,12 +128,10 @@ def test_credentials(credentials):
 
 @callback(
     Output("dataframe", "data"),
-    Output("dataframe-variables", "data"),
-    Output("dataframe-subsets", "children"),
     Output("toast-container", "children"),
     Output({"id": "selected-data", "source": "flags"}, "data"),
-    Input("location", "pathname"),
-    Input("location", "search"),
+    State("location", "pathname"),
+    State("location", "search"),
     Input("credentials-input", "value"),
 )
 def get_hakai_data(path, query, credentials):
@@ -167,17 +165,19 @@ def get_hakai_data(path, query, credentials):
             (result, None) if result else (None, _make_toast_error("No Data Retrieved"))
         )
 
+    logger.debug("load data triggered by %s", ctx.triggered_id)
+
     # if viewing home page do not downloading anything
     path = path.split("/")[1]
     if path == ["/"]:
         logger.debug("do not load anything from front page path='/")
-        return None, None, None, None, None
+        return None, None, None
     elif path not in config["pages"]:
         logger.warning("Unknown data type")
-        return None, None, None, None, None
+        return None, None, None
     elif not query:
         logger.debug("no query given")
-        return None, None, None, None, None
+        return None, None, None
 
     logger.debug("Load from path=%s", path)
     endpoints = config["pages"][path]
@@ -189,8 +189,6 @@ def get_hakai_data(path, query, credentials):
     result, toast_error = _get_data(url, main_endpoint.get("fields"))
     if toast_error:
         return (
-            None,
-            None,
             None,
             toast_error or _make_toast_error("No data available"),
             [],
@@ -214,8 +212,6 @@ def get_hakai_data(path, query, credentials):
             logger.debug("failed to get ctd flag data")
             return (
                 None,
-                None,
-                None,
                 toast_error or _make_toast_error("No data available"),
                 None,
             )
@@ -224,40 +220,4 @@ def get_hakai_data(path, query, credentials):
         logger.debug("no auxiliary data retrieved")
         result_flags = result
 
-    # Extract subsets
-    df = pd.DataFrame(result)
-    if path == "nutrients":
-        subset_variables = ["site_id", "line_out_depth"]
-    elif path == "ctd":
-        subset_variables = ["station", "direction_flag"]
-    else:
-        subset_variables = {}
-
-    subsets = {var: df[var].unique() for var in subset_variables}
-    subset_selection = [
-        dbc.Col(
-            dcc.Dropdown(
-                id={"type": "dataframe-subset", "subset": key},
-                options=options,
-                multi=True,
-                className="selection-box",
-                placeholder=key,
-            ),
-            md=4,
-        )
-        for key, options in subsets.items()
-    ] + [
-        dbc.Col(
-            dbc.Input(
-                id={"type": "dataframe-subset", "subset": "query"},
-                placeholder="Filter data ...",
-                type="text",
-                debounce=True,
-            ),
-            md=4,
-        )
-    ]
-
-    logger.debug("variables available %s", df.columns)
-    logger.debug("subsets available %s", subset_variables)
-    return result, ",".join(df.columns), subset_selection, None, result_flags
+    return result, None, result_flags

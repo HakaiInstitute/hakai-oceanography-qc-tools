@@ -16,5 +16,9 @@ tooltips = html.Div(
             target="log-in",
         ),
         dbc.Tooltip("Figure menu", target="figure-menu-button"),
+        dbc.Tooltip("Move time filter to prior", target="filter-time-button-move-down"),
+        dbc.Tooltip(
+            "Move time filter range to after", target="filter-time-button-move-down"
+        ),
     ]
 )
