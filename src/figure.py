@@ -429,7 +429,7 @@ def generate_figure(
         df = df.query(" and ".join(filter_subsets))
 
     # apply manual selection flags
-    if selected_data and not location.startswith('/ctd'):
+    if selected_data and not location.startswith("/ctd"):
         df = update_dataframe(
             df, pd.DataFrame(selected_data), on="hakai_id", how="left"
         )

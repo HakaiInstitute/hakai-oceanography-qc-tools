@@ -1,11 +1,10 @@
 import logging
 
-import pandas as pd
 import dash_bootstrap_components as dbc
+import pandas as pd
 from dash import Input, Output, State, callback, ctx, dcc, html
 
 from utils import load_config
-
 
 config = load_config()
 logger = logging.getLogger(__name__)
@@ -101,7 +100,7 @@ data_filter_interface = dbc.Collapse(
                         ],
                         align="center",
                         justify="center",
-                        className='filter-by-time'
+                        className="filter-by-time",
                     ),
                 ]
             ),
