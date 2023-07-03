@@ -323,6 +323,7 @@ def get_flag_var(var, variables):
 @callback(
     Output({"type": "graph", "page": "main"}, "figure"),
     Output("main-graph-spinner", "data"),
+    State("location", "pathname"),
     State("dataframe", "data"),
     Input("selected-data-table", "data"),
     Input({"type": "dataframe-subset", "subset": ALL}, "placeholder"),
@@ -341,7 +342,15 @@ def get_flag_var(var, variables):
     Input("figure-menu-label-spinner", "data"),
 )
 def generate_figure(
-    data, selected_data, subset_vars, subsets, time_min, time_max, form_inputs, *args
+    location,
+    data,
+    selected_data,
+    subset_vars,
+    subsets,
+    time_min,
+    time_max,
+    form_inputs,
+    *args,
 ):
     def _add_extra_traces(extra_traces):
         if extra_traces is None:
@@ -420,7 +429,7 @@ def generate_figure(
         df = df.query(" and ".join(filter_subsets))
 
     # apply manual selection flags
-    if selected_data:
+    if selected_data and not location.startswith('/ctd'):
         df = update_dataframe(
             df, pd.DataFrame(selected_data), on="hakai_id", how="left"
         )
