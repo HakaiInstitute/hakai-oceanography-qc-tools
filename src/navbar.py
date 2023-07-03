@@ -330,22 +330,19 @@ def update_date_range_slider(picker_date_min, picker_date_max, down, up):
         return None, None
     start = pd.to_datetime(picker_date_min)
     end = pd.to_datetime(picker_date_max)
-    step = end - start
-    if ctx.triggered_id == "filter-time-button-move-down" and step:
+    time_interval = (end - start) + pd.Timedelta(1, unit="days")
+    if ctx.triggered_id == "filter-time-button-move-down":
         logger.debug("Move time filter slider down")
-        dt = -pd.Timedelta(step, unit="days")
-    elif ctx.triggered_id == "filter-time-button-move-up" and step:
+        time_interval = -time_interval
+    elif ctx.triggered_id == "filter-time-button-move-up":
         logger.debug("Move time filter slider up")
-        dt = pd.Timedelta(step, unit="days")
-    else:
-        dt = pd.Timedelta(0, unit="days")
-    start += dt
-    end += dt
+    start += time_interval
+    end += time_interval
     logger.debug(
         "Move time filter slider: [%s,%s] by %s = [%s,%s]",
         picker_date_min,
         picker_date_max,
-        dt,
+        time_interval,
         start,
         end,
     )
