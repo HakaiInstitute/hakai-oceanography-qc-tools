@@ -5,7 +5,7 @@
       "x": "collected",
       "y": "main_var",
       "color": "main_var_flag",
-      "hover_data": "hakai_id"
+      "hover_data": "hakai_id,main_var_flag_desc"
     },
     "Time Series Profiles": {
       "type": "scatter",
@@ -13,21 +13,28 @@
       "y": "line_out_depth",
       "color": "main_var",
       "symbol": "main_var_flag",
-      "hover_data": "hakai_id"
+      "hover_data": "hakai_id,main_var_flag_desc"
+    },
+    "Profiles": {
+      "type": "scatter",
+      "x": "main_var",
+      "y": "depth",
+      "color": "main_var_flag",
+      "hover_data": "hakai_id,main_var_flag_desc"
     },
     "Contour Profiles": {
       "type": "contour",
       "x": "collected",
       "y": "line_out_depth",
       "color": "main_var",
-      "hover_data": "hakai_id"
+      "hover_data": "hakai_id,main_var_flag_desc"
     },
     "PO4 red-field": {
       "type": "scatter",
       "x": "po4",
       "y": "no2_no3_um",
       "color": "main_var_flag",
-      "hover_data": "hakai_id",
+      "hover_data": "hakai_id,main_var_flag_desc",
       "extra_traces": [
         [
           "Scatter",
@@ -46,7 +53,7 @@
       "x": "sio2",
       "y": "no2_no3_um",
       "color": "main_var_flag",
-      "hover_data": "hakai_id",
+      "hover_data": "hakai_id,main_var_flag_desc",
       "extra_traces": [
         [
           "Scatter",
@@ -75,21 +82,28 @@
       "y": "depth",
       "color": "main_var",
       "symbol": "main_var_flag",
-      "hover_data": "hakai_id"
+      "hover_data": "hakai_id,main_var_flag_desc"
     },
     "Time Series": {
       "type": "scatter",
       "x": "start_dt",
       "y": "main_var",
       "color": "main_var_flag",
-      "hover_data": "hakai_id"
+      "hover_data": "hakai_id,main_var_flag_desc"
+    },
+    "Profiles": {
+      "type": "scatter",
+      "x": "main_var",
+      "y": "depth",
+      "color": "main_var_flag",
+      "hover_data": "hakai_id,main_var_flag_desc"
     },
     "Contour Profiles": {
       "type": "contour",
       "x": "start_dt",
       "y": "pressure",
       "color": "main_var",
-      "hover_data": "hakai_id"
+      "hover_data": "hakai_id,main_var_flag_desc"
     },
     "Map": {
       "type": "scatter_mapbox",
