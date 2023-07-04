@@ -18,7 +18,7 @@
     "Profiles": {
       "type": "scatter",
       "x": "main_var",
-      "y": "depth",
+      "y": "line_out_depth",
       "color": "main_var_flag",
       "hover_data": "hakai_id,main_var_flag_desc"
     },
