@@ -561,7 +561,7 @@ def define_graph_default_values(path, label, parameter, variable, variables):
         return None
     path = path.split("/")[1]
     placeholder = figure_presets[path].get(label).get(parameter["item"])
-    if placeholder is None:
+    if not placeholder:
         return None
     elif parameter["item"] == "color_continuous_scale" and placeholder is None:
         default_color_scale = [
@@ -570,6 +570,8 @@ def define_graph_default_values(path, label, parameter, variable, variables):
             if key in variable
         ]
         return default_color_scale[0] if default_color_scale else "thermal"
+    elif not isinstance(placeholder, str):
+        return placeholder
 
     return ",".join([_rename_placeholder(item) for item in placeholder.split(",")])
 
