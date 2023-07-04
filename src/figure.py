@@ -455,7 +455,7 @@ def generate_figure(
         logger.debug("Generate scatter: %s", str(px_kwargs))
         fig = px.scatter(df, **px_kwargs)
     elif plot_type == "contour":
-        hover_data = px_kwargs.pop("hover_data", None)
+        px_kwargs.pop("hover_data", None)
         px_kwargs["colorscale"] = px_kwargs.pop("color_continuous_scale", None)
         logger.debug("Generate contour: %s", px_kwargs)
         fig = get_contour(df, **px_kwargs)
