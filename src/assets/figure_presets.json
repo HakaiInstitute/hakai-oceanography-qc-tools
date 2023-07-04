@@ -10,14 +10,14 @@
     "Time Series Profiles": {
       "type": "scatter",
       "x": "collected",
-      "y": "line_out_depth",
+      "y": "depth",
       "color": "main_var",
       "hover_data": "hakai_id,main_var_flag_desc"
     },
     "Profiles": {
       "type": "scatter",
       "x": "main_var",
-      "y": "line_out_depth",
+      "y": "depth",
       "color": "main_var_flag",
       "hover_data": "hakai_id,main_var_flag_desc"
     },
