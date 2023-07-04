@@ -548,31 +548,30 @@ color_scale_mapping = {
     State("dataframe-variables", "data"),
 )
 def define_graph_default_values(path, label, parameter, variable, variables):
+    def _rename_placeholder(item):
+        if item == "main_var":
+            return variable
+        elif item == "main_var_flag":
+            return get_flag_var(variable, variables)
+        elif item == "main_var_flag_desc":
+            return get_flag_var(variable, variables).replace("_level_1", "")
+        return item
+
     if variable is None or label is None:
         return None
     path = path.split("/")[1]
-    placeholder = figure_presets[path].get(label).get(parameter["item"], "")
-    placeholder = placeholder.replace(
-        "main_var_flag_desc",
-        get_flag_var(variable, variables.split(",")).replace("_level_1", ""),
-    )
-    placeholder = placeholder.replace(
-        "main_var_flag", get_flag_var(variable, variables.split(","))
-    )
-    placeholder = placeholder.replace("main_var", variable)
-
-    if placeholder == "main_var":
-        return variable
-    elif placeholder == "main_var_flag":
-        return get_flag_var(variable, variables.split(","))
-    if parameter["item"] == "color_continuous_scale" and placeholder is None:
+    placeholder = figure_presets[path].get(label).get(parameter["item"])
+    if placeholder is None:
+        return None
+    elif parameter["item"] == "color_continuous_scale" and placeholder is None:
         default_color_scale = [
             color_scale
             for key, color_scale in color_scale_mapping.items()
             if key in variable
         ]
-        placeholder = default_color_scale[0] if default_color_scale else "thermal"
-    return placeholder or None
+        return default_color_scale[0] if default_color_scale else "thermal"
+
+    return ",".join([_rename_placeholder(item) for item in placeholder.split(",")])
 
 
 @callback(
