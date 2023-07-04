@@ -459,7 +459,7 @@ def generate_figure(
 
     # Sort values
     if "profile" in label.lower():
-        sort_by = [time_var, "depth", "line_out_depth"]
+        sort_by = [time_var, "line_out_depth", "pressure"]
     else:
         sort_by = ["pressure", "line_out_depth", time_var]
     df = df.sort_values([var for var in sort_by if var in df])
