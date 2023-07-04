@@ -445,7 +445,7 @@ def generate_figure(
     # Generate plot
     if plot_type == "scatter":
         px_kwargs["labels"] = config["VARIABLES_LABEL"]
-        if "flag" in px_kwargs.get("color"):
+        if "flag" in px_kwargs.get("color", ""):
             logger.debug("assign color map for object")
             df[px_kwargs["color"]] = df[px_kwargs["color"]].astype(str)
             px_kwargs["color_discrete_map"] = flag_color_map
