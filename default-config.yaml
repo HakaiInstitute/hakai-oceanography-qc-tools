@@ -86,6 +86,7 @@ pages:
           "quality_level",
           "comments",
           "quality_log",
+          "analyzing_lab",
         ]
       upload_fields:
         [
@@ -98,6 +99,7 @@ pages:
           "quality_level",
           "comments",
           "quality_log",
+          "analyzing_lab",
         ]
   ctd:
     - endpoint: ctd/views/file/cast/data
