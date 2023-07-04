@@ -339,7 +339,7 @@ def generate_qc_table_style(data):
             "name": i,
             "id": i,
             "selectable": i.endswith("_flag"),
-            "editable": i.endswith("_flag"),
+            "editable": i.endswith("_flag") or i == "comments",
             "hideable": i != "hakai_id",
             "presentation": "dropdown" if i.endswith("_flag") else None,
         }
@@ -448,6 +448,13 @@ def apply_to_selection(
     def _return_json(df):
         return None if df is None else df.reset_index().to_dict("records")
 
+    def _join_comments(cast):
+        if cast["previous_comments"] is None:
+            return cast["comments"]
+        elif cast["comments"] in cast["previous_comments"]:
+            return cast["previous_comments"]
+        return f"{cast['previous_comments']}\n{cast['comments']}"
+
     on = ["hakai_id"]
     if not variable:
         return auto_qced_data, manually_selected_data
@@ -518,34 +525,46 @@ def apply_to_selection(
                 data["collected"], utc=True
             ).dt.tz_localize(None)
             auto_qced_data = run_nutrient_qc(data, overwrite_existing_flags=True)
+            auto_qced_data = (
+                auto_qced_data[["hakai_id"] + nutrient_variables_flags]
+                .groupby("hakai_id")
+                .first()
+            )
+            variable_flags = nutrient_variables_flags
+            qc_data = data[variable_flags].groupby("hakai_id").first()
         elif "ctd" in location:
+            logger.debug(
+                "Generate suggested flag for ctd %s: %s", variable, flag_data.columns
+            )
             auto_qced_data = generate_qc_flags(data, variable)
-
-        # Standardize flag tables
-        auto_qced_data = (
-            auto_qced_data[["hakai_id"] + nutrient_variables_flags]
-            .groupby("hakai_id")
-            .first()
-        )
-        data = data[["hakai_id"] + nutrient_variables_flags].groupby("hakai_id").first()
+            auto_qced_data["previous_comments"] = flag_data["comments"]
+            auto_qced_data["comments"] = auto_qced_data.apply(_join_comments, axis=1)
+            auto_qced_data = auto_qced_data.drop(columns=["previous_comments"])
+            variable_flags = [f"{variable}_flag", "comments"]
+            qc_data = flag_data[variable_flags]
 
         # Compare prior and after qc results
-        df_compare = auto_qced_data.compare(data).swaplevel(axis="columns")
+        logger.debug("original flags: %s", qc_data.columns)
+        logger.debug("udpated flags: %s", auto_qced_data.columns)
+        df_compare = auto_qced_data.compare(qc_data, keep_shape=True).swaplevel(
+            axis="columns"
+        )
+        logger.debug("Automated qc compare tables: %s", df_compare.columns)
         if to == "selection":
             logger.debug("Apply qc to selection: %s", graph_selected.index.values)
             auto_qced_data = df_compare["self"].query(
                 "hakai_id in @graph_selected.index.values"
-            )[nutrient_variables_flags]
+            )[variable_flags]
             logger.debug("Qc update %s records", len(auto_qced_data))
         elif to == "UKN":
-            logger.debug("Apply qc to unknown %s", nutrient_variables_flags)
+            logger.debug("Apply qc to unknown %s", variable_flags)
             auto_qced_data = df_compare.loc[
-                df_compare["other"][nutrient_variables_flags].isna().all(axis="columns")
-            ]["self"][nutrient_variables_flags]
+                df_compare["other"][variable_flags].isna().all(axis="columns")
+            ]["self"][variable_flags]
             logger.debug("Qc update %s records", len(auto_qced_data))
         elif to == "all":
             logger.debug("Apply ")
-            auto_qced_data = df_compare["self"][nutrient_variables_flags]
+            auto_qced_data = df_compare["self"][variable_flags]
 
     return _return_json(manually_selected_data), _return_json(auto_qced_data)
 

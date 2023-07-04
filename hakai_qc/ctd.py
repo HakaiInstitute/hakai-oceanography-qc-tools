@@ -43,6 +43,9 @@ def generate_qc_flags(data: pd.DataFrame, variable: str) -> pd.DataFrame:
         pd.DataFrame: hakai_id specific flag dataframe
     """
 
+    def _common_automated_qc_flag(flags):
+        return flags.dropna().median()
+
     def _review_hakai_flag(flags):
         flag, comment = None, []
 
@@ -59,7 +62,7 @@ def generate_qc_flags(data: pd.DataFrame, variable: str) -> pd.DataFrame:
     hakai_flag = f"{variable}_flag"
 
     qc_flags = data.groupby("hakai_id").agg(
-        {qartod_flag: "median", hakai_flag: _review_hakai_flag}
+        {qartod_flag: _common_automated_qc_flag, hakai_flag: _review_hakai_flag}
     )
     suggested_flags = qc_flags[hakai_flag].apply(pd.Series)
     suggested_flags[hakai_flag] = suggested_flags[hakai_flag].fillna(
