@@ -8,6 +8,8 @@ from urllib.parse import unquote
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, ctx, dcc, html
 from hakai_api import Client
+from hakai_qc import ctd, nutrients
+import pandas as pd
 
 from utils import load_config
 
@@ -191,6 +193,16 @@ def get_hakai_data(path, query, credentials):
             [],
         )
     logger.debug("data downloaded")
+
+    # Generate derived variables
+    logger.debug("Generate derived variables")
+    df = pd.DataFrame(result)
+    if path == "ctd":
+        df = ctd.get_derive_variables(df)
+    elif path == "nutrients":
+        df = nutrients.get_derived_variables(df)
+    result = df.to_dict(orient="records")
+
     # Load auxiliary data
     if path == "ctd":
         flag_filters = re.findall("(station|start_dt)(=|<|>|>=|<=)([^&]*)", url)
