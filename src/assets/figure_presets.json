@@ -21,7 +21,7 @@
       "y": "depth",
       "color": "main_var_flag",
       "hover_data": "hakai_id,main_var_flag_desc",
-      "kwargs": "{\"line_group\":\"collected\"}"
+      "kwargs": "{\"line_group\":\"date\"}"
     },
     "Contour Profiles": {
       "type": "contour",
