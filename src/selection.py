@@ -1,6 +1,6 @@
 import logging
 import math
-import os
+from pathlib import Path
 import shutil
 from datetime import datetime
 
@@ -26,7 +26,7 @@ quality_levels = [
     "Technicianmr",
     "Principal Investigator",
 ]
-MODULE_PATH = os.path.dirname(__file__)
+MODULE_PATH = Path(__file__).parent
 
 
 def get_flag_var(var):
@@ -555,24 +555,23 @@ def get_qc_excel(n_clicks, data, location):
     if data is None:
         return None, None
     logger.info("Generate excel file")
-    df = pd.DataFrame(data).drop(
-        columns=["id", "start_depth", "target_depth_m", "bottle_drop", "collected"],
-        errors="ignore",
-    )
+    df = pd.DataFrame(data)
     data_type = location.split("/")[1]
+    excel_template = MODULE_PATH / f"assets/hakai-template-{data_type}-samples.xlsx"
+
     variable_output = config["pages"].get(data_type)[0].get("upload_fields")
     logger.debug("Save excel file type:%s", data_type)
     if variable_output:
         logger.debug("Upload only varaibles=%s", variable_output)
         df = df[variable_output]
 
-    temp_file = os.path.join(
-        config["TEMP_FOLDER"],
-        f"hakai-qc-{data_type}-{datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}.xlsx",
+    temp_file = (
+        Path(config["TEMP_FOLDER"])
+        / f"hakai-qc-{data_type}-{datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}.xlsx"
     )
     logger.debug("Make a copy from the %s template", data_type)
     shutil.copy(
-        os.path.join(MODULE_PATH, f"assets/hakai-template-{location[1:]}-samples.xlsx"),
+        excel_template,
         temp_file,
     )
     logger.debug("Add data to qc excel file")
