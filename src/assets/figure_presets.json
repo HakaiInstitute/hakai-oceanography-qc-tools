@@ -15,7 +15,7 @@
       "hover_data": "hakai_id,main_var_flag_desc"
     },
     "Profiles": {
-      "type": "scatter",
+      "type": "line",
       "x": "main_var",
       "y": "depth",
       "color": "main_var_flag",
@@ -83,18 +83,19 @@
       "hover_data": "hakai_id,main_var_flag_desc"
     },
     "Time Series": {
-      "type": "scatter",
+      "type": "line",
       "x": "start_dt",
       "y": "main_var",
       "color": "main_var_flag",
       "hover_data": "hakai_id,main_var_flag_desc"
     },
     "Profiles": {
-      "type": "scatter",
+      "type": "line",
       "x": "main_var",
       "y": "depth",
       "color": "main_var_flag",
-      "hover_data": "hakai_id,main_var_flag_desc"
+      "hover_data": "hakai_id,main_var_flag_desc",
+      "line_group": "hakai_id"
     },
     "Contour Profiles": {
       "type": "contour",

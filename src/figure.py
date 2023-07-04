@@ -89,7 +89,7 @@ figure_menu = dbc.Collapse(
                                             },
                                             options=[
                                                 {"label": key, "value": key}
-                                                for key in ["scatter", "contour"]
+                                                for key in ["scatter", "contour","line"]
                                             ],
                                         ),
                                         width=10,
@@ -362,6 +362,15 @@ def generate_figure(
             if go_object == "Scatter":
                 fig.add_trace(go.Scatter(**trace))
 
+    def _convert_variable_to_str(df):
+        if "flag" in px_kwargs.get("color", ""):
+            logger.debug("assign color map for object")
+            df[px_kwargs["color"]] = df[px_kwargs["color"]].astype(str)
+            px_kwargs["color_discrete_map"] = flag_color_map
+        if "flag" in px_kwargs.get("symbol", ""):
+            df[px_kwargs["symbol"]] = df[px_kwargs["symbol"]].astype(str)
+        return df
+
     # transform data for plotting
     if data is None or not any(form_inputs.get("default")):
         logger.debug("do not generate plot yet")
@@ -442,16 +451,19 @@ def generate_figure(
     df.loc[:, "year"] = df[time_var].dt.year
     logger.debug("data to plot len(df)=%s", len(df))
 
+    # Sort values
+    if "profile" in label.lower():
+        sort_by = [time_var, "depth", "line_out_depth"]
+        line_group = "collected" if "collected" in df else "hakai_id"
+    else:
+        sort_by = ["pressure", "line_out_depth", time_var]
+        line_group = "line_out_depth" if "line_out_depth" in df else "pressure"
+    df = df.sort_values([var for var in sort_by if var in df])
+
     # Generate plot
     if plot_type == "scatter":
         px_kwargs["labels"] = config["VARIABLES_LABEL"]
-        if "flag" in px_kwargs.get("color", ""):
-            logger.debug("assign color map for object")
-            df[px_kwargs["color"]] = df[px_kwargs["color"]].astype(str)
-            px_kwargs["color_discrete_map"] = flag_color_map
-        if "flag" in px_kwargs.get("symbol", ""):
-            df[px_kwargs["symbol"]] = df[px_kwargs["symbol"]].astype(str)
-
+        df = _convert_variable_to_str(df)
         logger.debug("Generate scatter: %s", str(px_kwargs))
         fig = px.scatter(df, **px_kwargs)
     elif plot_type == "contour":
@@ -470,6 +482,14 @@ def generate_figure(
             height=600,
         )
         fig.update_layout(mapbox_style="open-street-map")
+    elif plot_type == "line":
+        df = _convert_variable_to_str(df)
+        fig = px.line(df, line_group=line_group, **px_kwargs, markers=True)
+        # Show flagged values as dots
+        if "flag_level_1" in px_kwargs.get("color", ""):
+            for trace in fig.data:
+                if trace["name"] != "1":
+                    trace["mode"] = "markers"
     else:
         logger.error("unknown plot_type=%s", plot_type)
         return None, None
