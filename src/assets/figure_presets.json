@@ -12,7 +12,6 @@
       "x": "collected",
       "y": "line_out_depth",
       "color": "main_var",
-      "symbol": "main_var_flag",
       "hover_data": "hakai_id,main_var_flag_desc"
     },
     "Profiles": {
@@ -81,7 +80,6 @@
       "x": "start_dt",
       "y": "depth",
       "color": "main_var",
-      "symbol": "main_var_flag",
       "hover_data": "hakai_id,main_var_flag_desc"
     },
     "Time Series": {
