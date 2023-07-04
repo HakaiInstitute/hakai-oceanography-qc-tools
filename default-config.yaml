@@ -51,6 +51,7 @@ VARIABLES_LABEL:
     "SVD": "Suspicious Value Discard",
     "BDL": "Below Detection Limit",
     "ctd": "CTD",
+    "depth": "Depth (m)",
   }
 
 pages:
