@@ -257,7 +257,7 @@ def generate_filter_pannel(data, path):
     filters
     """
     if data is None:
-        return [], [], 0, 100, None, None
+        return [], [], None, None
 
     logger.debug("Load data as dataframe to build filter")
     df = pd.DataFrame(data)
