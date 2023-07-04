@@ -169,7 +169,7 @@ def open_figure_menu(clicked, is_open):
     Input("location", "pathname"),
 )
 def get_variable_list(value, options, path):
-    if options is None:
+    if not options:
         return None, None
     location_items = path.split("/")
     logger.debug("dataframe-variables=%s", options)

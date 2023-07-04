@@ -497,7 +497,7 @@ def generate_figure(
     Input("dataframe-variables", "data"),
 )
 def define_variables_options(n, variables):
-    if variables is None:
+    if not variables:
         return len(n) * [None]
     variables = [
         {"label": config["VARIABLES_LABEL"].get(variable, variable), "value": variable}
