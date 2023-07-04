@@ -1,11 +1,12 @@
 {
   "nutrients": {
     "Time Series": {
-      "type": "scatter",
+      "type": "line",
       "x": "collected",
       "y": "main_var",
       "color": "main_var_flag",
-      "hover_data": "hakai_id,main_var_flag_desc"
+      "hover_data": "hakai_id,main_var_flag_desc",
+      "kwargs": "{\"line_group\":\"line_out_depth\"}"
     },
     "Time Series Profiles": {
       "type": "scatter",
@@ -19,7 +20,8 @@
       "x": "main_var",
       "y": "depth",
       "color": "main_var_flag",
-      "hover_data": "hakai_id,main_var_flag_desc"
+      "hover_data": "hakai_id,main_var_flag_desc",
+      "kwargs": "{\"line_group\":\"collected\"}"
     },
     "Contour Profiles": {
       "type": "contour",
@@ -87,7 +89,8 @@
       "x": "start_dt",
       "y": "main_var",
       "color": "main_var_flag",
-      "hover_data": "hakai_id,main_var_flag_desc"
+      "hover_data": "hakai_id,main_var_flag_desc",
+      "kwargs": "{\"line_group\":\"pressure\"}"
     },
     "Profiles": {
       "type": "line",
@@ -95,7 +98,7 @@
       "y": "depth",
       "color": "main_var_flag",
       "hover_data": "hakai_id,main_var_flag_desc",
-      "line_group": "hakai_id"
+      "kwargs": "{\"line_group\":\"hakai_id\"}"
     },
     "Contour Profiles": {
       "type": "contour",

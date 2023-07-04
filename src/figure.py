@@ -89,7 +89,11 @@ figure_menu = dbc.Collapse(
                                             },
                                             options=[
                                                 {"label": key, "value": key}
-                                                for key in ["scatter", "contour","line"]
+                                                for key in [
+                                                    "scatter",
+                                                    "contour",
+                                                    "line",
+                                                ]
                                             ],
                                         ),
                                         width=10,
@@ -215,7 +219,7 @@ figure_menu = dbc.Collapse(
                                         ),
                                     ]
                                 )
-                                for item in ["facet_col", "facet_row"]
+                                for item in ["facet_col", "facet_row", "kwargs"]
                             ],
                             html.Br(),
                             dbc.Row(
@@ -386,6 +390,7 @@ def generate_figure(
         "facet_row",
         "color_continuous_scale",
         "hover_data",
+        "kwargs",
     ]
     logger.debug("sort figure-menu form input")
     form_inputs = pd.DataFrame(form_inputs)
@@ -401,6 +406,7 @@ def generate_figure(
     inputs = form_inputs["output"]
 
     px_kwargs = inputs[px_kwargs_inputs].dropna().to_dict()
+    px_kwargs.update(json.loads(px_kwargs.pop("kwargs", "{}")))
     px_kwargs["hover_data"] = (
         px_kwargs["hover_data"].split(",")
         if isinstance(px_kwargs.get("hover_data"), str)
@@ -454,10 +460,8 @@ def generate_figure(
     # Sort values
     if "profile" in label.lower():
         sort_by = [time_var, "depth", "line_out_depth"]
-        line_group = "collected" if "collected" in df else "hakai_id"
     else:
         sort_by = ["pressure", "line_out_depth", time_var]
-        line_group = "line_out_depth" if "line_out_depth" in df else "pressure"
     df = df.sort_values([var for var in sort_by if var in df])
 
     # Generate plot
@@ -484,11 +488,11 @@ def generate_figure(
         fig.update_layout(mapbox_style="open-street-map")
     elif plot_type == "line":
         df = _convert_variable_to_str(df)
-        fig = px.line(df, line_group=line_group, **px_kwargs, markers=True)
+        fig = px.line(df, **px_kwargs, markers=True)
         # Show flagged values as dots
-        if "flag_level_1" in px_kwargs.get("color", ""):
+        if "flag" in px_kwargs.get("color", ""):
             for trace in fig.data:
-                if trace["name"] != "1":
+                if trace["name"] not in ("1", "AV"):
                     trace["mode"] = "markers"
     else:
         logger.error("unknown plot_type=%s", plot_type)
