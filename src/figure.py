@@ -449,6 +449,8 @@ def generate_figure(
             logger.debug("assign color map for object")
             df[px_kwargs["color"]] = df[px_kwargs["color"]].astype(str)
             px_kwargs["color_discrete_map"] = flag_color_map
+        if "flag" in px_kwargs.get("symbol", ""):
+            df[px_kwargs["symbol"]] = df[px_kwargs["symbol"]].astype(str)
 
         logger.debug("Generate scatter: %s", str(px_kwargs))
         fig = px.scatter(df, **px_kwargs)
