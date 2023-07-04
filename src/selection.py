@@ -10,6 +10,7 @@ from dash import ALL, Input, Output, State, callback, ctx, dash_table, dcc, html
 
 from hakai_qc.flags import flag_color_map, flags_conventions, get_hakai_variable_flag
 from hakai_qc.nutrients import nutrient_variables, run_nutrient_qc
+from hakai_qc.ctd import generate_qc_flags
 from hakai_qc.qc import update_dataframe
 
 # from pages.nutrients import get_flag_var
@@ -415,6 +416,7 @@ def get_selected_records_from_graph(graph_selected, custom_data_variables):
     State({"id": "selected-data", "source": "figure"}, "data"),
     State({"id": "selected-data", "source": "auto-qc"}, "data"),
     State({"id": "selected-data", "source": "flags"}, "data"),
+    State("location", "pathname"),
 )
 def apply_to_selection(
     apply,
@@ -427,6 +429,7 @@ def apply_to_selection(
     manually_selected_data,
     auto_qced_data,
     flag_data,
+    location,
 ):
     def _add_flag_selection(df_new, df_previous):
         logger.debug(
@@ -509,11 +512,15 @@ def apply_to_selection(
 
     elif action == "Automated QC":
         logger.debug("Run Automated QC")
-        data = data.dropna(subset=nutrient_variables).reset_index()
-        data["collected"] = pd.to_datetime(data["collected"], utc=True).dt.tz_localize(
-            None
-        )
-        auto_qced_data = run_nutrient_qc(data, overwrite_existing_flags=True)
+        if "nutrient" in location:
+            data = data.dropna(subset=nutrient_variables).reset_index()
+            data["collected"] = pd.to_datetime(
+                data["collected"], utc=True
+            ).dt.tz_localize(None)
+            auto_qced_data = run_nutrient_qc(data, overwrite_existing_flags=True)
+        elif "ctd" in location:
+            auto_qced_data = generate_qc_flags(data, variable)
+
         # Standardize flag tables
         auto_qced_data = (
             auto_qced_data[["hakai_id"] + nutrient_variables_flags]
