@@ -339,6 +339,7 @@ def get_flag_var(var, variables):
             {"item": ALL, "group": "graph", "options": ALL, "type": ALL}, "placeholder"
         ),
     },
+    Input("update-figure", "n_clicks"),
     Input("figure-menu-label-spinner", "data"),
 )
 def generate_figure(
