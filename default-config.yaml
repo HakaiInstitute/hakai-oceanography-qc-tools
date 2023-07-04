@@ -109,6 +109,8 @@ pages:
           "station",
           "latitude",
           "longitude",
+          "station_longitude",
+          "station_latitude",
           "start_dt",
           "direction_flag",
           "depth",
