@@ -253,7 +253,10 @@ def set_selection_apply_options(action, dataSelected, apply, to):
         },
     ]
     if action == "Flag":
-        apply_to_options += [{"label": "Unknown", "value": "UKN"}]
+        apply_to_options += [
+            {"label": "Unknown", "value": "unknown"},
+            {"label": "All", "value": "all"},
+        ]
         return (
             flags_conventions["Hakai"],
             apply if apply in _get_values(flags_conventions["Hakai"]) else "AV",
@@ -460,18 +463,29 @@ def apply_to_selection(
         if graph_selected.empty:
             logger.debug("no selection")
             return None
-        update_hakai_ids = set(graph_selected["hakai_id"].values)
-    elif to == "UKN":
-        logger.debug("Get list of hakai_ids with unknown or na values")
-        update_hakai_ids = qc_data.query(
-            f'{update_variable}.isna() or {update_variable} in ("UKN")'
-        ).index.values
+        update_hakai_ids = graph_selected["hakai_id"].drop_duplicates().values
+    elif to == "unknown":
+        query = f'{update_variable}.isna() or {update_variable} in ("UKN")'
+        logger.debug("Get hakai_ids with %s", query)
+        update_hakai_ids = qc_data.query(query).index.values
 
     elif to == "all":
         logger.debug("Get the full list of hakai_ids")
         update_hakai_ids = qc_data.index.values
+    elif action == "Quality Level":
+        if "quality_level" not in qc_data:
+            logger.error("No quality_level column available")
+            return qc_data.reset_index().to_dict(orient="records")
+        query = f"quality_level == '{to}'"
+        logger.debug("Update %s => %s", query, apply_value)
+        update_hakai_ids = qc_data.query(query).index.values
+
     else:
-        raise RuntimeError(f"Unknown apply to={to} parameter")
+        raise RuntimeError(f"Unknown apply action={action} to={to} parameters")
+
+    if not update_hakai_ids.any():
+        logger.warning("No records matches action=%s, to=%s", action, to)
+        logger.debug("qc_data=%s", qc_data[update_variable].head())
     logger.debug("%s hakai_ids were selected", len(update_hakai_ids))
 
     # Update data with already selected data
