@@ -51,6 +51,7 @@ VARIABLES_LABEL:
     "SVD": "Suspicious Value Discard",
     "BDL": "Below Detection Limit",
     "ctd": "CTD",
+    "depth": "Depth (m)",
   }
 
 pages:
@@ -74,8 +75,7 @@ pages:
           "line_out_depth",
           "pressure_transducer_depth",
           "lab_technician",
-          "no2_no3_ugl",
-          "no2_no3_units",
+          "no2_no3_um",
           "po4",
           "sio2",
           "no2_no3_flag",
@@ -86,6 +86,7 @@ pages:
           "quality_level",
           "comments",
           "quality_log",
+          "analyzing_lab",
         ]
       upload_fields:
         [
@@ -98,6 +99,7 @@ pages:
           "quality_level",
           "comments",
           "quality_log",
+          "analyzing_lab",
         ]
   ctd:
     - endpoint: ctd/views/file/cast/data
@@ -107,6 +109,8 @@ pages:
           "station",
           "latitude",
           "longitude",
+          "station_longitude",
+          "station_latitude",
           "start_dt",
           "direction_flag",
           "depth",

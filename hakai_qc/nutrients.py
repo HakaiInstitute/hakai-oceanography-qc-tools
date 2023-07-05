@@ -114,3 +114,8 @@ def run_nutrient_qc(
         )
 
     return df[original_columns]
+
+
+def get_derived_variables(df):
+    df["depth"] = df["pressure_transducer_depth"].fillna(df["line_out_depth"])
+    return df

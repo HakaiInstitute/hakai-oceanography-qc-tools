@@ -1,6 +1,7 @@
 import logging
 
 import dash_bootstrap_components as dbc
+import pandas as pd
 from dash import Input, Output, State, callback, ctx, dcc, html
 
 from utils import load_config
@@ -13,10 +14,8 @@ stores = dbc.Col(
         [
             dcc.Store(id="dataframe"),
             dcc.Store(id="dataframe-variables"),
-            dcc.Store(id="selected-data"),
-            dcc.Store(id={"id": "selected-data", "source": "auto-qc"}),
-            dcc.Store(id={"id": "selected-data", "source": "figure"}),
-            dcc.Store(id={"id": "selected-data", "source": "flags"}),
+            dcc.Store(id="qc-update-data"),
+            dcc.Store(id="qc-source-data"),
             dcc.Store(id="main-graph-spinner"),
             dcc.Store(id="auto-qc-nutrient-spinner"),
             dcc.Store(id="figure-menu-label-spinner"),
@@ -71,12 +70,35 @@ data_filter_interface = dbc.Collapse(
             dbc.CardBody(
                 [
                     dbc.Row(id="dataframe-subsets", align="center", justify="center"),
-                    html.Div(
-                        dbc.Button(
-                            "Apply filter",
-                            id="apply-subset-filetr",
-                            className="d-grid gap-2 col-6 mx-auto update-figure-button",
-                        )
+                    dbc.Row(
+                        [
+                            "Filter by time: ",
+                            dbc.Col(
+                                dcc.DatePickerRange(
+                                    id="time-filter-range-picker",
+                                    clearable=True,
+                                ),
+                                width=3,
+                            ),
+                            dbc.Col(
+                                dbc.ButtonGroup(
+                                    [
+                                        dbc.Button(
+                                            id="filter-time-button-move-down",
+                                            className="bi bi-arrow-left me-1",
+                                        ),
+                                        dbc.Button(
+                                            id="filter-time-button-move-up",
+                                            className="bi bi-arrow-right me-1",
+                                        ),
+                                    ]
+                                ),
+                                width=1,
+                            ),
+                        ],
+                        align="center",
+                        justify="center",
+                        className="filter-by-time",
                     ),
                 ]
             ),
@@ -145,7 +167,7 @@ def open_figure_menu(clicked, is_open):
     Input("location", "pathname"),
 )
 def get_variable_list(value, options, path):
-    if options is None:
+    if not options:
         return None, None
     location_items = path.split("/")
     logger.debug("dataframe-variables=%s", options)
@@ -218,3 +240,108 @@ navbar = dbc.Navbar(
     color=config["NAVBAR_COLOR"],
     dark=config["NAVBAR_DARK"],
 )
+
+
+@callback(
+    Output("dataframe-variables", "data"),
+    Output("dataframe-subsets", "children"),
+    Output("time-filter-range-picker", "min_date_allowed"),
+    Output("time-filter-range-picker", "max_date_allowed"),
+    Input("dataframe", "data"),
+    State("location", "pathname"),
+)
+def generate_filter_pannel(data, path):
+    """Parse downloaded data and generate the different subsets and time
+    filters
+    """
+    if data is None:
+        return [], [], None, None
+
+    logger.debug("Load data as dataframe to build filter")
+    df = pd.DataFrame(data)
+    path = path.split("/")[1]
+    if path == "nutrients":
+        subset_variables = ["site_id", "line_out_depth"]
+        time_variable = "collected"
+    elif path == "ctd":
+        subset_variables = ["station", "direction_flag"]
+        time_variable = "start_dt"
+    else:
+        raise RuntimeError("Unknown data type to generate filter")
+
+    # Get time interval
+    time = pd.to_datetime(df[time_variable])
+    time_min = time.min()
+    time_max = time.max()
+
+    # Retrieve subsets and generate dropdowns
+    logger.debug("Retrieve subsets variables")
+    subsets = {var: df[var].unique() for var in subset_variables}
+    subset_interface = dbc.Col(
+        [
+            dbc.Row(
+                [
+                    dbc.Col(
+                        dcc.Dropdown(
+                            id={"type": "dataframe-subset", "subset": key},
+                            options=options,
+                            multi=True,
+                            className="selection-box",
+                            placeholder=key,
+                        ),
+                        md=4,
+                    )
+                    for key, options in subsets.items()
+                ]
+                + [
+                    dbc.Col(
+                        dbc.Input(
+                            id={"type": "dataframe-subset", "subset": "query"},
+                            placeholder="Filter data ...",
+                            type="text",
+                            debounce=True,
+                        ),
+                        md=4,
+                    )
+                ]
+            ),
+        ]
+    )
+    return (
+        ",".join(df.columns),
+        subset_interface,
+        time_min.to_pydatetime(),
+        time_max.to_pydatetime(),
+    )
+
+
+@callback(
+    Output("time-filter-range-picker", "start_date"),
+    Output("time-filter-range-picker", "end_date"),
+    State("time-filter-range-picker", "start_date"),
+    State("time-filter-range-picker", "end_date"),
+    Input("filter-time-button-move-down", "n_clicks"),
+    Input("filter-time-button-move-up", "n_clicks"),
+)
+def update_date_range_slider(picker_date_min, picker_date_max, down, up):
+    if picker_date_min is None or picker_date_max is None:
+        return None, None
+    start = pd.to_datetime(picker_date_min)
+    end = pd.to_datetime(picker_date_max)
+    time_interval = (end - start) + pd.Timedelta(1, unit="days")
+    if ctx.triggered_id == "filter-time-button-move-down":
+        logger.debug("Move time filter slider down")
+        time_interval = -time_interval
+    elif ctx.triggered_id == "filter-time-button-move-up":
+        logger.debug("Move time filter slider up")
+    start += time_interval
+    end += time_interval
+    logger.debug(
+        "Move time filter slider: [%s,%s] by %s = [%s,%s]",
+        picker_date_min,
+        picker_date_max,
+        time_interval,
+        start,
+        end,
+    )
+    return start, end

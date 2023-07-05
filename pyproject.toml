@@ -17,6 +17,9 @@ sentry-sdk = "^1.15.0"
 PyYAML = "^6.0"
 python-dotenv = "^0.21.1"
 ioos-qc = "^2.1.0"
+fastparquet = "^2023.7.0"
+pyarrow = "^12.0.1"
+gsw = "^3.6.17"
 
 [tool.poetry.dev-dependencies]
 black = "^23.1.0"

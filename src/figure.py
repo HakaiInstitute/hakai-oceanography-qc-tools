@@ -89,7 +89,11 @@ figure_menu = dbc.Collapse(
                                             },
                                             options=[
                                                 {"label": key, "value": key}
-                                                for key in ["scatter", "contour"]
+                                                for key in [
+                                                    "scatter",
+                                                    "contour",
+                                                    "line",
+                                                ]
                                             ],
                                         ),
                                         width=10,
@@ -215,7 +219,7 @@ figure_menu = dbc.Collapse(
                                         ),
                                     ]
                                 )
-                                for item in ["facet_col", "facet_row"]
+                                for item in ["facet_col", "facet_row", "kwargs"]
                             ],
                             html.Br(),
                             dbc.Row(
@@ -323,10 +327,13 @@ def get_flag_var(var, variables):
 @callback(
     Output({"type": "graph", "page": "main"}, "figure"),
     Output("main-graph-spinner", "data"),
+    State("location", "pathname"),
     State("dataframe", "data"),
-    Input("selected-data-table", "data"),
+    Input("qc-table", "data"),
     Input({"type": "dataframe-subset", "subset": ALL}, "placeholder"),
     Input({"type": "dataframe-subset", "subset": ALL}, "value"),
+    Input("time-filter-range-picker", "start_date"),
+    Input("time-filter-range-picker", "end_date"),
     {
         "id": State({"item": ALL, "group": "graph", "options": ALL, "type": ALL}, "id"),
         "value": State(
@@ -339,7 +346,17 @@ def get_flag_var(var, variables):
     Input("update-figure", "n_clicks"),
     Input("figure-menu-label-spinner", "data"),
 )
-def generate_figure(data, selected_data, subset_vars, subsets, form_inputs, *args):
+def generate_figure(
+    location,
+    data,
+    selected_data,
+    subset_vars,
+    subsets,
+    time_min,
+    time_max,
+    form_inputs,
+    *args,
+):
     def _add_extra_traces(extra_traces):
         if extra_traces is None:
             return
@@ -348,6 +365,15 @@ def generate_figure(data, selected_data, subset_vars, subsets, form_inputs, *arg
         ):
             if go_object == "Scatter":
                 fig.add_trace(go.Scatter(**trace))
+
+    def _convert_variable_to_str(df):
+        if "flag" in px_kwargs.get("color", ""):
+            logger.debug("assign color map for object")
+            df[px_kwargs["color"]] = df[px_kwargs["color"]].astype(str)
+            px_kwargs["color_discrete_map"] = flag_color_map
+        if "flag" in px_kwargs.get("symbol", ""):
+            df[px_kwargs["symbol"]] = df[px_kwargs["symbol"]].astype(str)
+        return df
 
     # transform data for plotting
     if data is None or not any(form_inputs.get("default")):
@@ -364,6 +390,7 @@ def generate_figure(data, selected_data, subset_vars, subsets, form_inputs, *arg
         "facet_row",
         "color_continuous_scale",
         "hover_data",
+        "kwargs",
     ]
     logger.debug("sort figure-menu form input")
     form_inputs = pd.DataFrame(form_inputs)
@@ -379,6 +406,7 @@ def generate_figure(data, selected_data, subset_vars, subsets, form_inputs, *arg
     inputs = form_inputs["output"]
 
     px_kwargs = inputs[px_kwargs_inputs].dropna().to_dict()
+    px_kwargs.update(json.loads(px_kwargs.pop("kwargs", "{}")))
     px_kwargs["hover_data"] = (
         px_kwargs["hover_data"].split(",")
         if isinstance(px_kwargs.get("hover_data"), str)
@@ -399,20 +427,25 @@ def generate_figure(data, selected_data, subset_vars, subsets, form_inputs, *arg
     # Get Data and filter by given subset
     logger.info("Generating figure for subsets=%s", list(zip(subset_vars, subsets)))
     df = pd.DataFrame(data)
-    filter_subsets = " and ".join(
-        [
-            f"{subset_var} in {subset}" if subset_var != "Filter data ..." else subset
-            for subset_var, subset in zip(subset_vars, subsets)
-            if subset
-        ]
-    )
+    filter_subsets = [
+        f"{subset_var} in {subset}" if subset_var != "Filter data ..." else subset
+        for subset_var, subset in zip(subset_vars, subsets)
+        if subset
+    ]
+
+    # Filter figure by time
+    if time_min and time_max:
+        time_var = [var for var in ["collected", "start_dt"] if var in df]
+        if not time_var:
+            raise RuntimeError("No time variable available")
+        filter_subsets += [f"'{time_min}' < {time_var[0]} < '{time_max}'"]
 
     if filter_subsets:
         logger.debug("filter data with: %s", filter_subsets)
-        df = df.query(filter_subsets)
+        df = df.query(" and ".join(filter_subsets))
 
     # apply manual selection flags
-    if selected_data:
+    if selected_data and not location.startswith("/ctd"):
         df = update_dataframe(
             df, pd.DataFrame(selected_data), on="hakai_id", how="left"
         )
@@ -424,18 +457,21 @@ def generate_figure(data, selected_data, subset_vars, subsets, form_inputs, *arg
     df.loc[:, "year"] = df[time_var].dt.year
     logger.debug("data to plot len(df)=%s", len(df))
 
+    # Sort values
+    if "profile" in label.lower():
+        sort_by = [time_var, "line_out_depth", "pressure"]
+    else:
+        sort_by = ["pressure", "line_out_depth", time_var]
+    df = df.sort_values([var for var in sort_by if var in df])
+
     # Generate plot
     if plot_type == "scatter":
         px_kwargs["labels"] = config["VARIABLES_LABEL"]
-        if "flag" in px_kwargs.get("color"):
-            logger.debug("assign color map for object")
-            df[px_kwargs["color"]] = df[px_kwargs["color"]].astype(str)
-            px_kwargs["color_discrete_map"] = flag_color_map
-
+        df = _convert_variable_to_str(df)
         logger.debug("Generate scatter: %s", str(px_kwargs))
         fig = px.scatter(df, **px_kwargs)
     elif plot_type == "contour":
-        hover_data = px_kwargs.pop("hover_data", None)
+        px_kwargs.pop("hover_data", None)
         px_kwargs["colorscale"] = px_kwargs.pop("color_continuous_scale", None)
         logger.debug("Generate contour: %s", px_kwargs)
         fig = get_contour(df, **px_kwargs)
@@ -450,6 +486,14 @@ def generate_figure(data, selected_data, subset_vars, subsets, form_inputs, *arg
             height=600,
         )
         fig.update_layout(mapbox_style="open-street-map")
+    elif plot_type == "line":
+        df = _convert_variable_to_str(df)
+        fig = px.line(df, **px_kwargs, markers=True)
+        # Show flagged values as dots
+        if "flag" in px_kwargs.get("color", ""):
+            for trace in fig.data:
+                if trace["name"] not in ("1", "AV"):
+                    trace["mode"] = "markers"
     else:
         logger.error("unknown plot_type=%s", plot_type)
         return None, None
@@ -479,7 +523,7 @@ def generate_figure(data, selected_data, subset_vars, subsets, form_inputs, *arg
     Input("dataframe-variables", "data"),
 )
 def define_variables_options(n, variables):
-    if variables is None:
+    if not variables:
         return len(n) * [None]
     variables = [
         {"label": config["VARIABLES_LABEL"].get(variable, variable), "value": variable}
@@ -530,22 +574,32 @@ color_scale_mapping = {
     State("dataframe-variables", "data"),
 )
 def define_graph_default_values(path, label, parameter, variable, variables):
+    def _rename_placeholder(item):
+        if item == "main_var":
+            return variable
+        elif item == "main_var_flag":
+            return get_flag_var(variable, variables)
+        elif item == "main_var_flag_desc":
+            return get_flag_var(variable, variables).replace("_level_1", "")
+        return item
+
     if variable is None or label is None:
         return None
     path = path.split("/")[1]
     placeholder = figure_presets[path].get(label).get(parameter["item"])
-    if placeholder == "main_var":
-        return variable
-    elif placeholder == "main_var_flag":
-        return get_flag_var(variable, variables.split(","))
+    if not placeholder:
+        return None
     elif parameter["item"] == "color_continuous_scale" and placeholder is None:
         default_color_scale = [
             color_scale
             for key, color_scale in color_scale_mapping.items()
             if key in variable
         ]
-        placeholder = default_color_scale[0] if default_color_scale else "thermal"
-    return placeholder
+        return default_color_scale[0] if default_color_scale else "thermal"
+    elif not isinstance(placeholder, str):
+        return placeholder
+
+    return ",".join([_rename_placeholder(item) for item in placeholder.split(",")])
 
 
 @callback(

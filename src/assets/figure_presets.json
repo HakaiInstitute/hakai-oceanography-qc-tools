@@ -1,33 +1,41 @@
 {
   "nutrients": {
     "Time Series": {
-      "type": "scatter",
+      "type": "line",
       "x": "collected",
       "y": "main_var",
       "color": "main_var_flag",
-      "hover_data": "hakai_id"
+      "hover_data": "hakai_id,main_var_flag_desc",
+      "kwargs": "{\"line_group\":\"line_out_depth\"}"
     },
     "Time Series Profiles": {
       "type": "scatter",
       "x": "collected",
-      "y": "line_out_depth",
+      "y": "depth",
       "color": "main_var",
-      "symbol": "main_var_flag",
-      "hover_data": "hakai_id"
+      "hover_data": "hakai_id,main_var_flag_desc"
+    },
+    "Profiles": {
+      "type": "line",
+      "x": "main_var",
+      "y": "depth",
+      "color": "main_var_flag",
+      "hover_data": "hakai_id,main_var_flag_desc",
+      "kwargs": "{\"line_group\":\"date\"}"
     },
     "Contour Profiles": {
       "type": "contour",
       "x": "collected",
       "y": "line_out_depth",
       "color": "main_var",
-      "hover_data": "hakai_id"
+      "hover_data": "hakai_id,main_var_flag_desc"
     },
     "PO4 red-field": {
       "type": "scatter",
       "x": "po4",
       "y": "no2_no3_um",
       "color": "main_var_flag",
-      "hover_data": "hakai_id",
+      "hover_data": "hakai_id,main_var_flag_desc",
       "extra_traces": [
         [
           "Scatter",
@@ -46,7 +54,7 @@
       "x": "sio2",
       "y": "no2_no3_um",
       "color": "main_var_flag",
-      "hover_data": "hakai_id",
+      "hover_data": "hakai_id,main_var_flag_desc",
       "extra_traces": [
         [
           "Scatter",
@@ -74,22 +82,30 @@
       "x": "start_dt",
       "y": "depth",
       "color": "main_var",
-      "symbol": "main_var_flag",
-      "hover_data": "hakai_id"
+      "hover_data": "hakai_id,main_var_flag_desc"
     },
     "Time Series": {
-      "type": "scatter",
+      "type": "line",
       "x": "start_dt",
       "y": "main_var",
       "color": "main_var_flag",
-      "hover_data": "hakai_id"
+      "hover_data": "hakai_id,main_var_flag_desc",
+      "kwargs": "{\"line_group\":\"pressure\"}"
+    },
+    "Profiles": {
+      "type": "line",
+      "x": "main_var",
+      "y": "depth",
+      "color": "main_var_flag",
+      "hover_data": "hakai_id,main_var_flag_desc",
+      "kwargs": "{\"line_group\":\"hakai_id\"}"
     },
     "Contour Profiles": {
       "type": "contour",
       "x": "start_dt",
       "y": "pressure",
       "color": "main_var",
-      "hover_data": "hakai_id"
+      "hover_data": "hakai_id,main_var_flag_desc"
     },
     "Map": {
       "type": "scatter_mapbox",
