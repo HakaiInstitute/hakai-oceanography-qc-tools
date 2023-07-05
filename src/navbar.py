@@ -14,10 +14,8 @@ stores = dbc.Col(
         [
             dcc.Store(id="dataframe"),
             dcc.Store(id="dataframe-variables"),
-            dcc.Store(id="selected-data"),
-            dcc.Store(id={"id": "selected-data", "source": "auto-qc"}),
-            dcc.Store(id={"id": "selected-data", "source": "figure"}),
-            dcc.Store(id={"id": "selected-data", "source": "flags"}),
+            dcc.Store(id="qc-update-data"),
+            dcc.Store(id="qc-source-data"),
             dcc.Store(id="main-graph-spinner"),
             dcc.Store(id="auto-qc-nutrient-spinner"),
             dcc.Store(id="figure-menu-label-spinner"),

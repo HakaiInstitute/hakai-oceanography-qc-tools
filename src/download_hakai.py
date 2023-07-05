@@ -128,7 +128,7 @@ def test_credentials(credentials):
 @callback(
     Output("dataframe", "data"),
     Output("toast-container", "children"),
-    Output({"id": "selected-data", "source": "flags"}, "data"),
+    Output("qc-source-data", "data"),
     State("location", "pathname"),
     State("location", "search"),
     Input("credentials-input", "value"),

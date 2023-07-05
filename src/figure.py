@@ -329,7 +329,7 @@ def get_flag_var(var, variables):
     Output("main-graph-spinner", "data"),
     State("location", "pathname"),
     State("dataframe", "data"),
-    Input("selected-data-table", "data"),
+    Input("qc-table", "data"),
     Input({"type": "dataframe-subset", "subset": ALL}, "placeholder"),
     Input({"type": "dataframe-subset", "subset": ALL}, "value"),
     Input("time-filter-range-picker", "start_date"),

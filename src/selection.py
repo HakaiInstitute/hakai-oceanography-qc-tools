@@ -36,7 +36,7 @@ def get_flag_var(var):
 
 logger = logging.getLogger(__name__)
 selection_table = dash_table.DataTable(
-    id="selected-data-table",
+    id="qc-table",
     page_size=40,
     sort_action="native",
     filter_action="native",
@@ -176,19 +176,19 @@ qc_section = dbc.Collapse(
 
 
 @callback(
-    Output("selected-data-table", "active_cell"),
-    Output("selected-data-table", "page_current"),
+    Output("qc-table", "active_cell"),
+    Output("qc-table", "page_current"),
     Input(
         {"type": "graph", "page": ALL},
         "clickData",
     ),
-    State("selected-data-table", "derived_virtual_data"),
-    State("selected-data-table", "hidden_columns"),
-    State("selected-data-table", "active_cell"),
+    State("qc-table", "derived_virtual_data"),
+    State("qc-table", "hidden_columns"),
+    State("qc-table", "active_cell"),
     State("variable", "value"),
-    State("selected-data-table", "page_current"),
-    State("selected-data-table", "page_size"),
-    State("selected-data-table", "selected_cells"),
+    State("qc-table", "page_current"),
+    State("qc-table", "page_size"),
+    State("qc-table", "selected_cells"),
 )
 def select_qc_table(
     clicked,
@@ -280,29 +280,19 @@ def set_selection_apply_options(action, dataSelected, apply, to):
 
 @callback(
     dict(
-        data=Output("selected-data-table", "data"),
-        columns=Output("selected-data-table", "columns"),
-        dropdown=Output("selected-data-table", "dropdown"),
-        hidden_columns=Output("selected-data-table", "hidden_columns"),
-        style_data_conditional=Output("selected-data-table", "style_data_conditional"),
+        data=Output("qc-table", "data"),
+        columns=Output("qc-table", "columns"),
+        dropdown=Output("qc-table", "dropdown"),
+        hidden_columns=Output("qc-table", "hidden_columns"),
+        style_data_conditional=Output("qc-table", "style_data_conditional"),
     ),
-    inputs=[
-        State("selected-data-table", "data"),
-        [
-            Input({"id": "selected-data", "source": "figure"}, "data"),
-            Input({"id": "selected-data", "source": "auto-qc"}, "data"),
-            Input({"id": "selected-data", "source": "flags"}, "data"),
-        ],
-    ],
+    State("qc-table", "data"),
+    Input("qc-source-data", "data"),
+    Input("qc-update-data", "data"),
 )
-def update_selected_data(selected_data, newly_selected):
-    newly_selected = [
-        pd.DataFrame(source)
-        for source in newly_selected
-        if source is not None and len(source) > 0
-    ]
-    if not selected_data and not newly_selected:
-        logger.debug("no selection exist")
+def update_selected_data(qc_table_data, original_flags, updated_data):
+    if not qc_table_data and not original_flags:
+        logger.debug("no qc data available")
         return {
             "data": None,
             "columns": None,
@@ -310,17 +300,37 @@ def update_selected_data(selected_data, newly_selected):
             "hidden_columns": None,
             "style_data_conditional": None,
         }
-    if not selected_data:
-        logger.debug("add a new selection to an empty list %s", newly_selected)
-        return generate_qc_table_style(pd.concat(newly_selected))
 
-    df = pd.DataFrame(selected_data)
-    # logger.debug("append to a selection %s",df)
-    logger.debug("new selection %s", newly_selected)
-    for source in reversed(newly_selected):
-        df_newly_selected = pd.DataFrame(source)
-        logger.debug("append selection source %s", source)
-        df = update_dataframe(df, df_newly_selected, on=["hakai_id"], how="outer")
+    logger.debug(
+        "Update qc table with qc_table_data=%s updated_data=%s original_flags= %s",
+        qc_table_data,
+        updated_data,
+        original_flags,
+    )
+
+    if qc_table_data is None and updated_data is None and original_flags:
+        original_flags = pd.DataFrame(original_flags)
+        logger.debug("add original flags to the qc table %s", original_flags.columns)
+        return generate_qc_table_style(original_flags)
+
+    # Convert data to dataframes
+    qc_table_data = pd.DataFrame(qc_table_data)
+    updated_data = pd.DataFrame(updated_data)
+
+    logger.debug(
+        "Update already existing qc_table[%s]=%s with %s",
+        len(qc_table_data),
+        qc_table_data.columns,
+        updated_data.columns,
+    )
+
+    # Update table form selection interface
+    df = update_dataframe(
+        qc_table_data,
+        updated_data,
+        on=["hakai_id"],
+        how="outer",
+    )
 
     return generate_qc_table_style(df)
 
@@ -404,8 +414,7 @@ def get_selected_records_from_graph(graph_selected, custom_data_variables):
 
 
 @callback(
-    Output({"id": "selected-data", "source": "figure"}, "data"),
-    Output({"id": "selected-data", "source": "auto-qc"}, "data"),
+    Output("qc-update-data", "data"),
     Input("selection-apply-button", "n_clicks"),
     State("selection-action", "value"),
     State("selection-apply", "value"),
@@ -413,9 +422,7 @@ def get_selected_records_from_graph(graph_selected, custom_data_variables):
     State({"type": "graph", "page": ALL}, "selectedData"),
     State("variable", "value"),
     State("dataframe", "data"),
-    State({"id": "selected-data", "source": "figure"}, "data"),
-    State({"id": "selected-data", "source": "auto-qc"}, "data"),
-    State({"id": "selected-data", "source": "flags"}, "data"),
+    State("qc-table", "data"),
     State("location", "pathname"),
 )
 def apply_to_selection(
@@ -426,154 +433,95 @@ def apply_to_selection(
     graph_selections,
     variable,
     data,
-    manually_selected_data,
-    auto_qced_data,
-    flag_data,
+    qc_data,
     location,
 ):
-    def _add_flag_selection(df_new, df_previous):
-        logger.debug(
-            "Update len(%s)\n%s \n\n len(%s)\n%s",
-            len(df_new) if df_new is not None else None,
-            df_new,
-            len(df_previous) if df_previous is not None else None,
-            df_previous,
-        )
-        if df_previous is not None:
-            return update_dataframe(df_previous, df_new, on=on)
-        elif df_new is None or df_new.empty:
-            return df_previous
-        return df_new
-
-    def _return_json(df):
-        return None if df is None else df.reset_index().to_dict("records")
-
     def _join_comments(cast):
         if cast["previous_comments"] is None:
             return cast["comments"]
         elif cast["comments"] in cast["previous_comments"]:
             return cast["previous_comments"]
-        return f"{cast['previous_comments']}\n{cast['comments']}"
+        return f"{cast['previous_comments']}; {cast['comments']}"
 
-    on = ["hakai_id"]
-    if not variable:
-        return auto_qced_data, manually_selected_data
+    # Ignore empty data
+    if not variable or qc_data is None:
+        return None
 
-    flag_var = get_flag_var(variable) if action == "Flag" else "quality_level"
+    qc_data = pd.DataFrame(qc_data).groupby(["hakai_id"]).first()
+    update_variable = (
+        "quality_level" if action == "Quality Level" else get_flag_var(variable)
+    )
 
-    # Get record list selected
-    graph_selected = get_selected_records_from_graph(graph_selections, ["hakai_id"])
-    if graph_selected.empty and to == "selection":
-        logger.debug("no selection")
-        return manually_selected_data, auto_qced_data
-    elif not graph_selected.empty:
-        graph_selected = graph_selected.groupby(on).first()
-    logger.debug("Data selected = %s", len(graph_selected))
+    # Get list of hakai_id to update
+    if to == "selection":
+        # Retrieve list of selected hakai_ids from the graph
+        logger.debug("List of hakai_ids selected on figure")
+        graph_selected = get_selected_records_from_graph(graph_selections, ["hakai_id"])
+        if graph_selected.empty:
+            logger.debug("no selection")
+            return None
+        update_hakai_ids = set(graph_selected["hakai_id"].values)
+    elif to == "UKN":
+        logger.debug("Get list of hakai_ids with unknown or na values")
+        update_hakai_ids = qc_data.query(
+            f'{update_variable}.isna() or {update_variable} in ("UKN")'
+        ).index.values
+
+    elif to == "all":
+        logger.debug("Get the full list of hakai_ids")
+        update_hakai_ids = qc_data.index.values
+    else:
+        raise RuntimeError(f"Unknown apply to={to} parameter")
+    logger.debug("%s hakai_ids were selected", len(update_hakai_ids))
 
     # Update data with already selected data
-    data = pd.DataFrame(data).groupby(["hakai_id"]).first()
-    manually_selected_data = (
-        pd.DataFrame(manually_selected_data).groupby(["hakai_id"]).first()
-        if manually_selected_data
-        else None
-    )
-    auto_qced_data = (
-        pd.DataFrame(auto_qced_data).groupby(["hakai_id"]).first()
-        if auto_qced_data
-        else None
-    )
-    flag_data = (
-        pd.DataFrame(flag_data).groupby(["hakai_id"]).first() if flag_data else None
-    )
+    if action in ("Flag", "Quality Level"):
+        logger.debug("Apply given value to the selection")
+        qc_data.loc[update_hakai_ids, update_variable] = apply_value
+        return qc_data.reset_index().to_dict(orient="records")
+    elif action != "Automated QC":
+        logger.error("Unknown method to apply")
+        raise RuntimeError(f"unknown action to apply={action}")
 
-    if flag_data is not None:
-        data = update_dataframe(data, flag_data, on=["hakai_id"])
-    if manually_selected_data is not None:
-        data = update_dataframe(data, manually_selected_data, on=["hakai_id"])
-    if auto_qced_data is not None:
-        data = update_dataframe(data, auto_qced_data, on=["hakai_id"])
-
-    # Apply action
-    logger.debug("Apply %s to data[%s=='%s'] = %s", action, flag_var, to, apply_value)
-    if action in ("Flag", "Quality Level") and to == "selection":
-        logger.debug("Apply '%s'=%s to selection", action, apply_value)
-        manually_selected_data = _add_flag_selection(
-            graph_selected.assign(**{flag_var: apply_value}),
-            manually_selected_data,
+    logger.debug("Run Automated QC")
+    data = pd.DataFrame(data)
+    if "nutrient" in location:
+        data = data.dropna(subset=nutrient_variables).reset_index()
+        data["collected"] = pd.to_datetime(data["collected"], utc=True).dt.tz_localize(
+            None
         )
-    elif action in ("Flag", "Quality Level"):
-        filter_by = f"{flag_var} == '{to}'" if to != "UKN" else f"{flag_var}.isna()"
+        auto_qced_data = run_nutrient_qc(data, overwrite_existing_flags=True)
+        auto_qced_data = (
+            auto_qced_data[["hakai_id"] + nutrient_variables_flags]
+            .groupby("hakai_id")
+            .first()
+        )
+        variable_flags = nutrient_variables_flags
+
+    elif "ctd" in location:
         logger.debug(
-            "Filter data by %s and apply %s=%s", filter_by, flag_var, apply_value
+            "Generate suggested flag for ctd %s: %s", variable, qc_data.columns
         )
-
-        selected_data = data.query(filter_by if flag_var in data else None).assign(
-            **{flag_var: apply_value}
+        auto_qced_data = generate_qc_flags(data, variable)
+        auto_qced_data["previous_comments"] = qc_data["comments"]
+        auto_qced_data["comments"] = auto_qced_data.apply(
+            _join_comments, axis="columns"
         )
-        if not selected_data.empty:
-            manually_selected_data = _add_flag_selection(
-                selected_data[flag_var], manually_selected_data
-            )
-        else:
-            logger.debug("Filter returned no data")
+        variable_flags = [f"{variable}_flag", "comments"]
 
-    elif action == "Automated QC":
-        logger.debug("Run Automated QC")
-        if "nutrient" in location:
-            data = data.dropna(subset=nutrient_variables).reset_index()
-            data["collected"] = pd.to_datetime(
-                data["collected"], utc=True
-            ).dt.tz_localize(None)
-            auto_qced_data = run_nutrient_qc(data, overwrite_existing_flags=True)
-            auto_qced_data = (
-                auto_qced_data[["hakai_id"] + nutrient_variables_flags]
-                .groupby("hakai_id")
-                .first()
-            )
-            variable_flags = nutrient_variables_flags
-            qc_data = data[variable_flags].groupby("hakai_id").first()
-        elif "ctd" in location:
-            logger.debug(
-                "Generate suggested flag for ctd %s: %s", variable, flag_data.columns
-            )
-            auto_qced_data = generate_qc_flags(data, variable)
-            auto_qced_data["previous_comments"] = flag_data["comments"]
-            auto_qced_data["comments"] = auto_qced_data.apply(_join_comments, axis=1)
-            auto_qced_data = auto_qced_data.drop(columns=["previous_comments"])
-            variable_flags = [f"{variable}_flag", "comments"]
-            qc_data = flag_data[variable_flags]
+    # Compare prior and after qc results
+    qc_data.loc[update_hakai_ids, variable_flags] = auto_qced_data.loc[
+        update_hakai_ids, variable_flags
+    ]
 
-        # Compare prior and after qc results
-        logger.debug("original flags: %s", qc_data.columns)
-        logger.debug("udpated flags: %s", auto_qced_data.columns)
-        df_compare = auto_qced_data.compare(qc_data, keep_shape=True).swaplevel(
-            axis="columns"
-        )
-        logger.debug("Automated qc compare tables: %s", df_compare.columns)
-        if to == "selection":
-            logger.debug("Apply qc to selection: %s", graph_selected.index.values)
-            auto_qced_data = df_compare["self"].query(
-                "hakai_id in @graph_selected.index.values"
-            )[variable_flags]
-            logger.debug("Qc update %s records", len(auto_qced_data))
-        elif to == "UKN":
-            logger.debug("Apply qc to unknown %s", variable_flags)
-            auto_qced_data = df_compare.loc[
-                df_compare["other"][variable_flags].isna().all(axis="columns")
-            ]["self"][variable_flags]
-            logger.debug("Qc update %s records", len(auto_qced_data))
-        elif to == "all":
-            logger.debug("Apply ")
-            auto_qced_data = df_compare["self"][variable_flags]
-
-    return _return_json(manually_selected_data), _return_json(auto_qced_data)
+    return qc_data.reset_index().to_dict(orient="records")
 
 
 @callback(
     Output("download-qc-excel", "data"),
     Output("hakai-excel-load-spinner", "children"),
     Input("download-qc-excel-button", "n_clicks"),
-    State("selected-data-table", "data"),
+    State("qc-table", "data"),
     State("location", "pathname"),
 )
 def get_qc_excel(n_clicks, data, location):
@@ -611,7 +559,7 @@ def get_qc_excel(n_clicks, data, location):
 
 @callback(
     Output("flag-progress-bar", "children"),
-    Input("selected-data-table", "data"),
+    Input("qc-table", "data"),
     Input("variable", "value"),
 )
 def update_progress_bar(data, variable):
