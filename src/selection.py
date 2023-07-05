@@ -40,6 +40,7 @@ selection_table = dash_table.DataTable(
     page_size=40,
     sort_action="native",
     filter_action="native",
+    row_selectable="multi",
     style_header={
         "fontWeight": "bold",
         "fontSize": "14px",
@@ -153,7 +154,11 @@ table_extra_buttons = html.Div(
                 ),
             ],
             className="me-1",
-        )
+        ),
+        dbc.Button(
+            "Clear Selected Rows",
+            id="clear-selected-row-table",
+        ),
     ],
     className="qc-table-extra-buttons",
 )
@@ -228,6 +233,25 @@ def select_qc_table(
     }
     logger.debug("Select cell in qc-table from figure click %s", active_cell)
     return active_cell, current_page
+
+
+@callback(
+    Output({"type": "dataframe-subset", "subset": "query"}, "value"),
+    Input("qc-table", "selected_row_ids"),
+)
+def filter_by_selected_rows(selected_rows_ids):
+    if not selected_rows_ids:
+        return None
+    return f"hakai_id in {selected_rows_ids}"
+
+
+@callback(
+    Output("qc-table", "selected_rows"),
+    Output("qc-table", "selected_row_ids"),
+    Input("clear-selected-row-table", "n_clicks"),
+)
+def clear_selection(n_click):
+    return [],[]
 
 
 @callback(
