@@ -3,6 +3,7 @@ import math
 from pathlib import Path
 import shutil
 from datetime import datetime
+import re
 
 import dash_bootstrap_components as dbc
 import pandas as pd
@@ -251,7 +252,7 @@ def filter_by_selected_rows(selected_rows_ids):
     Input("clear-selected-row-table", "n_clicks"),
 )
 def clear_selection(n_click):
-    return [],[]
+    return [], []
 
 
 @callback(
@@ -291,10 +292,8 @@ def set_selection_apply_options(action, dataSelected, apply, to):
         apply_to_options += [{"label": ql, "value": ql} for ql in quality_levels]
         return (
             quality_levels,
-            apply
-            if apply in _get_values(flags_conventions["Hakai"])
-            else "Technicianmr",
-            to or "raw" if no_selection else "selection",
+            apply if apply in quality_levels else "Principal Investigator",
+            "Technicianm" if no_selection else "selection",
             apply_to_options,
         )
     else:
@@ -441,6 +440,14 @@ def get_selected_records_from_graph(graph_selected, custom_data_variables):
 
 
 @callback(
+    Output("selection-apply-button", "disabled"),
+    Input("user-initials", "value"),
+)
+def activate_apply_button(value):
+    return not (value and re.fullmatch('[A-Z]+',value))
+
+
+@callback(
     Output("qc-update-data", "data"),
     Input("selection-apply-button", "n_clicks"),
     State("selection-action", "value"),
@@ -451,6 +458,7 @@ def get_selected_records_from_graph(graph_selected, custom_data_variables):
     State("dataframe", "data"),
     State("qc-table", "data"),
     State("location", "pathname"),
+    State("user-initials", "value"),
 )
 def apply_to_selection(
     apply,
@@ -462,6 +470,7 @@ def apply_to_selection(
     data,
     qc_data,
     location,
+    initials,
 ):
     def _join_comments(cast):
         if cast["previous_comments"] is None:
@@ -513,9 +522,25 @@ def apply_to_selection(
     logger.debug("%s hakai_ids were selected", len(update_hakai_ids))
 
     # Update data with already selected data
-    if action in ("Flag", "Quality Level"):
-        logger.debug("Apply given value to the selection")
+    if action == "Flag":
+        logger.debug("Apply flag value to the selection")
         qc_data.loc[update_hakai_ids, update_variable] = apply_value
+        return qc_data.reset_index().to_dict(orient="records")
+    elif action == "Quality Level":
+        logger.debug("Apply qualit_level value to the selection")
+        qc_data.loc[update_hakai_ids, update_variable] = apply_value
+        if apply_value == "Principal Investigator":
+            append_quality_log = f"Data QCd by {initials}"
+            quality_log = qc_data.loc[update_hakai_ids, "quality_log"].str.split(
+                "\d+\:\s", regex=True
+            )
+            # find how many lines exists already and since we're using split,
+            # the first item is always empty
+            n_log = quality_log.apply(len)
+            qc_data.loc[update_hakai_ids, "quality_log"] += (
+                "\n" + n_log.astype(str) + f": {append_quality_log}"
+            )
+
         return qc_data.reset_index().to_dict(orient="records")
     elif action != "Automated QC":
         logger.error("Unknown method to apply")

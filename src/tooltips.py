@@ -20,5 +20,12 @@ tooltips = html.Div(
         dbc.Tooltip(
             "Move time filter range to after", target="filter-time-button-move-down"
         ),
+        dbc.Tooltip(
+            "User initials to include in data qc (all capital with 2 to 10 letters, ex: 'AB')",
+            target="user-initials",
+        ),
+        dbc.Tooltip(
+            "Apply to selection! Initials should be present to activate this button.", target="selection-apply-button"
+        )
     ]
 )
