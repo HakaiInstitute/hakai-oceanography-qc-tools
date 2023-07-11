@@ -52,6 +52,7 @@ VARIABLES_LABEL:
     "BDL": "Below Detection Limit",
     "ctd": "CTD",
     "depth": "Depth (m)",
+    "row_flag": "Sample Status",
   }
 
 pages:

@@ -372,7 +372,7 @@ def generate_qc_table_style(data):
         }
     columns = [
         {
-            "name": i,
+            "name": config["VARIABLES_LABEL"].get(i, i),
             "id": i,
             "selectable": i.endswith("_flag"),
             "editable": i.endswith("_flag") or i == "comments",
@@ -444,7 +444,7 @@ def get_selected_records_from_graph(graph_selected, custom_data_variables):
     Input("user-initials", "value"),
 )
 def activate_apply_button(value):
-    return not (value and re.fullmatch('[A-Z]+',value))
+    return not (value and re.fullmatch("[A-Z]+", value))
 
 
 @callback(
