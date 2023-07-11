@@ -58,7 +58,7 @@ navbar_menu = dbc.Nav(
                 id="qc-button",
             )
         ),
-        dbc.NavItem(dbc.NavLink(className="bi bi-person-circle me-1", id="log-in")),
+        dbc.NavItem(dbc.NavLink(className="bi me-1", id="log-in")),
     ],
     className="ms-auto",
 )
@@ -216,6 +216,19 @@ navbar = dbc.Navbar(
                                 className="selection-box me-2",
                             )
                         ),
+                        dbc.Col(
+                            dbc.Input(
+                                id="user-initials",
+                                type="text",
+                                min=2,
+                                max=10,
+                                pattern="[A-Z]+",
+                                persistence=True,
+                                persistence_type="local",
+                                size="small",
+                            ),
+                            width=1,
+                        ),
                         stores,
                     ],
                     align="center",
@@ -235,7 +248,8 @@ navbar = dbc.Navbar(
                 ],
                 className="flex-grow-1",
             ),
-        ]
+        ],
+        className="header-container",
     ),
     color=config["NAVBAR_COLOR"],
     dark=config["NAVBAR_DARK"],

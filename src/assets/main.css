@@ -94,3 +94,12 @@
 .filter-by-time {
   margin: 5px;
 }
+.log-in-icon {
+  border-radius: 50%;
+}
+.header-container {
+  max-width: 100%;
+  align-items: center;
+  margin-left: 3%;
+  margin-right: 3%;
+}
