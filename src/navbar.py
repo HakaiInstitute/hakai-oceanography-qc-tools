@@ -216,19 +216,6 @@ navbar = dbc.Navbar(
                                 className="selection-box me-2",
                             )
                         ),
-                        dbc.Col(
-                            dbc.Input(
-                                id="user-initials",
-                                type="text",
-                                min=2,
-                                max=10,
-                                pattern="[A-Z]+",
-                                persistence=True,
-                                persistence_type="local",
-                                size="small",
-                            ),
-                            width=1,
-                        ),
                         stores,
                     ],
                     align="center",

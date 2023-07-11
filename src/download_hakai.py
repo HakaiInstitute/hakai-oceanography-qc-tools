@@ -64,6 +64,21 @@ hakai_api_credentials_modal = dbc.Modal(
                     className="crendentials-input",
                 ),
                 dbc.Spinner(html.Div(id="credentials-spinners")),
+                dbc.Row(
+                    [
+                        "User Initials: ",
+                        dbc.Input(
+                            id="user-initials",
+                            type="text",
+                            min=2,
+                            max=10,
+                            pattern="[A-Z]+",
+                            persistence=True,
+                            persistence_type="local",
+                            size="small",
+                        ),
+                    ],
+                ),
                 dcc.Store(id="credentials", storage_type="local"),
             ]
         ),
