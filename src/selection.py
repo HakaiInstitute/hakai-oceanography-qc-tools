@@ -43,6 +43,7 @@ selection_table = dash_table.DataTable(
     sort_action="native",
     filter_action="native",
     row_selectable="multi",
+    sort_mode="multi",
     style_header={
         "fontWeight": "bold",
         "fontSize": "14px",
@@ -158,9 +159,18 @@ table_extra_buttons = html.Div(
             ],
             className="me-1",
         ),
-        dbc.Button(
-            "Clear Selected Rows",
-            id="clear-selected-row-table",
+        dbc.ButtonGroup(
+            [
+                dbc.Button(
+                    "Clear",
+                    id="clear-selected-row-table",
+                ),
+                dbc.Button(
+                    "Update",
+                    id="update-qc-table",
+                ),
+            ],
+            className="me-1",
         ),
     ],
     className="qc-table-extra-buttons",
@@ -239,12 +249,13 @@ def select_qc_table(
 
 @callback(
     Output({"type": "dataframe-subset", "subset": "query"}, "value"),
+    Output("clear-selected-row-table", "disabled"),
     Input("qc-table", "selected_row_ids"),
 )
 def filter_by_selected_rows(selected_rows_ids):
     if not selected_rows_ids:
-        return None
-    return f"hakai_id in {selected_rows_ids}"
+        return None, True
+    return f"hakai_id in {selected_rows_ids}", False
 
 
 @callback(
@@ -324,8 +335,9 @@ def set_selection_apply_options(action, dataSelected, apply, to):
     State("qc-table", "data"),
     Input("qc-source-data", "data"),
     Input("qc-update-data", "data"),
+    Input("update-qc-table", "n_clicks"),
 )
-def update_selected_data(qc_table_data, original_flags, updated_data):
+def update_selected_data(qc_table_data, original_flags, updated_data, update_click):
     if not qc_table_data and not original_flags:
         logger.debug("no qc data available")
         return {
@@ -345,10 +357,12 @@ def update_selected_data(qc_table_data, original_flags, updated_data):
 
     if qc_table_data is None and updated_data is None and original_flags:
         original_flags = pd.DataFrame(original_flags)
+        original_flags["modified"] = False
         logger.debug("add original flags to the qc table %s", original_flags.columns)
         return generate_qc_table_style(original_flags)
 
     # Convert data to dataframes
+    original_flags = pd.DataFrame(original_flags)
     qc_table_data = pd.DataFrame(qc_table_data)
     updated_data = pd.DataFrame(updated_data)
 
@@ -360,13 +374,23 @@ def update_selected_data(qc_table_data, original_flags, updated_data):
     )
 
     # Update table form selection interface
-    df = update_dataframe(
-        qc_table_data,
-        updated_data,
-        on=["hakai_id"],
-        how="outer",
-    )
+    if ctx.triggered_id == "update-qc-table":
+        df = qc_table_data
+    else:
+        df = update_dataframe(
+            qc_table_data,
+            updated_data,
+            on=["hakai_id"],
+            how="outer",
+        )
 
+    # Find modified rows
+    df["modified"] = (
+        ~df[[col for col in df if col in original_flags]]
+        .compare(original_flags, keep_shape=True)
+        .isna()
+        .all(axis=1)
+    ).astype(str)
     return generate_qc_table_style(df)
 
 
@@ -379,13 +403,13 @@ def generate_qc_table_style(data):
             "hidden_columns": None,
             "style_data_conditional": None,
         }
-    editable_columns = ("comments", "quality_level", "row_flag")
+    editable_columns = ("comments", "quality_level", "row_flag", "quality_log")
     dropdown_columns = ("quality_level", "row_flag")
     columns = [
         {
             "name": config["VARIABLES_LABEL"].get(i, i),
             "id": i,
-            "selectable": i.endswith("_flag"),
+            "selectable": i.endswith("_flag") or i in editable_columns,
             "editable": i.endswith("_flag") or i in editable_columns,
             "hideable": i != "hakai_id",
             "presentation": "dropdown"
@@ -419,7 +443,25 @@ def generate_qc_table_style(data):
             "if": {"state": "active"},
             "fontWeight": "bold",
             "border": "2px solid black",
-        }
+        },
+        {
+            "if": {
+                "column_editable": False,
+                "column_id": [col for col in data if col != "hakai_id"],
+            },
+            "color": "grey",
+        },
+        {
+            "if": {
+                "filter_query": "{modified} = True",
+            },
+            "font-style": "italic",
+            "border": "1px solid black",
+        },
+        {
+            "if": {"filter_query": "{modified} = True", "column_id": "modified"},
+            "fontWeight": "bold",
+        },
     ]
     dropdown_menus = {
         **{col: {"options": flags_conventions["Hakai"]} for col in flag_columns},

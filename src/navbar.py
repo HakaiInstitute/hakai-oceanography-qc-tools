@@ -69,7 +69,22 @@ data_filter_interface = dbc.Collapse(
             dbc.CardHeader("Filter data by"),
             dbc.CardBody(
                 [
-                    dbc.Row(id="dataframe-subsets", align="center", justify="center"),
+                    dbc.Row(
+                        [
+                            dbc.Col(id="dataframe-subsets"),
+                            dbc.Col(
+                                dbc.Input(
+                                    id={"type": "dataframe-subset", "subset": "query"},
+                                    placeholder="Filter data ...",
+                                    type="text",
+                                    debounce=True,
+                                ),
+                                md=4,
+                            ),
+                        ],
+                        align="center",
+                        justify="center",
+                    ),
                     dbc.Row(
                         [
                             "Filter by time: ",
@@ -278,36 +293,22 @@ def generate_filter_pannel(data, path):
     # Retrieve subsets and generate dropdowns
     logger.debug("Retrieve subsets variables")
     subsets = {var: df[var].unique() for var in subset_variables}
-    subset_interface = dbc.Col(
-        [
-            dbc.Row(
-                [
-                    dbc.Col(
-                        dcc.Dropdown(
-                            id={"type": "dataframe-subset", "subset": key},
-                            options=options,
-                            multi=True,
-                            className="selection-box",
-                            placeholder=key,
-                        ),
-                        md=4,
-                    )
-                    for key, options in subsets.items()
-                ]
-                + [
-                    dbc.Col(
-                        dbc.Input(
-                            id={"type": "dataframe-subset", "subset": "query"},
-                            placeholder="Filter data ...",
-                            type="text",
-                            debounce=True,
-                        ),
-                        md=4,
-                    )
-                ]
-            ),
-        ]
-    )
+    subset_interface = [
+        dbc.Row(
+            [
+                dbc.Col(
+                    dcc.Dropdown(
+                        id={"type": "dataframe-subset", "subset": key},
+                        options=options,
+                        multi=True,
+                        className="selection-box",
+                        placeholder=key,
+                    ),
+                )
+                for key, options in subsets.items()
+            ]
+        ),
+    ]
     return (
         ",".join(df.columns),
         subset_interface,
