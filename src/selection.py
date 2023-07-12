@@ -490,14 +490,18 @@ def get_selected_records_from_graph(graph_selected, custom_data_variables):
     available_selection = [graph for graph in graph_selected if graph]
     if not available_selection:
         return pd.DataFrame()
-    return pd.DataFrame(
-        [
-            point["customdata"][: len(custom_data_variables)]
-            for graph in available_selection
-            for point in graph["points"]
-        ],
-        columns=custom_data_variables,
-    )
+    try:
+        return pd.DataFrame(
+            [
+                point["customdata"][: len(custom_data_variables)]
+                for graph in available_selection
+                for point in graph["points"]
+            ],
+            columns=custom_data_variables,
+        )
+    except KeyError as e:
+        logger.error("Failed to retrieve selection: %s", available_selection)
+        raise e
 
 
 @callback(
