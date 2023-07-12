@@ -36,6 +36,19 @@ flags_conventions = {
         {"label": "FAIL", "value": 4},
         {"label": "MISSING", "value": 9},
     ],
+    "quality_level": [
+        {"label": "Raw", "value": "Raw"},
+        {"label": "Technicianm", "value": "Technicianm"},
+        {"label": "Technicianr", "value": "Technicianr"},
+        {"label": "Technicianmr", "value": "Technicianmr"},
+        {"label": "Principal Investigator", "value": "Principal Investigator"},
+    ],
+    "row_flag": [
+        {"label": "Collected", "value": "Collected"},
+        {"label": "Submitted", "value": "Submitted"},
+        {"label": "Results", "value": "Results"},
+        {"label": "Not Available", "value": "Not Available"},
+    ],
 }
 
 flag_mapping = {"no2_no3_um": "no2_no3_flag"}

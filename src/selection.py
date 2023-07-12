@@ -28,6 +28,7 @@ quality_levels = [
     "Technicianmr",
     "Principal Investigator",
 ]
+sample_status = ["Collected", "Submitted", "Results", "Not Available"]
 MODULE_PATH = Path(__file__).parent
 
 
@@ -92,6 +93,7 @@ selection_interface = dbc.Row(
                 options=[
                     "Flag",
                     "Quality Level",
+                    "Sample Status",
                     "Automated QC",
                 ],
                 value="Flag",
@@ -206,7 +208,6 @@ def select_qc_table(
     page_size,
     selected_cells,
 ):
-    trigger = ctx.triggered_id
     if (
         not clicked
         or clicked[0] is None
@@ -286,6 +287,14 @@ def set_selection_apply_options(action, dataSelected, apply, to):
             flags_conventions["Hakai"],
             apply if apply in _get_values(flags_conventions["Hakai"]) else "AV",
             to or "UKN" if no_selection else "selection",
+            apply_to_options,
+        )
+    elif action == "Sample Status":
+        apply_to_options += [{"label": ql, "value": ql} for ql in sample_status]
+        return (
+            sample_status,
+            apply if apply in sample_status else "Results",
+            "Not Available" if no_selection else "selection",
             apply_to_options,
         )
     elif action == "Quality Level":
@@ -370,14 +379,18 @@ def generate_qc_table_style(data):
             "hidden_columns": None,
             "style_data_conditional": None,
         }
+    editable_columns = ("comments", "quality_level", "row_flag")
+    dropdown_columns = ("quality_level", "row_flag")
     columns = [
         {
             "name": config["VARIABLES_LABEL"].get(i, i),
             "id": i,
             "selectable": i.endswith("_flag"),
-            "editable": i.endswith("_flag") or i == "comments",
+            "editable": i.endswith("_flag") or i in editable_columns,
             "hideable": i != "hakai_id",
-            "presentation": "dropdown" if i.endswith("_flag") else None,
+            "presentation": "dropdown"
+            if i.endswith("_flag") or i in dropdown_columns
+            else None,
         }
         for i in data.columns
     ] + [dict(name="id", id="id")]
@@ -409,8 +422,14 @@ def generate_qc_table_style(data):
         }
     ]
     dropdown_menus = {
-        col: {"options": flags_conventions["Hakai"]} for col in flag_columns
+        **{col: {"options": flags_conventions["Hakai"]} for col in flag_columns},
+        **{
+            col: {"options": flags_conventions[col]}
+            for col in ["quality_level", "row_flag"]
+            if col in data
+        },
     }
+
     logger.debug("Dropdown menus: %s", dropdown_menus)
     return dict(
         data=data.assign(id=data["hakai_id"]).to_dict("records"),
@@ -482,11 +501,10 @@ def apply_to_selection(
     # Ignore empty data
     if not variable or qc_data is None:
         return None
-
     qc_data = pd.DataFrame(qc_data).groupby(["hakai_id"]).first()
-    update_variable = (
-        "quality_level" if action == "Quality Level" else get_flag_var(variable)
-    )
+
+    action_variable = {"Quality Level": "quality_level", "Sample Status": "row_flag"}
+    update_variable = action_variable.get(action, get_flag_var(variable))
 
     # Get list of hakai_id to update
     if to == "selection":
@@ -505,11 +523,14 @@ def apply_to_selection(
     elif to == "all":
         logger.debug("Get the full list of hakai_ids")
         update_hakai_ids = qc_data.index.values
-    elif action == "Quality Level":
-        if "quality_level" not in qc_data:
-            logger.error("No quality_level column available")
+    elif action in ("Quality Level", "Sample Status"):
+        if update_variable not in qc_data:
+            logger.error("No %s column available", update_variable)
             return qc_data.reset_index().to_dict(orient="records")
-        query = f"quality_level == '{to}'"
+        if to == "Not Available":
+            query = f"{update_variable}.isna() or {update_variable} == '{to}' "
+        else:
+            query = f"{update_variable} == '{to}' "
         logger.debug("Update %s => %s", query, apply_value)
         update_hakai_ids = qc_data.query(query).index.values
 
@@ -522,8 +543,8 @@ def apply_to_selection(
     logger.debug("%s hakai_ids were selected", len(update_hakai_ids))
 
     # Update data with already selected data
-    if action == "Flag":
-        logger.debug("Apply flag value to the selection")
+    if action in ("Flag", "Sample Status"):
+        logger.debug("Apply %s=%s value to the selection", action, apply_value)
         qc_data.loc[update_hakai_ids, update_variable] = apply_value
         return qc_data.reset_index().to_dict(orient="records")
     elif action == "Quality Level":
