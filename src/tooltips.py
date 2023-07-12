@@ -25,7 +25,16 @@ tooltips = html.Div(
             target="user-initials",
         ),
         dbc.Tooltip(
-            "Apply to selection! Initials should be present to activate this button.", target="selection-apply-button"
-        )
+            "Apply to selection! Initials should be present to activate this button.",
+            target="selection-apply-button",
+        ),
+        dbc.Tooltip(
+            "Update qc table modified columns (this is useful when manual corrections are made directely on the table itself)",
+            target="update-qc-table",
+        ),
+        dbc.Tooltip(
+            "Clear hakai_id selection filter in qc-table",
+            target="clear-selected-row-table",
+        ),
     ]
 )
