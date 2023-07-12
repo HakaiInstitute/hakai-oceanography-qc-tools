@@ -52,6 +52,7 @@ VARIABLES_LABEL:
     "BDL": "Below Detection Limit",
     "ctd": "CTD",
     "depth": "Depth (m)",
+    "row_flag": "Sample Status",
   }
 
 pages:
@@ -244,4 +245,5 @@ DEFAULT_HIDDEN_COLUMNS_IN_TABLE:
     "depth_flag",
     "pressure_flag",
     "id",
+    "depth",
   ]

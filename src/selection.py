@@ -3,6 +3,7 @@ import math
 from pathlib import Path
 import shutil
 from datetime import datetime
+import re
 
 import dash_bootstrap_components as dbc
 import pandas as pd
@@ -27,6 +28,7 @@ quality_levels = [
     "Technicianmr",
     "Principal Investigator",
 ]
+sample_status = ["Collected", "Submitted", "Results", "Not Available"]
 MODULE_PATH = Path(__file__).parent
 
 
@@ -41,6 +43,7 @@ selection_table = dash_table.DataTable(
     sort_action="native",
     filter_action="native",
     row_selectable="multi",
+    sort_mode="multi",
     style_header={
         "fontWeight": "bold",
         "fontSize": "14px",
@@ -91,6 +94,7 @@ selection_interface = dbc.Row(
                 options=[
                     "Flag",
                     "Quality Level",
+                    "Sample Status",
                     "Automated QC",
                 ],
                 value="Flag",
@@ -155,9 +159,18 @@ table_extra_buttons = html.Div(
             ],
             className="me-1",
         ),
-        dbc.Button(
-            "Clear Selected Rows",
-            id="clear-selected-row-table",
+        dbc.ButtonGroup(
+            [
+                dbc.Button(
+                    "Clear",
+                    id="clear-selected-row-table",
+                ),
+                dbc.Button(
+                    "Update",
+                    id="update-qc-table",
+                ),
+            ],
+            className="me-1",
         ),
     ],
     className="qc-table-extra-buttons",
@@ -205,7 +218,6 @@ def select_qc_table(
     page_size,
     selected_cells,
 ):
-    trigger = ctx.triggered_id
     if (
         not clicked
         or clicked[0] is None
@@ -237,12 +249,13 @@ def select_qc_table(
 
 @callback(
     Output({"type": "dataframe-subset", "subset": "query"}, "value"),
+    Output("clear-selected-row-table", "disabled"),
     Input("qc-table", "selected_row_ids"),
 )
 def filter_by_selected_rows(selected_rows_ids):
     if not selected_rows_ids:
-        return None
-    return f"hakai_id in {selected_rows_ids}"
+        return None, True
+    return f"hakai_id in {selected_rows_ids}", False
 
 
 @callback(
@@ -251,7 +264,7 @@ def filter_by_selected_rows(selected_rows_ids):
     Input("clear-selected-row-table", "n_clicks"),
 )
 def clear_selection(n_click):
-    return [],[]
+    return [], []
 
 
 @callback(
@@ -287,14 +300,20 @@ def set_selection_apply_options(action, dataSelected, apply, to):
             to or "UKN" if no_selection else "selection",
             apply_to_options,
         )
+    elif action == "Sample Status":
+        apply_to_options += [{"label": ql, "value": ql} for ql in sample_status]
+        return (
+            sample_status,
+            apply if apply in sample_status else "Results",
+            "Not Available" if no_selection else "selection",
+            apply_to_options,
+        )
     elif action == "Quality Level":
         apply_to_options += [{"label": ql, "value": ql} for ql in quality_levels]
         return (
             quality_levels,
-            apply
-            if apply in _get_values(flags_conventions["Hakai"])
-            else "Technicianmr",
-            to or "raw" if no_selection else "selection",
+            apply if apply in quality_levels else "Principal Investigator",
+            "Technicianm" if no_selection else "selection",
             apply_to_options,
         )
     else:
@@ -316,8 +335,9 @@ def set_selection_apply_options(action, dataSelected, apply, to):
     State("qc-table", "data"),
     Input("qc-source-data", "data"),
     Input("qc-update-data", "data"),
+    Input("update-qc-table", "n_clicks"),
 )
-def update_selected_data(qc_table_data, original_flags, updated_data):
+def update_selected_data(qc_table_data, original_flags, updated_data, update_click):
     if not qc_table_data and not original_flags:
         logger.debug("no qc data available")
         return {
@@ -337,10 +357,12 @@ def update_selected_data(qc_table_data, original_flags, updated_data):
 
     if qc_table_data is None and updated_data is None and original_flags:
         original_flags = pd.DataFrame(original_flags)
+        original_flags["modified"] = False
         logger.debug("add original flags to the qc table %s", original_flags.columns)
         return generate_qc_table_style(original_flags)
 
     # Convert data to dataframes
+    original_flags = pd.DataFrame(original_flags)
     qc_table_data = pd.DataFrame(qc_table_data)
     updated_data = pd.DataFrame(updated_data)
 
@@ -352,13 +374,23 @@ def update_selected_data(qc_table_data, original_flags, updated_data):
     )
 
     # Update table form selection interface
-    df = update_dataframe(
-        qc_table_data,
-        updated_data,
-        on=["hakai_id"],
-        how="outer",
-    )
+    if ctx.triggered_id == "update-qc-table":
+        df = qc_table_data
+    else:
+        df = update_dataframe(
+            qc_table_data,
+            updated_data,
+            on=["hakai_id"],
+            how="outer",
+        )
 
+    # Find modified rows
+    df["modified"] = (
+        ~df[[col for col in df if col in original_flags]]
+        .compare(original_flags, keep_shape=True)
+        .isna()
+        .all(axis=1)
+    ).astype(str)
     return generate_qc_table_style(df)
 
 
@@ -371,14 +403,18 @@ def generate_qc_table_style(data):
             "hidden_columns": None,
             "style_data_conditional": None,
         }
+    editable_columns = ("comments", "quality_level", "row_flag", "quality_log")
+    dropdown_columns = ("quality_level", "row_flag")
     columns = [
         {
-            "name": i,
+            "name": config["VARIABLES_LABEL"].get(i, i),
             "id": i,
-            "selectable": i.endswith("_flag"),
-            "editable": i.endswith("_flag") or i == "comments",
+            "selectable": i.endswith("_flag") or i in editable_columns,
+            "editable": i.endswith("_flag") or i in editable_columns,
             "hideable": i != "hakai_id",
-            "presentation": "dropdown" if i.endswith("_flag") else None,
+            "presentation": "dropdown"
+            if i.endswith("_flag") or i in dropdown_columns
+            else None,
         }
         for i in data.columns
     ] + [dict(name="id", id="id")]
@@ -407,11 +443,35 @@ def generate_qc_table_style(data):
             "if": {"state": "active"},
             "fontWeight": "bold",
             "border": "2px solid black",
-        }
+        },
+        {
+            "if": {
+                "column_editable": False,
+                "column_id": [col for col in data if col != "hakai_id"],
+            },
+            "color": "grey",
+        },
+        {
+            "if": {
+                "filter_query": "{modified} = True",
+            },
+            "font-style": "italic",
+            "border": "1px solid black",
+        },
+        {
+            "if": {"filter_query": "{modified} = True", "column_id": "modified"},
+            "fontWeight": "bold",
+        },
     ]
     dropdown_menus = {
-        col: {"options": flags_conventions["Hakai"]} for col in flag_columns
+        **{col: {"options": flags_conventions["Hakai"]} for col in flag_columns},
+        **{
+            col: {"options": flags_conventions[col]}
+            for col in ["quality_level", "row_flag"]
+            if col in data
+        },
     }
+
     logger.debug("Dropdown menus: %s", dropdown_menus)
     return dict(
         data=data.assign(id=data["hakai_id"]).to_dict("records"),
@@ -430,14 +490,26 @@ def get_selected_records_from_graph(graph_selected, custom_data_variables):
     available_selection = [graph for graph in graph_selected if graph]
     if not available_selection:
         return pd.DataFrame()
-    return pd.DataFrame(
-        [
-            point["customdata"][: len(custom_data_variables)]
-            for graph in available_selection
-            for point in graph["points"]
-        ],
-        columns=custom_data_variables,
-    )
+    try:
+        return pd.DataFrame(
+            [
+                point["customdata"][: len(custom_data_variables)]
+                for graph in available_selection
+                for point in graph["points"]
+            ],
+            columns=custom_data_variables,
+        )
+    except KeyError as e:
+        logger.error("Failed to retrieve selection: %s", available_selection)
+        raise e
+
+
+@callback(
+    Output("selection-apply-button", "disabled"),
+    Input("user-initials", "value"),
+)
+def activate_apply_button(value):
+    return not (value and re.fullmatch("[A-Z]+", value))
 
 
 @callback(
@@ -451,6 +523,7 @@ def get_selected_records_from_graph(graph_selected, custom_data_variables):
     State("dataframe", "data"),
     State("qc-table", "data"),
     State("location", "pathname"),
+    State("user-initials", "value"),
 )
 def apply_to_selection(
     apply,
@@ -462,6 +535,7 @@ def apply_to_selection(
     data,
     qc_data,
     location,
+    initials,
 ):
     def _join_comments(cast):
         if cast["previous_comments"] is None:
@@ -473,11 +547,10 @@ def apply_to_selection(
     # Ignore empty data
     if not variable or qc_data is None:
         return None
-
     qc_data = pd.DataFrame(qc_data).groupby(["hakai_id"]).first()
-    update_variable = (
-        "quality_level" if action == "Quality Level" else get_flag_var(variable)
-    )
+
+    action_variable = {"Quality Level": "quality_level", "Sample Status": "row_flag"}
+    update_variable = action_variable.get(action, get_flag_var(variable))
 
     # Get list of hakai_id to update
     if to == "selection":
@@ -496,11 +569,14 @@ def apply_to_selection(
     elif to == "all":
         logger.debug("Get the full list of hakai_ids")
         update_hakai_ids = qc_data.index.values
-    elif action == "Quality Level":
-        if "quality_level" not in qc_data:
-            logger.error("No quality_level column available")
+    elif action in ("Quality Level", "Sample Status"):
+        if update_variable not in qc_data:
+            logger.error("No %s column available", update_variable)
             return qc_data.reset_index().to_dict(orient="records")
-        query = f"quality_level == '{to}'"
+        if to == "Not Available":
+            query = f"{update_variable}.isna() or {update_variable} == '{to}' "
+        else:
+            query = f"{update_variable} == '{to}' "
         logger.debug("Update %s => %s", query, apply_value)
         update_hakai_ids = qc_data.query(query).index.values
 
@@ -513,9 +589,25 @@ def apply_to_selection(
     logger.debug("%s hakai_ids were selected", len(update_hakai_ids))
 
     # Update data with already selected data
-    if action in ("Flag", "Quality Level"):
-        logger.debug("Apply given value to the selection")
+    if action in ("Flag", "Sample Status"):
+        logger.debug("Apply %s=%s value to the selection", action, apply_value)
         qc_data.loc[update_hakai_ids, update_variable] = apply_value
+        return qc_data.reset_index().to_dict(orient="records")
+    elif action == "Quality Level":
+        logger.debug("Apply qualit_level value to the selection")
+        qc_data.loc[update_hakai_ids, update_variable] = apply_value
+        if apply_value == "Principal Investigator":
+            append_quality_log = f"Data QCd by {initials}"
+            quality_log = qc_data.loc[update_hakai_ids, "quality_log"].str.split(
+                "\d+\:\s", regex=True
+            )
+            # find how many lines exists already and since we're using split,
+            # the first item is always empty
+            n_log = quality_log.apply(len)
+            qc_data.loc[update_hakai_ids, "quality_log"] += (
+                "\n" + n_log.astype(str) + f": {append_quality_log}"
+            )
+
         return qc_data.reset_index().to_dict(orient="records")
     elif action != "Automated QC":
         logger.error("Unknown method to apply")

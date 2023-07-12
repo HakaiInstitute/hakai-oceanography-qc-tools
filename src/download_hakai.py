@@ -1,7 +1,8 @@
 import json
 import logging
+import base64
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from time import mktime
 from urllib.parse import unquote
 
@@ -18,34 +19,24 @@ config = load_config()
 
 
 def parse_hakai_token(token):
-    return (
-        None if token is None else dict(map(lambda x: x.split("="), token.split("&")))
-    )
-
-
-hakai_token_keys = {"token_type", "access_token", "expires_at"}
+    info = dict(item.split("=", 1) for item in token.split("&"))
+    base64_bytes = info["access_token"].encode("ascii")
+    message_bytes = base64.b64decode(base64_bytes + b"==")
+    message = message_bytes.decode("ascii", "ignore")
+    return json.loads('{"id":' + message.split('{"id":', 1)[1].rsplit("}", 1)[0] + "}")
 
 
 def _test_hakai_api_credentials(token):
     """Test hakai api credential token"""
     if token is None:
-        return False, "credentials unavailable"
+        return None, "credentials unavailable"
     try:
         credentials = parse_hakai_token(token)
-        now = int(
-            mktime(datetime.now().timetuple()) + datetime.now().microsecond / 1000000.0
-        )
-        if now > int(credentials["expires_at"]):
-            return False, "Credentials are expired"
-        elif set(credentials.keys()) != hakai_token_keys:
-            return (
-                False,
-                f"Credentials is missing the key: {set(credentials.keys()) - hakai_token_keys}",
-            )
-
-        return True, "Valid Credentials"
+        if datetime.now(timezone.utc).timestamp() > credentials["exp"]:
+            return None, "Credentials are expired"
+        return credentials, "Valid Credentials"
     except Exception as exception:
-        return False, f"Failed to parse credentials: {exception}"
+        return None, f"Failed to parse credentials: {exception}"
 
 
 hakai_api_credentials_modal = dbc.Modal(
@@ -73,6 +64,21 @@ hakai_api_credentials_modal = dbc.Modal(
                     className="crendentials-input",
                 ),
                 dbc.Spinner(html.Div(id="credentials-spinners")),
+                dbc.FormFloating(
+                    [
+                        dbc.Input(
+                            id="user-initials",
+                            type="text",
+                            min=2,
+                            max=10,
+                            pattern="[A-Z]+",
+                            persistence=True,
+                            persistence_type="local",
+                            size="small",
+                        ),
+                        dbc.Label("User Initials: "),
+                    ],
+                ),
                 dcc.Store(id="credentials", storage_type="local"),
             ]
         ),
@@ -113,14 +119,30 @@ def review_stored_credentials(valid_credentials_input, log_in_clicks):
 @callback(
     Output("credentials-input", "valid"),
     Output("credentials-input", "invalid"),
+    Output("log-in", "children"),
+    Output("user-initials", "value"),
+    Output("select-work-area", "options"),
     Output("credentials-spinners", "children"),
     Input("credentials-input", "value"),
+    State("user-initials", "value"),
 )
-def test_credentials(credentials):
-    is_valid, message = _test_hakai_api_credentials(credentials)
+def test_credentials(credentials, user_initials):
+    parsed_credentials, message = _test_hakai_api_credentials(credentials)
+    is_valid = bool(parsed_credentials)
+    if is_valid and user_initials is None:
+        user_initials = "".join(
+            [letter for letter in parsed_credentials["name"] if letter.isupper()]
+        )
     return (
         is_valid,
         not is_valid,
+        html.Img(
+            src=parsed_credentials["picture"], height="30px", className="log-in-icon"
+        )
+        if is_valid
+        else html.I(className="bi bi-person-circle me-1"),
+        user_initials,
+        parsed_credentials["workareas"] if is_valid else None,
         dbc.Alert(message, color="success" if is_valid else "danger"),
     )
 

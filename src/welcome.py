@@ -194,25 +194,6 @@ def show_welcome_page(path, search, valid_credentials):
     return unknown_datatype or no_search
 
 
-@callback(
-    Output("select-work-area", "options"),
-    Output("load-work-areas", "children"),
-    Input("select-data-type", "value"),
-    State("credentials-input", "value"),
-)
-def get_work_area_list(data_type, credentials):
-    if data_type is None:
-        return None, None
-
-    client = Client(credentials=credentials)
-    logger.debug("Get work_area list for data_type=%s", data_type)
-    response = client.get(
-        f"{client.api_root}/{config['pages'][data_type][0]['endpoint']}?fields=work_area&sort=work_area&limit=-1&distinct"
-    )
-    logger.debug("resulting response=%s", response.text)
-    return [item["work_area"] for item in response.json()], None
-
-
 @callback(Output("select-extra", "value"), Input("select-data-type", "value"))
 def apply_default_extra_filters(data_type):
     return "direction_flag=d" if data_type == "ctd" else None
