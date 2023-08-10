@@ -41,7 +41,7 @@ def _test_hakai_api_credentials(token):
 
 hakai_api_credentials_modal = dbc.Modal(
     [
-        dbc.ModalHeader(dbc.ModalTitle("Hakai API Crendentials"), close_button=True),
+        dbc.ModalHeader(dbc.ModalTitle("Hakai Credentials"), close_button=True),
         dbc.ModalBody(
             [
                 "Please go here and authorize:\n",
