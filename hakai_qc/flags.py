@@ -50,6 +50,21 @@ flags_conventions = {
         {"label": "Not Available", "value": "Not Available"},
     ],
 }
+flag_tooltips = {
+    "Hakai": """
+    Acceptable Value = AV 
+    Suspicious Value Cautious = SVC
+    Suspicious Value Discard = SVD
+    Below Detection Limit = BDL
+    """,
+    "quality_level": """
+    - Raw = collected but no event QC / nothing has been done yet.
+    - Technicianm = metadata Rechecked & moved post-survey
+    - Technicianmr = Metadata QC and Results back from the lab matched with metadata
+    - Technicianr = Results are back from the lab but metadata hasn’t been QC’d
+    - Principal Investigator = paper / data product ready Data has gone through QC
+    """,
+}
 
 flag_mapping = {"no2_no3_um": "no2_no3_flag"}
 

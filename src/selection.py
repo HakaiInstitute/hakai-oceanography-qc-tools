@@ -9,7 +9,12 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 from dash import ALL, Input, Output, State, callback, ctx, dash_table, dcc, html
 
-from hakai_qc.flags import flag_color_map, flags_conventions, get_hakai_variable_flag
+from hakai_qc.flags import (
+    flag_color_map,
+    flags_conventions,
+    get_hakai_variable_flag,
+    flag_tooltips,
+)
 from hakai_qc.nutrients import nutrient_variables, run_nutrient_qc
 from hakai_qc.ctd import generate_qc_flags
 from hakai_qc.qc import update_dataframe
@@ -115,6 +120,7 @@ selection_interface = dbc.Row(
                 persistence_type="session",
             ),
         ),
+        dbc.Tooltip(id="selection-apply-tooltip", target="selection-apply",style={"width":"300px"}),
         dbc.Col(
             dbc.Button(
                 "Apply",
@@ -270,6 +276,7 @@ def clear_selection(n_click):
 @callback(
     Output("selection-apply", "options"),
     Output("selection-apply", "value"),
+    Output("selection-apply-tooltip", "children"),
     Output("selection-to", "value"),
     Output("selection-to", "options"),
     Input("selection-action", "value"),
@@ -297,6 +304,7 @@ def set_selection_apply_options(action, dataSelected, apply, to):
         return (
             flags_conventions["Hakai"],
             apply if apply in _get_values(flags_conventions["Hakai"]) else "AV",
+            flag_tooltips["Hakai"],
             to or "UKN" if no_selection else "selection",
             apply_to_options,
         )
@@ -305,6 +313,7 @@ def set_selection_apply_options(action, dataSelected, apply, to):
         return (
             sample_status,
             apply if apply in sample_status else "Results",
+            None,
             "Not Available" if no_selection else "selection",
             apply_to_options,
         )
@@ -313,6 +322,7 @@ def set_selection_apply_options(action, dataSelected, apply, to):
         return (
             quality_levels,
             apply if apply in quality_levels else "Principal Investigator",
+            flag_tooltips["quality_level"],
             "Technicianm" if no_selection else "selection",
             apply_to_options,
         )
@@ -321,7 +331,7 @@ def set_selection_apply_options(action, dataSelected, apply, to):
             {"label": "Unknown", "value": "UKN"},
             {"label": "All", "value": "all"},
         ]
-        return [], None, "UKN" if no_selection else "selection", apply_to_options
+        return [], None, None, "UKN" if no_selection else "selection", apply_to_options
 
 
 @callback(

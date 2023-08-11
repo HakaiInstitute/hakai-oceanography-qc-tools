@@ -21,7 +21,7 @@ config = load_config()
 def parse_hakai_token(token):
     info = dict(item.split("=", 1) for item in token.split("&"))
     base64_bytes = info["access_token"].encode("ascii")
-    message_bytes = base64.b64decode(base64_bytes + b"==")
+    message_bytes = base64.b64decode(base64_bytes[:-(len(base64_bytes) % 4)])
     message = message_bytes.decode("ascii", "ignore")
     return json.loads('{"id":' + message.split('{"id":', 1)[1].rsplit("}", 1)[0] + "}")
 
@@ -41,7 +41,7 @@ def _test_hakai_api_credentials(token):
 
 hakai_api_credentials_modal = dbc.Modal(
     [
-        dbc.ModalHeader(dbc.ModalTitle("Hakai API Crendentials"), close_button=True),
+        dbc.ModalHeader(dbc.ModalTitle("Hakai Credentials"), close_button=True),
         dbc.ModalBody(
             [
                 "Please go here and authorize:\n",
