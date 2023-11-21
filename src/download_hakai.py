@@ -21,7 +21,9 @@ config = load_config()
 def parse_hakai_token(token):
     info = dict(item.split("=", 1) for item in token.split("&"))
     base64_bytes = info["access_token"].encode("ascii")
-    message_bytes = base64.b64decode(base64_bytes[:-(len(base64_bytes) % 4)])
+    message_bytes = base64.b64decode(base64_bytes)
+    if not message_bytes:
+        message_bytes = base64.b64decode(base64_bytes[: -(len(base64_bytes) % 4)])
     message = message_bytes.decode("ascii", "ignore")
     return json.loads('{"id":' + message.split('{"id":', 1)[1].rsplit("}", 1)[0] + "}")
 
