@@ -1,13 +1,11 @@
-import logging
-
 import pandas as pd
 from ioos_qc import qartod
 from ioos_qc.config import Config
 from ioos_qc.qartod import qartod_compare
 from ioos_qc.stores import PandasStore
 from ioos_qc.streams import PandasStream
+from loguru import logger
 
-logger = logging.getLogger(__name__)
 default_axe_variables = dict(time="time", z="depth", lat="lat", lon="lon")
 
 
@@ -21,16 +19,16 @@ def qc_dataframe(df, configs, groupby=None, axes=None):
     else:
         default_axe_variables.update(axes)
 
-    logger.debug("qc nutrient dataframe.index.name=%s, df=%s", df.index.name, df)
+    logger.debug("qc nutrient dataframe.index.name={}, df={}", df.index.name, df)
     original_columns = df.columns
     for query, config in configs.items():
         result_store = []
         df_subset = df.query(query)[original_columns]
-        logger.info("run qc on query: %s = len(df)=%s", query, len(df_subset))
+        logger.info("run qc on query: {} = len(df)={}", query, len(df_subset))
         for group, timeserie in df_subset.groupby(groupby, as_index=False):
             # Make sure that the timeseries are sorted chronologically
             timeserie = timeserie.reset_index()
-            # logger.debug("timeseries to be qc len(df)=%s: %s", len(timeserie),timeserie)
+            # logger.debug("timeseries to be qc len(df)={}: {}", len(timeserie),timeserie)
             stream = PandasStream(timeserie, **axes)
             results = stream.run(Config(config))
 

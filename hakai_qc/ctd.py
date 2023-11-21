@@ -1,5 +1,5 @@
-import pandas as pd
 import gsw
+import pandas as pd
 
 from hakai_qc.flags import flag_qartod_to_hakai
 

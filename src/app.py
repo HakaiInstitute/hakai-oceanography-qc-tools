@@ -1,12 +1,12 @@
 # Run this app with `python app.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
-import logging
 import os
 
 import dash_bootstrap_components as dbc
 import plotly.io as pio
 import sentry_sdk
-from dash import Dash, Input, Output, State, callback, dcc, html
+from dash import Dash, Input, Output, callback, dcc, html
+from loguru import logger
 from sentry_sdk.integrations.logging import LoggingIntegration
 
 import selection as selection
@@ -44,13 +44,9 @@ if config.get("ACTIVATE_SENTRY_LOG") in (True, "true", 1):
         profiles_sample_rate=1.0,
     )
 
-logger = logging.getLogger()
-logger.setLevel(config["LOG_LEVEL"])
-fileHandler = logging.FileHandler("logs/dashboard.log")
-fileHandler.setFormatter(
-    logging.Formatter("%(asctime)s - %(name)s - %(levelname)s: %(message)s")
-)
-logger.addHandler(fileHandler)
+
+
+logger.add("logs/dashboard.log", level="WARNING")
 
 app = Dash(
     config["APP_NAME"],

@@ -1,7 +1,9 @@
-from hakai_qc.ctd import generate_qc_flags
-from hakai_api import Client
-import pandas as pd
 from pathlib import Path
+
+import pandas as pd
+from hakai_api import Client
+
+from hakai_qc.ctd import generate_qc_flags
 
 
 def get_ctd_test_file():

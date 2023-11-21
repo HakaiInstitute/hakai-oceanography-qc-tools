@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 import re
 
@@ -9,6 +8,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from dash import ALL, MATCH, Input, Output, State, callback, ctx, dcc, html
+from loguru import logger
 
 from download_hakai import fill_hakai_flag_variables
 from hakai_qc.flags import flag_color_map, flag_mapping
@@ -22,7 +22,7 @@ figure_presets_path = os.path.join(
 with open(figure_presets_path) as file_handle:
     figure_presets = json.load(file_handle)
 
-logger = logging.getLogger(__name__)
+
 FIGURE_GROUPS = ["Timeseries Profiles", "Profile"]
 
 figure_radio_buttons = html.Div(
@@ -402,7 +402,7 @@ def generate_figure(
         .set_index("name")
         .replace({"None": None})
     )
-    logger.debug("form inputs=\n%s", form_inputs)
+    logger.debug("form inputs=\n{}", form_inputs)
     inputs = form_inputs["output"]
 
     px_kwargs = inputs[px_kwargs_inputs].dropna().to_dict()
@@ -413,19 +413,19 @@ def generate_figure(
         else px_kwargs.get("hover_data")
     )
     if px_kwargs.get("x") is None or px_kwargs.get("y") is None:
-        logger.debug("No x or y axis given: px_kwargs=%s", px_kwargs)
+        logger.debug("No x or y axis given: px_kwargs={}", px_kwargs)
         return None, None
 
     label = inputs["label"]
     plot_type = inputs["type"]
     if inputs[["color_min", "color_max"]].notna().any():
         range_color = inputs[["color_min", "color_max"]].tolist()
-        logger.debug("set range color: %s", range_color)
+        logger.debug("set range color: {}", range_color)
         px_kwargs["range_color"] = range_color
 
-    logger.debug("px_kwarkgs= %s", px_kwargs)
+    logger.debug("px_kwarkgs= {}", px_kwargs)
     # Get Data and filter by given subset
-    logger.info("Generating figure for subsets=%s", list(zip(subset_vars, subsets)))
+    logger.info("Generating figure for subsets={}", list(zip(subset_vars, subsets)))
     df = pd.DataFrame(data)
     filter_subsets = [
         f"{subset_var} in {subset}" if subset_var != "Filter data ..." else subset
@@ -441,7 +441,7 @@ def generate_figure(
         filter_subsets += [f"'{time_min}' < {time_var[0]} < '{time_max}'"]
 
     if filter_subsets:
-        logger.debug("filter data with: %s", filter_subsets)
+        logger.debug("filter data with: {}", filter_subsets)
         df = df.query(" and ".join(filter_subsets))
 
     # apply manual selection flags
@@ -455,7 +455,7 @@ def generate_figure(
     time_var = "collected" if "collected" in df else "start_dt"
     df[time_var] = pd.to_datetime(df[time_var])
     df.loc[:, "year"] = df[time_var].dt.year
-    logger.debug("data to plot len(df)=%s", len(df))
+    logger.debug("data to plot len(df)={}", len(df))
 
     # Sort values
     if "profile" in label.lower():
@@ -468,12 +468,12 @@ def generate_figure(
     if plot_type == "scatter":
         px_kwargs["labels"] = config["VARIABLES_LABEL"]
         df = _convert_variable_to_str(df)
-        logger.debug("Generate scatter: %s", str(px_kwargs))
+        logger.debug("Generate scatter: {}", str(px_kwargs))
         fig = px.scatter(df, **px_kwargs)
     elif plot_type == "contour":
         px_kwargs.pop("hover_data", None)
         px_kwargs["colorscale"] = px_kwargs.pop("color_continuous_scale", None)
-        logger.debug("Generate contour: %s", px_kwargs)
+        logger.debug("Generate contour: {}", px_kwargs)
         fig = get_contour(df, **px_kwargs)
     elif plot_type == "scatter_mapbox":
         fig = px.scatter_mapbox(
@@ -495,7 +495,7 @@ def generate_figure(
                 if trace["name"] not in ("1", "AV"):
                     trace["mode"] = "markers"
     else:
-        logger.error("unknown plot_type=%s", plot_type)
+        logger.error("unknown plot_type={}", plot_type)
         return None, None
 
     _add_extra_traces(inputs["extra_traces"] or "[]")
@@ -509,7 +509,7 @@ def generate_figure(
     if re.search("profile", label, re.IGNORECASE):
         fig.update_yaxes(autorange="reversed")
     fig.update_layout(modebar=dict(color=config["NAVBAR_COLOR"]), dragmode="select")
-    logger.debug("output figure: %s", fig)
+    logger.debug("output figure: {}", fig)
     return fig, None
 
 
@@ -619,7 +619,7 @@ def define_graph_default_values(path, label, parameter, variable, variables):
 def get_label(label, variable):
     if variable is None:
         return None, None
-    logger.debug("Selected figure type preset: %s", label)
+    logger.debug("Selected figure type preset: {}", label)
     return label, None
 
 
