@@ -45,7 +45,6 @@ if config.get("ACTIVATE_SENTRY_LOG") in (True, "true", 1):
     )
 
 
-
 logger.add("logs/dashboard.log", level="WARNING")
 
 app = Dash(

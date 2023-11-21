@@ -24,7 +24,7 @@ def parse_hakai_token(token):
     if not message_bytes:
         message_bytes = base64.b64decode(base64_bytes[: -(len(base64_bytes) % 4)])
     message = message_bytes.decode("ascii", "ignore")
-    logger.debug("Decoded token={}",message)
+    logger.debug("Decoded token={}", message)
     if message is None:
         logger.error("failed to decode token")
     return json.loads('{"id":' + message.split('{"id":', 1)[1].rsplit("}", 1)[0] + "}")
@@ -133,10 +133,11 @@ def review_stored_credentials(valid_credentials_input, log_in_clicks):
     State("user-initials", "value"),
 )
 def test_credentials(credentials, user_initials):
-    logger.debug("read credentials token={}",credentials)
+    logger.debug("read credentials token={}", credentials)
     parsed_credentials, message = _test_hakai_api_credentials(credentials)
-    logger.debug("parsed credentials = {}",parsed_credentials)
+    logger.debug("parsed credentials = {}", parsed_credentials)
     is_valid = bool(parsed_credentials)
+    logger.info("Hakai Token Credential is: {}", is_valid)
     if is_valid and user_initials is None:
         user_initials = "".join(
             [letter for letter in parsed_credentials["name"] if letter.isupper()]
@@ -190,6 +191,9 @@ def get_hakai_data(path, query, credentials):
             return None, _make_toast_error(f"Failed to download data: {response}")
 
         result = response.json()
+        logger.info(
+            "Hakai {} records downloaded from {}", len(result), url.split("&fields")[0]
+        )
         return (
             (result, None) if result else (None, _make_toast_error("No Data Retrieved"))
         )
