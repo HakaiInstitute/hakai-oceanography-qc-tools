@@ -57,15 +57,24 @@ welcome_section = dbc.Modal(
                             id="select-data-type",
                             placeholder="Data Type",
                         ),
-                        dbc.Select(id="select-work-area", placeholder="Work Area"),
-                        dbc.Select(id="select-survey", placeholder="Survey"),
-                        dbc.Select(id="select-station", placeholder="Station"),
+                        dbc.Select(
+                            id="select-work-area",
+                            placeholder="Work Area",
+                            persistence=True,
+                        ),
+                        dbc.Select(
+                            id="select-survey", placeholder="Survey", persistence=True
+                        ),
+                        dbc.Select(
+                            id="select-station", placeholder="Station", persistence=True
+                        ),
                         dcc.DatePickerRange(
                             id="select-date-range",
                             min_date_allowed=date(2012, 1, 1),
                             max_date_allowed=date.today(),
                             start_date=date(date.today().year - 1, 1, 1),
                             end_date=date.today(),
+                            persistence=True,
                         ),
                         dbc.FormFloating(
                             [
