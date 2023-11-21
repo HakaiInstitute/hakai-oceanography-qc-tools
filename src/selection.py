@@ -436,7 +436,7 @@ def generate_qc_table_style(data):
     logger.debug("Flag columns: {}", flag_columns)
     color_conditional = (
         {
-            "if": {"column_id": col, "filter_query": "{{}} = '{}'" % (col, flag)},
+            "if": {"column_id": col, "filter_query":  "{%s} = '%s'" % (col, flag)},
             "backgroundColor": flag_color,
             "color": "white",
         }
@@ -445,7 +445,7 @@ def generate_qc_table_style(data):
     )
     blank_conditional = (
         {
-            "if": {"column_id": col, "filter_query": "{{}} = ''" % col},
+            "if": {"column_id": col, "filter_query":  "{%s} = ''"  % col},
             "backgroundColor": "light_grey",
             "color": "black",
         }
