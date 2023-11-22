@@ -1,7 +1,3 @@
-# logging
-ENVIRONMENT: local
-LOG_LEVEL: DEBUG
-
 PRIMARY_VARIABLES:
   nutrients: [sio2, po4, no2_no3_um]
   ctd:
