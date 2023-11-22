@@ -9,14 +9,14 @@ from dash import Dash, Input, Output, callback, dcc, html
 from loguru import logger
 from sentry_sdk.integrations.logging import LoggingIntegration
 
-import selection as selection
-from download_hakai import hakai_api_credentials_modal
-from figure import figure_menu, figure_radio_buttons
-from hakai_plotly_template import hakai_template
-from navbar import data_filter_interface, navbar
-from tooltips import tooltips
-from utils import load_config
-from welcome import welcome_section
+import hakai_qc_app.selection as selection
+from hakai_qc_app.download_hakai import hakai_api_credentials_modal
+from hakai_qc_app.figure import figure_menu, figure_radio_buttons
+from hakai_qc_app.hakai_plotly_template import hakai_template
+from hakai_qc_app.navbar import data_filter_interface, navbar
+from hakai_qc_app.tooltips import tooltips
+from hakai_qc_app.utils import load_config
+from hakai_qc_app.welcome import welcome_section
 
 # load hakai template
 pio.templates["hakai"] = hakai_template
@@ -50,7 +50,7 @@ logger.add("logs/dashboard.log", level="WARNING")
 app = Dash(
     config["APP_NAME"],
     external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],
-    assets_folder="src/assets",
+    assets_folder="hakai_qc_app/assets",
 )
 app.title = config["APP_NAME"]
 app._favicon = "hakai_icon.png"

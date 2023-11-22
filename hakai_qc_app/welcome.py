@@ -5,7 +5,7 @@ from dash import Input, Output, State, callback, dcc, html
 from hakai_api import Client
 from loguru import logger
 
-from utils import load_config
+from hakai_qc_app.utils import load_config
 
 config = load_config()
 

@@ -5,7 +5,7 @@ from dash import Input, Output, State, callback, ctx, dcc, html
 from loguru import logger
 
 from hakai_qc.nutrients import get_nutrient_statistics
-from utils import load_config
+from hakai_qc_app.utils import load_config
 
 config = load_config()
 

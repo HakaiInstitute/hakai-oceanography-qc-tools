@@ -10,10 +10,10 @@ import plotly.graph_objects as go
 from dash import ALL, MATCH, Input, Output, State, callback, dcc, html
 from loguru import logger
 
-from download_hakai import fill_hakai_flag_variables
+from hakai_qc_app.download_hakai import fill_hakai_flag_variables
 from hakai_qc.flags import flag_color_map, flag_mapping
 from hakai_qc.nutrients import variables_flag_mapping
-from utils import load_config, update_dataframe
+from hakai_qc_app.utils import load_config, update_dataframe
 
 config = load_config()
 figure_presets_path = os.path.join(
@@ -464,7 +464,7 @@ def generate_figure(
         sort_by = ["pressure", "line_out_depth", time_var]
     df = df.sort_values([var for var in sort_by if var in df])
 
-    reverse_y_axis = px_kwargs.get('y') in ('depth','pressure')
+    reverse_y_axis = px_kwargs.get("y") in ("depth", "pressure")
 
     # Generate plot
     if plot_type == "scatter":
@@ -634,7 +634,7 @@ def get_plot_types(path):
     if path == "/":
         return None, None
     location_items = path.split("/")
-    logger.info("Get figure presets for {}",location_items[1])
+    logger.info("Get figure presets for {}", location_items[1])
     presets = {
         item.lower().replace(" ", "_").replace("-", ""): {"label": item, "value": item}
         for item in figure_presets.get(location_items[1], {}).keys()
