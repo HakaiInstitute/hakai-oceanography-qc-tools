@@ -1,11 +1,11 @@
-name: Deploy development to hak4i.org
+name: Test changes with Pytest
 on:
   pull_request:
     branches:
       - main
       - development
 jobs:
-  deploy-development:
+  test-pull-request:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
