@@ -3,6 +3,7 @@ import json
 import re
 from datetime import datetime, timezone
 from urllib.parse import unquote
+import binascii
 
 import dash_bootstrap_components as dbc
 import pandas as pd
@@ -19,7 +20,15 @@ config = load_config()
 def parse_hakai_token(token):
     info = dict(item.split("=", 1) for item in token.split("&"))
     base64_bytes = info["access_token"].encode("ascii")
-    message_bytes = base64.b64decode(base64_bytes[: -(len(base64_bytes) % 4 + 1)])
+    for padding_ignore in range(0,5):
+        try:
+            message_bytes = base64.b64decode(base64_bytes[: -padding_ignore])
+            if not message_bytes:
+                logger.debug("read token[:-{}]=''")
+                continue
+            break
+        except binascii.Error or RuntimeError:
+            logger.debug("failed to read token[:-{}]", padding_ignore)
 
     message = message_bytes.decode("ascii", "ignore")
     logger.debug("Decoded token={}", message)
