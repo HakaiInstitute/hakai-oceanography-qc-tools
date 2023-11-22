@@ -20,13 +20,14 @@ config = load_config()
 def parse_hakai_token(token):
     info = dict(item.split("=", 1) for item in token.split("&"))
     base64_bytes = info["access_token"].encode("ascii")
-    message_bytes = base64.b64decode(base64_bytes)
-    if not message_bytes:
-        message_bytes = base64.b64decode(base64_bytes[: -(len(base64_bytes) % 4)])
+    message_bytes = base64.b64decode(base64_bytes[: -(len(base64_bytes) % 4 + 1)])
+
     message = message_bytes.decode("ascii", "ignore")
     logger.debug("Decoded token={}", message)
     if message is None:
         logger.error("failed to decode token")
+        return None
+    logger.info("Token decoded='{}'", message)
     return json.loads('{"id":' + message.split('{"id":', 1)[1].rsplit("}", 1)[0] + "}")
 
 
@@ -139,6 +140,8 @@ def test_credentials(credentials, user_initials):
     is_valid = bool(parsed_credentials)
     logger.info("Hakai Token Credential is: {}", is_valid)
     if is_valid and user_initials is None:
+        # If no initials is already filled
+        # use the credential name to generate initials
         user_initials = "".join(
             [letter for letter in parsed_credentials["name"] if letter.isupper()]
         )
