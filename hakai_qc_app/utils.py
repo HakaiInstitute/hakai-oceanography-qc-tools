@@ -1,21 +1,4 @@
-import os
-
 import pandas as pd
-import yaml
-from dotenv import dotenv_values
-
-
-def load_config():
-    # Load configuration
-    with open("default-config.yaml", encoding="UTF-8") as config_handle:
-        config = yaml.load(config_handle, Loader=yaml.SafeLoader)
-    config.update(
-        {
-            **dotenv_values(".env"),  # load shared development variables
-            **os.environ,  # override loaded values with environment variables
-        }
-    )
-    return config
 
 
 def update_dataframe(df, new_df, on=None, suffix="_new", how="outer"):

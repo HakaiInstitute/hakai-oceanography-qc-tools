@@ -1,9 +1,9 @@
 import base64
+import binascii
 import json
 import re
 from datetime import datetime, timezone
 from urllib.parse import unquote
-import binascii
 
 import dash_bootstrap_components as dbc
 import pandas as pd
@@ -12,17 +12,15 @@ from hakai_api import Client
 from loguru import logger
 
 from hakai_qc import ctd, nutrients
-from hakai_qc_app.utils import load_config
-
-config = load_config()
+from hakai_qc_app.variables import pages
 
 
 def parse_hakai_token(token):
     info = dict(item.split("=", 1) for item in token.split("&"))
     base64_bytes = info["access_token"].encode("ascii")
-    for padding_ignore in range(0,5):
+    for padding_ignore in range(0, 5):
         try:
-            message_bytes = base64.b64decode(base64_bytes[: -padding_ignore])
+            message_bytes = base64.b64decode(base64_bytes[:-padding_ignore])
             if not message_bytes:
                 logger.debug("read token[:-{}]=''")
                 continue
@@ -216,7 +214,7 @@ def get_hakai_data(path, query, credentials):
     if path == ["/"]:
         logger.debug("do not load anything from front page path='/")
         return None, None, None
-    elif path not in config["pages"]:
+    elif path not in pages:
         logger.warning("Unknown data type")
         return None, None, None
     elif not query:
@@ -224,7 +222,7 @@ def get_hakai_data(path, query, credentials):
         return None, None, None
 
     logger.debug("Load from path={}", path)
-    endpoints = config["pages"][path]
+    endpoints = pages[path]
     main_endpoint = endpoints[0]
     client = Client(credentials=credentials)
     query = unquote(query)

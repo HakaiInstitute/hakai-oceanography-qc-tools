@@ -5,9 +5,7 @@ from dash import Input, Output, State, callback, dcc, html
 from hakai_api import Client
 from loguru import logger
 
-from hakai_qc_app.utils import load_config
-
-config = load_config()
+from hakai_qc_app.variables import VARIABLES_LABEL, pages
 
 welcome_title = dbc.Row(
     [
@@ -47,12 +45,10 @@ welcome_section = dbc.Modal(
                         dbc.Select(
                             options=[
                                 {
-                                    "label": config["VARIABLES_LABEL"].get(
-                                        item, item.title()
-                                    ),
+                                    "label": VARIABLES_LABEL.get(item, item.title()),
                                     "value": item,
                                 }
-                                for item in config["pages"].keys()
+                                for item in pages.keys()
                             ],
                             id="select-data-type",
                             placeholder="Data Type",
@@ -133,7 +129,7 @@ def get_station_list(data_type, credentials, work_area, survey, start_date, end_
     work_area_filter = f"work_area={work_area}&" if work_area else ""
     survey_filter = f"{survey_variable}={survey}&" if survey else ""
     response = client.get(
-        f"{client.api_root}/{config['pages'][data_type][0]['endpoint']}?"
+        f"{client.api_root}/{pages[data_type][0]['endpoint']}?"
         f"{work_area_filter}{survey_filter}"
         f"fields={site_label}&sort={site_label}&limit=-1&distinct"
         f"&{time_variable}>={start_date}"
@@ -162,7 +158,7 @@ def get_survey_list(data_type, credentials, work_area, start_date, end_date):
     survey_variable = "cruise" if data_type == "ctd" else "survey"
     work_area_filter = f"work_area={work_area}&" if work_area else ""
     response = client.get(
-        f"{client.api_root}/{config['pages'][data_type][0]['endpoint']}?"
+        f"{client.api_root}/{pages[data_type][0]['endpoint']}?"
         f"{work_area_filter}"
         f"fields={survey_variable}&sort={survey_variable}&limit=-1&distinct"
         f"&{time_variable}>={start_date}"
@@ -181,7 +177,7 @@ def get_survey_list(data_type, credentials, work_area, start_date, end_date):
 def get_datatype_from_pathname(pathname, welcome_is_open):
     if not welcome_is_open or pathname in ("/", None):
         return None
-    data_type = [item for item in config["pages"] if item in pathname]
+    data_type = [item for item in pages if item in pathname]
     logger.info("Data type given by path: {}", data_type)
     return data_type[0] if data_type else None
 
@@ -198,7 +194,7 @@ def show_welcome_page(path, search, valid_credentials):
     data_type = path.split("/")[1]
     logger.debug("show welcome for data_type={} in path={}", data_type, path)
     no_search = len(search) < 10
-    unknown_datatype = data_type not in config["pages"]
+    unknown_datatype = data_type not in pages
     logger.debug("no_search={} or unknown_datatype= {}", no_search, unknown_datatype)
     return unknown_datatype or no_search
 

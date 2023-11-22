@@ -18,11 +18,12 @@ from hakai_qc.flags import (
 )
 from hakai_qc.nutrients import nutrient_variables, run_nutrient_qc
 from hakai_qc.qc import update_dataframe
+from hakai_qc_app.variables import (
+    DEFAULT_HIDDEN_COLUMNS_IN_TABLE,
+    VARIABLES_LABEL,
+    pages,
+)
 
-# from pages.nutrients import get_flag_var
-from hakai_qc_app.utils import load_config
-
-config = load_config()
 variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
 nutrient_variables_flags = [get_hakai_variable_flag(var) for var in nutrient_variables]
 quality_levels = [
@@ -420,7 +421,7 @@ def generate_qc_table_style(data):
     dropdown_columns = ("quality_level", "row_flag")
     columns = [
         {
-            "name": config["VARIABLES_LABEL"].get(i, i),
+            "name": VARIABLES_LABEL.get(i, i),
             "id": i,
             "selectable": i.endswith("_flag") or i in editable_columns,
             "editable": i.endswith("_flag") or i in editable_columns,
@@ -490,7 +491,7 @@ def generate_qc_table_style(data):
         data=data.assign(id=data["hakai_id"]).to_dict("records"),
         columns=columns,
         dropdown=dropdown_menus,
-        hidden_columns=config["DEFAULT_HIDDEN_COLUMNS_IN_TABLE"],
+        hidden_columns=DEFAULT_HIDDEN_COLUMNS_IN_TABLE,
         style_data_conditional=(
             *color_conditional,
             *blank_conditional,
@@ -676,7 +677,7 @@ def get_qc_excel(n_clicks, data, location):
     data_type = location.split("/")[1]
     excel_template = MODULE_PATH / f"assets/hakai-template-{data_type}-samples.xlsx"
 
-    variable_output = config["pages"].get(data_type)[0].get("upload_fields")
+    variable_output = pages.get(data_type)[0].get("upload_fields")
     logger.debug("Save excel file type:{}", data_type)
     if variable_output:
         logger.debug("Upload only varaibles={}", variable_output)

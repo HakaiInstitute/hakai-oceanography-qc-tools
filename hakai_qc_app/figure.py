@@ -10,12 +10,12 @@ import plotly.graph_objects as go
 from dash import ALL, MATCH, Input, Output, State, callback, dcc, html
 from loguru import logger
 
-from hakai_qc_app.download_hakai import fill_hakai_flag_variables
 from hakai_qc.flags import flag_color_map, flag_mapping
 from hakai_qc.nutrients import variables_flag_mapping
-from hakai_qc_app.utils import load_config, update_dataframe
+from hakai_qc_app.download_hakai import fill_hakai_flag_variables
+from hakai_qc_app.utils import update_dataframe
+from hakai_qc_app.variables import VARIABLES_LABEL
 
-config = load_config()
 figure_presets_path = os.path.join(
     os.path.dirname(__file__), "assets/figure_presets.json"
 )
@@ -468,7 +468,7 @@ def generate_figure(
 
     # Generate plot
     if plot_type == "scatter":
-        px_kwargs["labels"] = config["VARIABLES_LABEL"]
+        px_kwargs["labels"] = VARIABLES_LABEL
         df = _convert_variable_to_str(df)
         logger.debug("Generate scatter: {}", str(px_kwargs))
         fig = px.scatter(df, **px_kwargs)
@@ -502,9 +502,7 @@ def generate_figure(
 
     _add_extra_traces(inputs["extra_traces"] or "[]")
 
-    fig.for_each_trace(
-        lambda t: t.update(name=config["VARIABLES_LABEL"].get(t.name, t.name))
-    )
+    fig.for_each_trace(lambda t: t.update(name=VARIABLES_LABEL.get(t.name, t.name)))
     fig.update_layout(
         height=600,
     )
@@ -528,7 +526,7 @@ def define_variables_options(n, variables):
     if not variables:
         return len(n) * [None]
     variables = [
-        {"label": config["VARIABLES_LABEL"].get(variable, variable), "value": variable}
+        {"label": VARIABLES_LABEL.get(variable, variable), "value": variable}
         for variable in variables.split(",")
     ]
     variables = [{"label": "None", "value": "None"}] + variables

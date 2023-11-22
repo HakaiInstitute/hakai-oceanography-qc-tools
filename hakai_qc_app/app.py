@@ -29,7 +29,7 @@ sentry_sdk.init(
     integrations=[
         LoguruIntegration(),
     ],
-    environment=os.getenv("ENVIRONMENT",'local'),
+    environment=os.getenv("ENVIRONMENT", "local"),
     server_name=os.uname()[1],
     traces_sample_rate=1.0,
     profiles_sample_rate=1.0,
@@ -38,7 +38,7 @@ sentry_sdk.init(
 app = Dash(
     "Hakai Data Viewer",
     external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],
-    assets_folder="./hakai_qc_app/assets"
+    assets_folder="./hakai_qc_app/assets",
 )
 
 app.layout = html.Div(
@@ -71,11 +71,12 @@ app.layout = html.Div(
 def show_figure_area(figure):
     return bool(figure)
 
+
 @click.command()
-@click.option('--host', default="0.0.0.0", type=str, envvar='HOST')
-@click.option('--port', default=8050, type=int, envvar='PORT')
+@click.option("--host", default="127.0.0.1", type=str, envvar="HOST")
+@click.option("--port", default=8050, type=int, envvar="PORT")
 @click.option("--debug", is_flag=True, show_default=True, default=True, envvar="DEBUG")
-def run_app(host,port,debug=True):
+def run_app(host, port, debug=True):
     app.run_server(
         host=host,
         port=port,

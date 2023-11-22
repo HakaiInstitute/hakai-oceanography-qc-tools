@@ -1,14 +1,10 @@
 import dash_bootstrap_components as dbc
 import pandas as pd
-import plotly.express as px
 from dash import Input, Output, State, callback, ctx, dcc, html
 from loguru import logger
 
 from hakai_qc.nutrients import get_nutrient_statistics
-from hakai_qc_app.utils import load_config
-
-config = load_config()
-
+from hakai_qc_app.variables import PRIMARY_VARIABLES, VARIABLES_LABEL
 
 stores = dbc.Col(
     dbc.Spinner(
@@ -229,9 +225,9 @@ def get_variable_list(value, options, path):
     location_items = path.split("/")
     logger.debug("dataframe-variables={}", options)
     options = [
-        {"label": config["VARIABLES_LABEL"].get(option, option), "value": option}
+        {"label": VARIABLES_LABEL.get(option, option), "value": option}
         for option in options.split(",")
-        if option in config["PRIMARY_VARIABLES"][location_items[1]]
+        if option in PRIMARY_VARIABLES[location_items[1]]
     ]
 
     # If value given in url use that
