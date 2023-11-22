@@ -51,7 +51,7 @@ selection_table = dash_table.DataTable(
     style_header={
         "fontWeight": "bold",
         "fontSize": "14px",
-        "backgroundColor": config["NAVBAR_COLOR"],
+        "backgroundColor": "#B52026",
         "color": "white",
         "textAlign": "center",
     },
@@ -67,7 +67,7 @@ selection_table = dash_table.DataTable(
         {
             "if": {"column_id": "hakai_id"},
             "textAlign": "left",
-            "backgroundColor": config["NAVBAR_COLOR"],
+            "backgroundColor": "#B52026",
             "color": "white",
         },
         {

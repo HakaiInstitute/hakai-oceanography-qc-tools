@@ -510,7 +510,7 @@ def generate_figure(
     )
     if re.search("profile", label, re.IGNORECASE) or reverse_y_axis:
         fig.update_yaxes(autorange="reversed")
-    fig.update_layout(modebar=dict(color=config["NAVBAR_COLOR"]), dragmode="select")
+    fig.update_layout(modebar=dict(color="#B52026"), dragmode="select")
     logger.debug("output figure: {}", fig)
     return fig, None
 
