@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM --platform=linux/x86_64 python:3.10-slim
 
 ENV PYTHONFAULTHANDLER=1 \
     PYTHONUNBUFFERED=1 \
