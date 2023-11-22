@@ -7,7 +7,7 @@ import plotly.io as pio
 import sentry_sdk
 from dash import Dash, Input, Output, callback, dcc, html
 from loguru import logger
-from sentry_sdk.integrations.logging import LoggingIntegration
+from sentry_sdk.integrations.loguru import LoguruIntegration
 
 import hakai_qc_app.selection as selection
 from hakai_qc_app.download_hakai import hakai_api_credentials_modal
@@ -27,16 +27,11 @@ config.update({key: value for key, value in os.environ.items() if key in config}
 if not os.path.exists(config["TEMP_FOLDER"]):
     os.makedirs(config["TEMP_FOLDER"])
 
-if config.get("ACTIVATE_SENTRY_LOG") in (True, "true", 1):
-    sentry_logging = LoggingIntegration(
-        level=config["SENTRY_LEVEL"],  # Capture info and above as breadcrumbs
-        event_level=config["SENTRY_EVENT_LEVEL"],  # Send errors as events
-    )
-
+if config.get("SENTRY_DSN"):
     sentry_sdk.init(
         dsn=config["SENTRY_DSN"],
         integrations=[
-            sentry_logging,
+            LoguruIntegration(),
         ],
         environment=config["ENVIRONMENT"],
         server_name=os.uname()[1],
