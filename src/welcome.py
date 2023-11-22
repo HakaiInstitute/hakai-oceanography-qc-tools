@@ -56,6 +56,7 @@ welcome_section = dbc.Modal(
                             ],
                             id="select-data-type",
                             placeholder="Data Type",
+                            persistence=True,
                         ),
                         dbc.Select(
                             id="select-work-area",
