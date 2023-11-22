@@ -3,7 +3,7 @@ name = "hakai-oceanography-qc-tools"
 version = "0.1.0"
 description = "\"Sets of tools used by Hakai oceanography to qc their data\""
 authors = ["Jessy Barrette <30420025+JessyBarrette@users.noreply.github.com>"]
-packages = [{include = "hakai_qc"}, {include = "hakai_qc_app/**/*.py"}]
+packages = [{include = "hakai_qc"}, {include = "hakai_qc_app/**/*"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
