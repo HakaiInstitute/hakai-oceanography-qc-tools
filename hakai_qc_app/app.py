@@ -40,6 +40,7 @@ sentry_sdk.init(
 app = Dash(
     "Hakai Data Viewer",
     external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],
+    assets_folder="./hakai_qc_app/assets"
 )
 
 app.layout = html.Div(
