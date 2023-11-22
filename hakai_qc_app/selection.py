@@ -683,7 +683,7 @@ def get_qc_excel(n_clicks, data, location):
         df = df[variable_output]
 
     temp_file = (
-        Path(config["TEMP_FOLDER"])
+        Path("temp")
         / f"hakai-qc-{data_type}-{datetime.now().strftime('%Y-%m-%dT%H:%M:{}')}.xlsx"
     )
     logger.debug("Make a copy from the {} template", data_type)

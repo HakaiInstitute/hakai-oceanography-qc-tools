@@ -21,6 +21,7 @@ pyarrow = "^12.0.1"
 gsw = "^3.6.17"
 loguru = "^0.7.2"
 sentry-sdk = {extras = ["loguru"], version = "^1.36.0"}
+click = "^8.1.7"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"

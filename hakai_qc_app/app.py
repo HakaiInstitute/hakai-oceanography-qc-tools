@@ -7,6 +7,7 @@ import plotly.io as pio
 import sentry_sdk
 from dash import Dash, Input, Output, callback, dcc, html
 from sentry_sdk.integrations.loguru import LoguruIntegration
+import click
 
 import hakai_qc_app.selection as selection
 from hakai_qc_app.download_hakai import hakai_api_credentials_modal
@@ -14,24 +15,19 @@ from hakai_qc_app.figure import figure_menu, figure_radio_buttons
 from hakai_qc_app.hakai_plotly_template import hakai_template
 from hakai_qc_app.navbar import data_filter_interface, navbar
 from hakai_qc_app.tooltips import tooltips
-from hakai_qc_app.utils import load_config
 from hakai_qc_app.welcome import welcome_section
 
 # load hakai template
 pio.templates["hakai"] = hakai_template
 pio.templates.default = "hakai"
 
-config = load_config()
-config.update({key: value for key, value in os.environ.items() if key in config})
-if not os.path.exists(config["TEMP_FOLDER"]):
-    os.makedirs(config["TEMP_FOLDER"])
 
 sentry_sdk.init(
     dsn="https://f75b498b33164cc7bcf827f18f763435@o56764.ingest.sentry.io/4504520655110144",
     integrations=[
         LoguruIntegration(),
     ],
-    environment=config["ENVIRONMENT"],
+    environment=os.getenv("ENVIRONMENT",'local'),
     server_name=os.uname()[1],
     traces_sample_rate=1.0,
     profiles_sample_rate=1.0,
@@ -73,12 +69,17 @@ app.layout = html.Div(
 def show_figure_area(figure):
     return bool(figure)
 
+@click.command()
+@click.option('--host', default="0.0.0.0", type=str, envvar='HOST')
+@click.option('--port', default=8050, type=int, envvar='PORT')
+@click.option("--debug", is_flag=True, show_default=True, default=True, envvar="DEBUG")
+def run_app(host,port,debug=True):
+    app.run_server(
+        host=host,
+        port=port,
+        debug=debug,
+    )
+
 
 if __name__ == "__main__":
-    app.run_server(
-        host=config["DASH_HOST"],
-        port=config["DASH_PORT"],
-        debug=True
-        if config["DASH_DEBUG"] not in (False, "false", "False", 0)
-        else False,
-    )
+    run_app()

@@ -1,9 +1,3 @@
-# App settings
-DASH_DEBUG: true
-DASH_HOST: "0.0.0.0"
-DASH_PORT: 8050
-TEMP_FOLDER: "./temp"
-
 # logging
 ENVIRONMENT: local
 LOG_LEVEL: DEBUG
