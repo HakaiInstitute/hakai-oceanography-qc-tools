@@ -2,12 +2,13 @@
 # visit http://127.0.0.1:8050/ in your web browser.
 import os
 
+import click
 import dash_bootstrap_components as dbc
 import plotly.io as pio
 import sentry_sdk
 from dash import Dash, Input, Output, callback, dcc, html
 from sentry_sdk.integrations.loguru import LoguruIntegration
-import click
+from dotenv import load_dotenv
 
 import hakai_qc_app.selection as selection
 from hakai_qc_app.download_hakai import hakai_api_credentials_modal
@@ -21,6 +22,7 @@ from hakai_qc_app.welcome import welcome_section
 pio.templates["hakai"] = hakai_template
 pio.templates.default = "hakai"
 
+load_dotenv()
 
 sentry_sdk.init(
     dsn="https://f75b498b33164cc7bcf827f18f763435@o56764.ingest.sentry.io/4504520655110144",
