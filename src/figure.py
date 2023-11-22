@@ -464,6 +464,8 @@ def generate_figure(
         sort_by = ["pressure", "line_out_depth", time_var]
     df = df.sort_values([var for var in sort_by if var in df])
 
+    reverse_y_axis = px_kwargs.get('y') in ('depth','pressure')
+
     # Generate plot
     if plot_type == "scatter":
         px_kwargs["labels"] = config["VARIABLES_LABEL"]
@@ -506,7 +508,7 @@ def generate_figure(
     fig.update_layout(
         height=600,
     )
-    if re.search("profile", label, re.IGNORECASE):
+    if re.search("profile", label, re.IGNORECASE) or reverse_y_axis:
         fig.update_yaxes(autorange="reversed")
     fig.update_layout(modebar=dict(color=config["NAVBAR_COLOR"]), dragmode="select")
     logger.debug("output figure: {}", fig)
