@@ -113,6 +113,15 @@
       "y": "latitude",
       "color": "main_var",
       "hover_data": "hakai_id,station"
+    },
+    "Density": {
+      "type": "scatter",
+      "x": "density",
+      "y": "pressure",
+      "color": "main_var",
+      "symbol": "main_var_flag",
+      "hover_data": "hakai_id,station"
     }
+
   }
 }
