@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from dash import ALL, MATCH, Input, Output, State, callback, ctx, dcc, html
+from dash import ALL, MATCH, Input, Output, State, callback, dcc, html
 from loguru import logger
 
 from download_hakai import fill_hakai_flag_variables
@@ -632,6 +632,7 @@ def get_plot_types(path):
     if path == "/":
         return None, None
     location_items = path.split("/")
+    logger.info("Get figure presets for {}",location_items[1])
     presets = {
         item.lower().replace(" ", "_").replace("-", ""): {"label": item, "value": item}
         for item in figure_presets.get(location_items[1], {}).keys()
