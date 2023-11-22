@@ -2,7 +2,6 @@ import base64
 import json
 import re
 from datetime import datetime, timezone
-from time import mktime
 from urllib.parse import unquote
 
 import dash_bootstrap_components as dbc
@@ -12,7 +11,7 @@ from hakai_api import Client
 from loguru import logger
 
 from hakai_qc import ctd, nutrients
-from utils import load_config
+from hakai_qc_app.utils import load_config
 
 config = load_config()
 
