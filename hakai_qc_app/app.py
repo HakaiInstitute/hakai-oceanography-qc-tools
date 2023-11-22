@@ -6,7 +6,6 @@ import dash_bootstrap_components as dbc
 import plotly.io as pio
 import sentry_sdk
 from dash import Dash, Input, Output, callback, dcc, html
-from loguru import logger
 from sentry_sdk.integrations.loguru import LoguruIntegration
 
 import hakai_qc_app.selection as selection
@@ -27,28 +26,21 @@ config.update({key: value for key, value in os.environ.items() if key in config}
 if not os.path.exists(config["TEMP_FOLDER"]):
     os.makedirs(config["TEMP_FOLDER"])
 
-if config.get("SENTRY_DSN"):
-    sentry_sdk.init(
-        dsn=config["SENTRY_DSN"],
-        integrations=[
-            LoguruIntegration(),
-        ],
-        environment=config["ENVIRONMENT"],
-        server_name=os.uname()[1],
-        traces_sample_rate=1.0,
-        profiles_sample_rate=1.0,
-    )
-
-
-logger.add("logs/dashboard.log", level="WARNING")
+sentry_sdk.init(
+    dsn="https://f75b498b33164cc7bcf827f18f763435@o56764.ingest.sentry.io/4504520655110144",
+    integrations=[
+        LoguruIntegration(),
+    ],
+    environment=config["ENVIRONMENT"],
+    server_name=os.uname()[1],
+    traces_sample_rate=1.0,
+    profiles_sample_rate=1.0,
+)
 
 app = Dash(
-    config["APP_NAME"],
+    "Hakai Data Viewer",
     external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],
-    assets_folder="hakai_qc_app/assets",
 )
-app.title = config["APP_NAME"]
-app._favicon = "hakai_icon.png"
 
 app.layout = html.Div(
     [

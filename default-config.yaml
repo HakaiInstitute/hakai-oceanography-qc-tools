@@ -1,5 +1,5 @@
 # App settings
-DASH_DEBUG: false
+DASH_DEBUG: true
 DASH_HOST: "0.0.0.0"
 DASH_PORT: 8050
 TEMP_FOLDER: "./temp"
@@ -7,19 +7,6 @@ TEMP_FOLDER: "./temp"
 # logging
 ENVIRONMENT: local
 LOG_LEVEL: DEBUG
-WEB_LOG_LEVEL: DEBUG
-SENTRY_LEVEL: INFO
-SENTRY_EVENT_LEVEL: ERROR
-SENTRY_DSN: https://f75b498b33164cc7bcf827f18f763435@o56764.ingest.sentry.io/4504520655110144
-
-# App settings
-APP_NAME: Hakai Data Viewer
-NAVBAR_COLOR: "#B52026"
-NAVBAR_DARK: true
-
-# Hakai endpoints
-HAKAI_DEFAULT_API_SERVER_ROOT: https://hecate.hakai.org/api
-HAKAI_ENDPOINTS: "ctd/views/file/cast"
 
 PRIMARY_VARIABLES:
   nutrients: [sio2, po4, no2_no3_um]

@@ -295,8 +295,8 @@ navbar = dbc.Navbar(
         ],
         className="header-container",
     ),
-    color=config["NAVBAR_COLOR"],
-    dark=config["NAVBAR_DARK"],
+    color="#B52026",
+    dark=True,
 )
 
 
