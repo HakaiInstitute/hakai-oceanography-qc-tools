@@ -1,28 +1,33 @@
-import json
-import logging
 import base64
+import json
 import re
 from datetime import datetime, timezone
 from time import mktime
 from urllib.parse import unquote
 
 import dash_bootstrap_components as dbc
+import pandas as pd
 from dash import Input, Output, State, callback, ctx, dcc, html
 from hakai_api import Client
-from hakai_qc import ctd, nutrients
-import pandas as pd
+from loguru import logger
 
+from hakai_qc import ctd, nutrients
 from utils import load_config
 
-logger = logging.getLogger(__name__)
 config = load_config()
 
 
 def parse_hakai_token(token):
     info = dict(item.split("=", 1) for item in token.split("&"))
     base64_bytes = info["access_token"].encode("ascii")
-    message_bytes = base64.b64decode(base64_bytes[:-(len(base64_bytes) % 4)])
+    message_bytes = base64.b64decode(base64_bytes[: -(len(base64_bytes) % 4 + 1)])
+
     message = message_bytes.decode("ascii", "ignore")
+    logger.debug("Decoded token={}", message)
+    if message is None:
+        logger.error("failed to decode token")
+        return None
+    logger.info("Token decoded='{}'", message)
     return json.loads('{"id":' + message.split('{"id":', 1)[1].rsplit("}", 1)[0] + "}")
 
 
@@ -32,10 +37,12 @@ def _test_hakai_api_credentials(token):
         return None, "credentials unavailable"
     try:
         credentials = parse_hakai_token(token)
+        logger.debug("Parsed token={}", credentials)
         if datetime.now(timezone.utc).timestamp() > credentials["exp"]:
             return None, "Credentials are expired"
         return credentials, "Valid Credentials"
     except Exception as exception:
+        logger.exception("Failed to parse credentials")
         return None, f"Failed to parse credentials: {exception}"
 
 
@@ -127,9 +134,14 @@ def review_stored_credentials(valid_credentials_input, log_in_clicks):
     State("user-initials", "value"),
 )
 def test_credentials(credentials, user_initials):
+    logger.debug("read credentials token={}", credentials)
     parsed_credentials, message = _test_hakai_api_credentials(credentials)
+    logger.debug("parsed credentials = {}", parsed_credentials)
     is_valid = bool(parsed_credentials)
+    logger.info("Hakai Token Credential is: {}", is_valid)
     if is_valid and user_initials is None:
+        # If no initials is already filled
+        # use the credential name to generate initials
         user_initials = "".join(
             [letter for letter in parsed_credentials["name"] if letter.isupper()]
         )
@@ -178,15 +190,18 @@ def get_hakai_data(path, query, credentials):
                 f"Failed data query: {parsed_response.get('hint') or response.text}"
             )
         elif response.status_code != 200:
-            logger.debug("Hakai Error= %s : %s", response.status_code, response.text)
+            logger.debug("Hakai Error= {} : {}", response.status_code, response.text)
             return None, _make_toast_error(f"Failed to download data: {response}")
 
         result = response.json()
+        logger.info(
+            "Hakai {} records downloaded from {}", len(result), url.split("&fields")[0]
+        )
         return (
             (result, None) if result else (None, _make_toast_error("No Data Retrieved"))
         )
 
-    logger.debug("load data triggered by %s", ctx.triggered_id)
+    logger.debug("load data triggered by {}", ctx.triggered_id)
 
     # if viewing home page do not downloading anything
     path = path.split("/")[1]
@@ -200,13 +215,13 @@ def get_hakai_data(path, query, credentials):
         logger.debug("no query given")
         return None, None, None
 
-    logger.debug("Load from path=%s", path)
+    logger.debug("Load from path={}", path)
     endpoints = config["pages"][path]
     main_endpoint = endpoints[0]
     client = Client(credentials=credentials)
     query = unquote(query)
     url = f"{config.get('HAKAI_DEFAULT_API_SERVER_ROOT') or client.api_root}/{main_endpoint['endpoint']}?{query[1:]}"
-    logger.debug("run hakai query: %s", url)
+    logger.debug("run hakai query: {}", url)
     result, toast_error = _get_data(url, main_endpoint.get("fields"))
     if toast_error:
         return (
@@ -237,7 +252,7 @@ def get_hakai_data(path, query, credentials):
             f"{endpoints[1]['endpoint']}?"
             f"{'&'.join(flag_filters)}"
         )
-        logger.debug("Retrieve CTD flags: %s", url_flags)
+        logger.debug("Retrieve CTD flags: {}", url_flags)
         result_flags, toast_error = _get_data(url_flags, endpoints[1].get("fields"))
         if toast_error:
             logger.debug("failed to get ctd flag data")

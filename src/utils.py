@@ -1,11 +1,9 @@
-import logging
 import os
 
 import pandas as pd
 import yaml
 from dotenv import dotenv_values
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 def load_config():

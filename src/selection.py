@@ -1,22 +1,22 @@
-import logging
 import math
-from pathlib import Path
+import re
 import shutil
 from datetime import datetime
-import re
+from pathlib import Path
 
 import dash_bootstrap_components as dbc
 import pandas as pd
 from dash import ALL, Input, Output, State, callback, ctx, dash_table, dcc, html
+from loguru import logger
 
+from hakai_qc.ctd import generate_qc_flags
 from hakai_qc.flags import (
     flag_color_map,
+    flag_tooltips,
     flags_conventions,
     get_hakai_variable_flag,
-    flag_tooltips,
 )
 from hakai_qc.nutrients import nutrient_variables, run_nutrient_qc
-from hakai_qc.ctd import generate_qc_flags
 from hakai_qc.qc import update_dataframe
 
 # from pages.nutrients import get_flag_var
@@ -41,7 +41,6 @@ def get_flag_var(var):
     return variables_flag_mapping.get(var, var + "_flag")
 
 
-logger = logging.getLogger(__name__)
 selection_table = dash_table.DataTable(
     id="qc-table",
     page_size=40,
@@ -120,7 +119,11 @@ selection_interface = dbc.Row(
                 persistence_type="session",
             ),
         ),
-        dbc.Tooltip(id="selection-apply-tooltip", target="selection-apply",style={"width":"300px"}),
+        dbc.Tooltip(
+            id="selection-apply-tooltip",
+            target="selection-apply",
+            style={"width": "300px"},
+        ),
         dbc.Col(
             dbc.Button(
                 "Apply",
@@ -230,8 +233,8 @@ def select_qc_table(
         or clicked[0]["points"][0].get("customdata") is None
     ):
         return active_cell, current_page
-    logger.debug("clicked=%s", clicked)
-    logger.debug("selected_cells=%s", selected_cells)
+    logger.debug("clicked={}", clicked)
+    logger.debug("selected_cells={}", selected_cells)
     selected_hakai_id = clicked[0]["points"][0]["customdata"][0]
     selected_row = [
         id for id, row in enumerate(qc_data) if row["hakai_id"] == selected_hakai_id
@@ -249,7 +252,7 @@ def select_qc_table(
         "column_id": column,
         "row_id": selected_hakai_id,
     }
-    logger.debug("Select cell in qc-table from figure click %s", active_cell)
+    logger.debug("Select cell in qc-table from figure click {}", active_cell)
     return active_cell, current_page
 
 
@@ -359,7 +362,7 @@ def update_selected_data(qc_table_data, original_flags, updated_data, update_cli
         }
 
     logger.debug(
-        "Update qc table with qc_table_data=%s updated_data=%s original_flags= %s",
+        "Update qc table with qc_table_data={} updated_data={} original_flags= {}",
         qc_table_data,
         updated_data,
         original_flags,
@@ -368,7 +371,7 @@ def update_selected_data(qc_table_data, original_flags, updated_data, update_cli
     if qc_table_data is None and updated_data is None and original_flags:
         original_flags = pd.DataFrame(original_flags)
         original_flags["modified"] = False
-        logger.debug("add original flags to the qc table %s", original_flags.columns)
+        logger.debug("add original flags to the qc table {}", original_flags.columns)
         return generate_qc_table_style(original_flags)
 
     # Convert data to dataframes
@@ -377,7 +380,7 @@ def update_selected_data(qc_table_data, original_flags, updated_data, update_cli
     updated_data = pd.DataFrame(updated_data)
 
     logger.debug(
-        "Update already existing qc_table[%s]=%s with %s",
+        "Update already existing qc_table[{}]={} with {}",
         len(qc_table_data),
         qc_table_data.columns,
         updated_data.columns,
@@ -429,11 +432,11 @@ def generate_qc_table_style(data):
         for i in data.columns
     ] + [dict(name="id", id="id")]
     flag_columns = [col for col in data.columns if col.endswith("_flag")]
-    logger.debug("QC columns: %s", columns)
-    logger.debug("Flag columns: %s", flag_columns)
+    logger.debug("QC columns: {}", columns)
+    logger.debug("Flag columns: {}", flag_columns)
     color_conditional = (
         {
-            "if": {"column_id": col, "filter_query": "{%s} = '%s'" % (col, flag)},
+            "if": {"column_id": col, "filter_query":  "{%s} = '%s'" % (col, flag)},
             "backgroundColor": flag_color,
             "color": "white",
         }
@@ -442,7 +445,7 @@ def generate_qc_table_style(data):
     )
     blank_conditional = (
         {
-            "if": {"column_id": col, "filter_query": "{%s} = ''" % col},
+            "if": {"column_id": col, "filter_query":  "{%s} = ''"  % col},
             "backgroundColor": "light_grey",
             "color": "black",
         }
@@ -482,7 +485,7 @@ def generate_qc_table_style(data):
         },
     }
 
-    logger.debug("Dropdown menus: %s", dropdown_menus)
+    logger.debug("Dropdown menus: {}", dropdown_menus)
     return dict(
         data=data.assign(id=data["hakai_id"]).to_dict("records"),
         columns=columns,
@@ -510,7 +513,7 @@ def get_selected_records_from_graph(graph_selected, custom_data_variables):
             columns=custom_data_variables,
         )
     except KeyError as e:
-        logger.error("Failed to retrieve selection: %s", available_selection)
+        logger.error("Failed to retrieve selection: {}", available_selection)
         raise e
 
 
@@ -573,7 +576,7 @@ def apply_to_selection(
         update_hakai_ids = graph_selected["hakai_id"].drop_duplicates().values
     elif to == "unknown":
         query = f'{update_variable}.isna() or {update_variable} in ("UKN")'
-        logger.debug("Get hakai_ids with %s", query)
+        logger.debug("Get hakai_ids with {}", query)
         update_hakai_ids = qc_data.query(query).index.values
 
     elif to == "all":
@@ -581,26 +584,26 @@ def apply_to_selection(
         update_hakai_ids = qc_data.index.values
     elif action in ("Quality Level", "Sample Status"):
         if update_variable not in qc_data:
-            logger.error("No %s column available", update_variable)
+            logger.error("No {} column available", update_variable)
             return qc_data.reset_index().to_dict(orient="records")
         if to == "Not Available":
             query = f"{update_variable}.isna() or {update_variable} == '{to}' "
         else:
             query = f"{update_variable} == '{to}' "
-        logger.debug("Update %s => %s", query, apply_value)
+        logger.debug("Update {} => {}", query, apply_value)
         update_hakai_ids = qc_data.query(query).index.values
 
     else:
         raise RuntimeError(f"Unknown apply action={action} to={to} parameters")
 
     if not update_hakai_ids.any():
-        logger.warning("No records matches action=%s, to=%s", action, to)
-        logger.debug("qc_data=%s", qc_data[update_variable].head())
-    logger.debug("%s hakai_ids were selected", len(update_hakai_ids))
+        logger.warning("No records matches action={}, to={}", action, to)
+        logger.debug("qc_data={}", qc_data[update_variable].head())
+    logger.debug("{} hakai_ids were selected", len(update_hakai_ids))
 
     # Update data with already selected data
     if action in ("Flag", "Sample Status"):
-        logger.debug("Apply %s=%s value to the selection", action, apply_value)
+        logger.debug("Apply {}={} value to the selection", action, apply_value)
         qc_data.loc[update_hakai_ids, update_variable] = apply_value
         return qc_data.reset_index().to_dict(orient="records")
     elif action == "Quality Level":
@@ -640,7 +643,7 @@ def apply_to_selection(
 
     elif "ctd" in location:
         logger.debug(
-            "Generate suggested flag for ctd %s: %s", variable, qc_data.columns
+            "Generate suggested flag for ctd {}: {}", variable, qc_data.columns
         )
         auto_qced_data = generate_qc_flags(data, variable)
         auto_qced_data["previous_comments"] = qc_data["comments"]
@@ -674,16 +677,16 @@ def get_qc_excel(n_clicks, data, location):
     excel_template = MODULE_PATH / f"assets/hakai-template-{data_type}-samples.xlsx"
 
     variable_output = config["pages"].get(data_type)[0].get("upload_fields")
-    logger.debug("Save excel file type:%s", data_type)
+    logger.debug("Save excel file type:{}", data_type)
     if variable_output:
-        logger.debug("Upload only varaibles=%s", variable_output)
+        logger.debug("Upload only varaibles={}", variable_output)
         df = df[variable_output]
 
     temp_file = (
         Path(config["TEMP_FOLDER"])
-        / f"hakai-qc-{data_type}-{datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}.xlsx"
+        / f"hakai-qc-{data_type}-{datetime.now().strftime('%Y-%m-%dT%H:%M:{}')}.xlsx"
     )
-    logger.debug("Make a copy from the %s template", data_type)
+    logger.debug("Make a copy from the {} template", data_type)
     shutil.copy(
         excel_template,
         temp_file,
@@ -714,7 +717,7 @@ def update_progress_bar(data, variable):
     flag_column = df[flag_variable].replace(flag_color_map).replace({None: "grey"})
     nrecs = len(flag_column)
     flags = (flag_column.groupby(flag_column).count() / nrecs * 100).to_dict()
-    # logger.debug("Flag distribution=%s", dist)
+    # logger.debug("Flag distribution={}", dist)
     return [
         dbc.Progress(value=value, color=color, bar=True)
         for color, value in flags.items()

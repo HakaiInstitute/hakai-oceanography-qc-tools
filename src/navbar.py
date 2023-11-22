@@ -1,13 +1,14 @@
-import logging
-
 import dash_bootstrap_components as dbc
 import pandas as pd
+import plotly.express as px
 from dash import Input, Output, State, callback, ctx, dcc, html
+from loguru import logger
 
+from hakai_qc.nutrients import get_nutrient_statistics
 from utils import load_config
 
 config = load_config()
-logger = logging.getLogger(__name__)
+
 
 stores = dbc.Col(
     dbc.Spinner(
@@ -57,6 +58,20 @@ navbar_menu = dbc.Nav(
                 className="bi bi-search me-1",
                 id="qc-button",
             )
+        ),
+        dbc.NavItem(
+            dbc.NavLink(
+                className="bi bi-bar-chart me-1",
+                id="stats-button",
+            )
+        ),
+        dbc.Modal(
+            [
+                dbc.ModalHeader(dbc.ModalTitle("Statistics")),
+                dbc.ModalBody("A large modal.", id="stats-modal-body"),
+            ],
+            id="stats-modal",
+            size="large",
         ),
         dbc.NavItem(dbc.NavLink(className="bi me-1", id="log-in")),
     ],
@@ -126,6 +141,33 @@ data_filter_interface = dbc.Collapse(
 
 
 @callback(
+    Output("stats-modal", "is_open"),
+    Output("stats-modal-body", "children"),
+    Input("stats-button", "n_clicks"),
+    State("location", "pathname"),
+    State("dataframe", "data"),
+)
+def open_stats_modal(n_clicks, location, data):  # Generate stats
+    if n_clicks is None:
+        return False, []
+
+    df = pd.DataFrame(data)
+    content = None
+    if "nutrients" in location:
+        stats_items = get_nutrient_statistics(df)
+        content = html.Div(
+            [
+                "pool",
+                str(stats_items["pool_standard_deviation"]),
+                "distribution",
+                dcc.Graph(figure=stats_items["distribution"]),
+            ]
+        )
+
+    return True, content
+
+
+@callback(
     Output("data-selection-interface", "is_open"),
     Output("filter-by", "active"),
     Input("filter-by", "n_clicks"),
@@ -145,7 +187,7 @@ def showfilter_by_section(n_clicks, is_open):
 )
 def show_qc_section(n_clicks, is_open, hash):
     logger.debug(
-        "trigger qc section: trigger=%s, click=%s,is_open=%s,hash=%s",
+        "trigger qc section: trigger={}, click={},is_open={},hash={}",
         ctx.triggered_id,
         n_clicks,
         is_open,
@@ -185,7 +227,7 @@ def get_variable_list(value, options, path):
     if not options:
         return None, None
     location_items = path.split("/")
-    logger.debug("dataframe-variables=%s", options)
+    logger.debug("dataframe-variables={}", options)
     options = [
         {"label": config["VARIABLES_LABEL"].get(option, option), "value": option}
         for option in options.split(",")
@@ -195,7 +237,7 @@ def get_variable_list(value, options, path):
     # If value given in url use that
     if len(location_items) > 2:
         value = location_items[2]
-        logger.debug("variable value=%s from path=%s", value, path)
+        logger.debug("variable value={} from path={}", value, path)
     return value or (options[0]["value"] if options else None), options
 
 
@@ -339,7 +381,7 @@ def update_date_range_slider(picker_date_min, picker_date_max, down, up):
     start += time_interval
     end += time_interval
     logger.debug(
-        "Move time filter slider: [%s,%s] by %s = [%s,%s]",
+        "Move time filter slider: [{},{}] by {} = [{},{}]",
         picker_date_min,
         picker_date_max,
         time_interval,

@@ -1,3 +1,7 @@
+import plotly.express as px
+from plotly.subplots import make_subplots
+
+from hakai_qc.analysis import get_samples_pool_standard_deviation
 from hakai_qc.flags import flag_qartod_to_hakai, get_hakai_variable_flag
 from hakai_qc.qc import qartod_compare, qc_dataframe
 
@@ -119,3 +123,34 @@ def run_nutrient_qc(
 def get_derived_variables(df):
     df["depth"] = df["pressure_transducer_depth"].fillna(df["line_out_depth"])
     return df
+
+
+def get_nutrient_statistics(df):
+    stats_items = {}
+    variables = ["no2_no3_um", "po4", "sio2"]
+    stats = ["count", "std", "mean"]
+    groupby = ["site_id", "collected", "line_out_depth"]
+    df_grouped = df.groupby(groupby).agg({variable: stats for variable in variables})
+
+    # Get distribution plots
+    subplots = make_subplots(rows=len(variables), cols=1)
+    for id, variable in enumerate(variables):
+        replicates = df_grouped[variable].query("count > 1").reset_index()
+        if replicates.empty:
+            continue
+        fig = px.histogram(
+            replicates,
+            x="std",
+            color="line_out_depth",
+            hover_name="collected",
+        )
+        for trace in fig.data:
+            subplots.add_trace(trace, row=id, col=1)
+
+    stats_items["distribution"] = subplots
+
+    # Get pool standard deviation
+    stats_items["pool_standard_deviation"] = get_samples_pool_standard_deviation(
+        df, variables, groupby
+    )
+    return stats_items
