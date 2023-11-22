@@ -2,7 +2,7 @@
 
 <!-- NOTE: All sections are placeholders. Use the relevant ones-->
 
-![Logo](src/assets/logo.png)
+![Logo](hakai_qc_app/assets/logo.png)
 
 <!-- Make a favicon/logo using something like:
 
@@ -80,7 +80,7 @@ Install dependencies
 Start the development server
 
 ```shell
-  python src/app.py
+  python hakai_qc_app/app.py
 ```
 
 ## Tests

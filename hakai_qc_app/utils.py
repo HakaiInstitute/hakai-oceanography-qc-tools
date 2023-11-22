@@ -3,7 +3,6 @@ import os
 import pandas as pd
 import yaml
 from dotenv import dotenv_values
-from loguru import logger
 
 
 def load_config():

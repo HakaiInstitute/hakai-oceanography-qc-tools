@@ -3,7 +3,7 @@ name = "hakai-oceanography-qc-tools"
 version = "0.1.0"
 description = "\"Sets of tools used by Hakai oceanography to qc their data\""
 authors = ["Jessy Barrette <30420025+JessyBarrette@users.noreply.github.com>"]
-packages = [{include = "hakai_qc"}]
+packages = [{include = "hakai_qc"}, {include = "hakai_qc_app/**/*.py"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -22,7 +22,8 @@ pyarrow = "^12.0.1"
 gsw = "^3.6.17"
 loguru = "^0.7.2"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.3"
 black = "^23.1.0"
 flake8 = "^6.0.0"
 isort = "^5.12.0"
