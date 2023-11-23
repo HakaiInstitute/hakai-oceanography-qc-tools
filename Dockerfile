@@ -13,7 +13,6 @@ RUN pip install poetry
 
 # Copy only requirements to cache them in docker layer
 WORKDIR /code
-ADD https://www.google.com /time.now
 COPY . /code
 
 # Project initialization:
