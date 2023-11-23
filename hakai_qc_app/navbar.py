@@ -47,6 +47,9 @@ navbar_menu = dbc.Nav(
             )
         ),
         dbc.NavItem(
+            dbc.NavLink(className="bi bi-house-fill me-1", id="welcome-button")
+        ),
+        dbc.NavItem(
             dbc.NavLink(className="bi bi-filter-circle-fill me-1", id="filter-by")
         ),
         dbc.NavItem(

@@ -1,4 +1,5 @@
 import pandas as pd
+from hakai_api import Client
 
 
 def update_dataframe(df, new_df, on=None, suffix="_new", how="outer"):
@@ -15,3 +16,31 @@ def update_dataframe(df, new_df, on=None, suffix="_new", how="outer"):
         drop_cols += [new_col]
     df_merge.drop(columns=drop_cols, inplace=True)
     return df_merge
+
+
+def update_ctd_survey_station_lists(path='assets/ctd_survey_stations.parquet'):
+    client = Client()
+    response = client.get(
+        f"{client.api_root}/ctd/views/file/cast?"
+        f"fields=organization,work_area,cruise,station&limit=-1&distinct"
+    )
+    response.raise_for_status()
+    df = pd.DataFrame(response.json())
+    df.to_parquet(path)
+
+def update_nutrients_survey_station_lists(path='assets/nutrients_survey_stations.parquet'):
+    client = Client()
+    response = client.get(
+        f"{client.api_root}/eims/views/output/nutrients?"
+        f"fields=organization,work_area,survey,site_id&limit=-1&distinct"
+    )
+    response.raise_for_status()
+    df = pd.DataFrame(response.json())
+    df.to_parquet(path)
+
+def update_survey_stations_lists(path=None):
+    update_ctd_survey_station_lists(path)
+    update_nutrients_survey_station_lists(path)
+
+if __name__ == "__main__":
+    update_survey_stations_lists()
