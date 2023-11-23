@@ -309,7 +309,7 @@ def set_selection_apply_options(action, dataSelected, apply, to):
             flags_conventions["Hakai"],
             apply if apply in _get_values(flags_conventions["Hakai"]) else "AV",
             flag_tooltips["Hakai"],
-            to or "UKN" if no_selection else "selection",
+            to or "unknown" if no_selection else "selection",
             apply_to_options,
         )
     elif action == "Sample Status":
@@ -332,10 +332,10 @@ def set_selection_apply_options(action, dataSelected, apply, to):
         )
     else:
         apply_to_options += [
-            {"label": "Unknown", "value": "UKN"},
+            {"label": "Unknown", "value": "unknown"},
             {"label": "All", "value": "all"},
         ]
-        return [], None, None, "UKN" if no_selection else "selection", apply_to_options
+        return [], None, None, "unknown" if no_selection else "selection", apply_to_options
 
 
 @callback(
