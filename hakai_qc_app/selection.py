@@ -672,9 +672,9 @@ def get_qc_excel(n_clicks, data, location):
     """Save file to an excel file format compatible with the Hakai Portal upload"""
     if data is None:
         return None, None
-    logger.info("Generate excel file")
     df = pd.DataFrame(data)
     data_type = location.split("/")[1]
+    logger.info("Retrieve excel file template for {}", data_type)
     excel_template = MODULE_PATH / f"assets/hakai-template-{data_type}-samples.xlsx"
 
     variable_output = pages.get(data_type)[0].get("upload_fields")
@@ -682,12 +682,13 @@ def get_qc_excel(n_clicks, data, location):
     if variable_output:
         logger.debug("Upload only varaibles={}", variable_output)
         df = df[variable_output]
-
+    temp_dir = Path("temp")
+    temp_dir.mkdir(parents=True, exist_ok=True)
     temp_file = (
-        Path("temp")
-        / f"hakai-qc-{data_type}-{datetime.now().strftime('%Y-%m-%dT%H:%M:{}')}.xlsx"
+        temp_dir
+        / f"hakai-qc-{data_type}-{datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}.xlsx"
     )
-    logger.debug("Make a copy from the {} template", data_type)
+    logger.info("Copy {} template/update excel file to: {}", data_type, temp_file)
     shutil.copy(
         excel_template,
         temp_file,
