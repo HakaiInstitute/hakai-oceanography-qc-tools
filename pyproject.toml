@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "hakai-oceanography-qc-tools"
-version = "0.1.0"
+version = "0.1.1"
 description = "\"Sets of tools used by Hakai oceanography to qc their data\""
 authors = ["Jessy Barrette <30420025+JessyBarrette@users.noreply.github.com>"]
 packages = [{include = "hakai_qc"}, {include = "hakai_qc_app/**/*"}]
