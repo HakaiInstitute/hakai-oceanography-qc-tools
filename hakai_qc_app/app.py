@@ -2,12 +2,13 @@
 # visit http://127.0.0.1:8050/ in your web browser.
 import os
 
+import click
 import dash_bootstrap_components as dbc
 import plotly.io as pio
 import sentry_sdk
 from dash import Dash, Input, Output, callback, dcc, html
-from loguru import logger
-from sentry_sdk.integrations.logging import LoggingIntegration
+from dotenv import load_dotenv
+from sentry_sdk.integrations.loguru import LoguruIntegration
 
 import hakai_qc_app.selection as selection
 from hakai_qc_app.download_hakai import hakai_api_credentials_modal
@@ -15,45 +16,30 @@ from hakai_qc_app.figure import figure_menu, figure_radio_buttons
 from hakai_qc_app.hakai_plotly_template import hakai_template
 from hakai_qc_app.navbar import data_filter_interface, navbar
 from hakai_qc_app.tooltips import tooltips
-from hakai_qc_app.utils import load_config
 from hakai_qc_app.welcome import welcome_section
 
 # load hakai template
 pio.templates["hakai"] = hakai_template
 pio.templates.default = "hakai"
 
-config = load_config()
-config.update({key: value for key, value in os.environ.items() if key in config})
-if not os.path.exists(config["TEMP_FOLDER"]):
-    os.makedirs(config["TEMP_FOLDER"])
+load_dotenv()
 
-if config.get("ACTIVATE_SENTRY_LOG") in (True, "true", 1):
-    sentry_logging = LoggingIntegration(
-        level=config["SENTRY_LEVEL"],  # Capture info and above as breadcrumbs
-        event_level=config["SENTRY_EVENT_LEVEL"],  # Send errors as events
-    )
-
-    sentry_sdk.init(
-        dsn=config["SENTRY_DSN"],
-        integrations=[
-            sentry_logging,
-        ],
-        environment=config["ENVIRONMENT"],
-        server_name=os.uname()[1],
-        traces_sample_rate=1.0,
-        profiles_sample_rate=1.0,
-    )
-
-
-logger.add("logs/dashboard.log", level="WARNING")
+sentry_sdk.init(
+    dsn="https://f75b498b33164cc7bcf827f18f763435@o56764.ingest.sentry.io/4504520655110144",
+    integrations=[
+        LoguruIntegration(),
+    ],
+    environment=os.getenv("ENVIRONMENT", "local"),
+    server_name=os.uname()[1],
+    traces_sample_rate=1.0,
+    profiles_sample_rate=1.0,
+)
 
 app = Dash(
-    config["APP_NAME"],
+    "Hakai Data Viewer",
     external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],
-    assets_folder="hakai_qc_app/assets",
+    assets_folder="./hakai_qc_app/assets",
 )
-app.title = config["APP_NAME"]
-app._favicon = "hakai_icon.png"
 
 app.layout = html.Div(
     [
@@ -86,11 +72,17 @@ def show_figure_area(figure):
     return bool(figure)
 
 
-if __name__ == "__main__":
+@click.command()
+@click.option("--host", default="127.0.0.1", type=str, envvar="HOST")
+@click.option("--port", default=8050, type=int, envvar="PORT")
+@click.option("--debug", is_flag=True, show_default=True, default=True, envvar="DEBUG")
+def run_app(host, port, debug=True):
     app.run_server(
-        host=config["DASH_HOST"],
-        port=config["DASH_PORT"],
-        debug=True
-        if config["DASH_DEBUG"] not in (False, "false", "False", 0)
-        else False,
+        host=host,
+        port=port,
+        debug=debug,
     )
+
+
+if __name__ == "__main__":
+    run_app()

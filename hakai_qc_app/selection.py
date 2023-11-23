@@ -18,11 +18,12 @@ from hakai_qc.flags import (
 )
 from hakai_qc.nutrients import nutrient_variables, run_nutrient_qc
 from hakai_qc.qc import update_dataframe
+from hakai_qc_app.variables import (
+    DEFAULT_HIDDEN_COLUMNS_IN_TABLE,
+    VARIABLES_LABEL,
+    pages,
+)
 
-# from pages.nutrients import get_flag_var
-from hakai_qc_app.utils import load_config
-
-config = load_config()
 variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
 nutrient_variables_flags = [get_hakai_variable_flag(var) for var in nutrient_variables]
 quality_levels = [
@@ -51,7 +52,7 @@ selection_table = dash_table.DataTable(
     style_header={
         "fontWeight": "bold",
         "fontSize": "14px",
-        "backgroundColor": config["NAVBAR_COLOR"],
+        "backgroundColor": "#B52026",
         "color": "white",
         "textAlign": "center",
     },
@@ -67,7 +68,7 @@ selection_table = dash_table.DataTable(
         {
             "if": {"column_id": "hakai_id"},
             "textAlign": "left",
-            "backgroundColor": config["NAVBAR_COLOR"],
+            "backgroundColor": "#B52026",
             "color": "white",
         },
         {
@@ -308,7 +309,7 @@ def set_selection_apply_options(action, dataSelected, apply, to):
             flags_conventions["Hakai"],
             apply if apply in _get_values(flags_conventions["Hakai"]) else "AV",
             flag_tooltips["Hakai"],
-            to or "UKN" if no_selection else "selection",
+            to or "unknown" if no_selection else "selection",
             apply_to_options,
         )
     elif action == "Sample Status":
@@ -331,10 +332,16 @@ def set_selection_apply_options(action, dataSelected, apply, to):
         )
     else:
         apply_to_options += [
-            {"label": "Unknown", "value": "UKN"},
+            {"label": "Unknown", "value": "unknown"},
             {"label": "All", "value": "all"},
         ]
-        return [], None, None, "UKN" if no_selection else "selection", apply_to_options
+        return (
+            [],
+            None,
+            None,
+            "unknown" if no_selection else "selection",
+            apply_to_options,
+        )
 
 
 @callback(
@@ -420,7 +427,7 @@ def generate_qc_table_style(data):
     dropdown_columns = ("quality_level", "row_flag")
     columns = [
         {
-            "name": config["VARIABLES_LABEL"].get(i, i),
+            "name": VARIABLES_LABEL.get(i, i),
             "id": i,
             "selectable": i.endswith("_flag") or i in editable_columns,
             "editable": i.endswith("_flag") or i in editable_columns,
@@ -490,7 +497,7 @@ def generate_qc_table_style(data):
         data=data.assign(id=data["hakai_id"]).to_dict("records"),
         columns=columns,
         dropdown=dropdown_menus,
-        hidden_columns=config["DEFAULT_HIDDEN_COLUMNS_IN_TABLE"],
+        hidden_columns=DEFAULT_HIDDEN_COLUMNS_IN_TABLE,
         style_data_conditional=(
             *color_conditional,
             *blank_conditional,
@@ -671,22 +678,23 @@ def get_qc_excel(n_clicks, data, location):
     """Save file to an excel file format compatible with the Hakai Portal upload"""
     if data is None:
         return None, None
-    logger.info("Generate excel file")
     df = pd.DataFrame(data)
     data_type = location.split("/")[1]
+    logger.info("Retrieve excel file template for {}", data_type)
     excel_template = MODULE_PATH / f"assets/hakai-template-{data_type}-samples.xlsx"
 
-    variable_output = config["pages"].get(data_type)[0].get("upload_fields")
+    variable_output = pages.get(data_type)[0].get("upload_fields")
     logger.debug("Save excel file type:{}", data_type)
     if variable_output:
         logger.debug("Upload only varaibles={}", variable_output)
         df = df[variable_output]
-
+    temp_dir = Path("temp")
+    temp_dir.mkdir(parents=True, exist_ok=True)
     temp_file = (
-        Path(config["TEMP_FOLDER"])
-        / f"hakai-qc-{data_type}-{datetime.now().strftime('%Y-%m-%dT%H:%M:{}')}.xlsx"
+        temp_dir
+        / f"hakai-qc-{data_type}-{datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}.xlsx"
     )
-    logger.debug("Make a copy from the {} template", data_type)
+    logger.info("Copy {} template/update excel file to: {}", data_type, temp_file)
     shutil.copy(
         excel_template,
         temp_file,

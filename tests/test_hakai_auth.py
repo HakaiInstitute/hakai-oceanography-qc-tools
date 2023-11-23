@@ -1,5 +1,6 @@
-from hakai_qc_app.download_hakai import parse_hakai_token
 import pytest
+
+from hakai_qc_app.download_hakai import parse_hakai_token
 
 
 @pytest.mark.parametrize(

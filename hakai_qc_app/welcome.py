@@ -1,13 +1,11 @@
 from datetime import date
 
 import dash_bootstrap_components as dbc
-from dash import Input, Output, State, callback, dcc, html
+from dash import Input, Output, State, callback, dcc, html, ctx
 from hakai_api import Client
 from loguru import logger
 
-from hakai_qc_app.utils import load_config
-
-config = load_config()
+from hakai_qc_app.variables import VARIABLES_LABEL, pages
 
 welcome_title = dbc.Row(
     [
@@ -47,12 +45,10 @@ welcome_section = dbc.Modal(
                         dbc.Select(
                             options=[
                                 {
-                                    "label": config["VARIABLES_LABEL"].get(
-                                        item, item.title()
-                                    ),
+                                    "label": VARIABLES_LABEL.get(item, item.title()),
                                     "value": item,
                                 }
-                                for item in config["pages"].keys()
+                                for item in pages.keys()
                             ],
                             id="select-data-type",
                             placeholder="Data Type",
@@ -63,12 +59,20 @@ welcome_section = dbc.Modal(
                             placeholder="Work Area",
                             persistence=True,
                         ),
-                        dbc.Select(
-                            id="select-survey", placeholder="Survey", persistence=True
+                        dbc.Input(
+                            id="select-survey",
+                            placeholder="Survey",
+                            persistence=True,
+                            list="select-survey-list",
                         ),
-                        dbc.Select(
-                            id="select-station", placeholder="Station", persistence=True
+                        html.Datalist(id="select-survey-list"),
+                        dbc.Input(
+                            id="select-station",
+                            placeholder="Station",
+                            persistence=True,
+                            list="select-station-list",
                         ),
+                        html.Datalist(id="select-station-list"),
                         dcc.DatePickerRange(
                             id="select-date-range",
                             min_date_allowed=date(2012, 1, 1),
@@ -104,7 +108,7 @@ def list_to_select_dict(options: list):
 
 
 @callback(
-    Output("select-station", "options"),
+    Output("select-station-list", "children"),
     Output("load-sites", "children"),
     Input("select-data-type", "value"),
     State("credentials-input", "value"),
@@ -133,19 +137,19 @@ def get_station_list(data_type, credentials, work_area, survey, start_date, end_
     work_area_filter = f"work_area={work_area}&" if work_area else ""
     survey_filter = f"{survey_variable}={survey}&" if survey else ""
     response = client.get(
-        f"{client.api_root}/{config['pages'][data_type][0]['endpoint']}?"
+        f"{client.api_root}/{pages[data_type][0]['endpoint']}?"
         f"{work_area_filter}{survey_filter}"
         f"fields={site_label}&sort={site_label}&limit=-1&distinct"
         f"&{time_variable}>={start_date}"
         f"&{time_variable}<={end_date}"
     )
-    stations = [item[site_label] for item in response.json()]
+    stations = [html.Option(value=item[site_label]) for item in response.json()]
     logger.debug("station list response={}", stations)
-    return list_to_select_dict(stations), None
+    return stations, None
 
 
 @callback(
-    Output("select-survey", "options"),
+    Output("select-survey-list", "children"),
     Input("select-data-type", "value"),
     State("credentials-input", "value"),
     Input("select-work-area", "value"),
@@ -162,15 +166,15 @@ def get_survey_list(data_type, credentials, work_area, start_date, end_date):
     survey_variable = "cruise" if data_type == "ctd" else "survey"
     work_area_filter = f"work_area={work_area}&" if work_area else ""
     response = client.get(
-        f"{client.api_root}/{config['pages'][data_type][0]['endpoint']}?"
+        f"{client.api_root}/{pages[data_type][0]['endpoint']}?"
         f"{work_area_filter}"
         f"fields={survey_variable}&sort={survey_variable}&limit=-1&distinct"
         f"&{time_variable}>={start_date}"
         f"&{time_variable}<={end_date}"
     )
-    surveys = [None] + [item[survey_variable] for item in response.json()]
+    surveys = [html.Option(value=item[survey_variable]) for item in response.json()]
     logger.debug("survey response={}", surveys)
-    return list_to_select_dict(surveys)
+    return surveys
 
 
 @callback(
@@ -181,26 +185,37 @@ def get_survey_list(data_type, credentials, work_area, start_date, end_date):
 def get_datatype_from_pathname(pathname, welcome_is_open):
     if not welcome_is_open or pathname in ("/", None):
         return None
-    data_type = [item for item in config["pages"] if item in pathname]
+    data_type = [item for item in pages if item in pathname]
     logger.info("Data type given by path: {}", data_type)
     return data_type[0] if data_type else None
 
 
 @callback(
     Output("welcome-section", "is_open"),
+    Output("welcome-section", "backdrop"),
     Input("location", "pathname"),
     Input("location", "search"),
     Input("credentials-input", "valid"),
+    Input("welcome-button", "n_clicks"),
 )
-def show_welcome_page(path, search, valid_credentials):
+def show_welcome_page(path, search, valid_credentials, n_clicks):
     if not valid_credentials:
         return False
     data_type = path.split("/")[1]
     logger.debug("show welcome for data_type={} in path={}", data_type, path)
     no_search = len(search) < 10
-    unknown_datatype = data_type not in config["pages"]
-    logger.debug("no_search={} or unknown_datatype= {}", no_search, unknown_datatype)
-    return unknown_datatype or no_search
+    unknown_datatype = data_type not in pages
+    welcome_button = ctx.triggered_id == "welcome-button" and n_clicks
+    logger.info(
+        "no_search={} or unknown_datatype= {} or welcome_button={}",
+        no_search,
+        unknown_datatype,
+        welcome_button,
+    )
+    return (
+        unknown_datatype or no_search or welcome_button,
+        "static" if no_search else True,
+    )
 
 
 @callback(Output("select-extra", "value"), Input("select-data-type", "value"))

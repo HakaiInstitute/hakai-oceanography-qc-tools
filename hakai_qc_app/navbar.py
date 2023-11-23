@@ -1,14 +1,10 @@
 import dash_bootstrap_components as dbc
 import pandas as pd
-import plotly.express as px
 from dash import Input, Output, State, callback, ctx, dcc, html
 from loguru import logger
 
 from hakai_qc.nutrients import get_nutrient_statistics
-from hakai_qc_app.utils import load_config
-
-config = load_config()
-
+from hakai_qc_app.variables import PRIMARY_VARIABLES, VARIABLES_LABEL
 
 stores = dbc.Col(
     dbc.Spinner(
@@ -49,6 +45,9 @@ navbar_menu = dbc.Nav(
                 className="me-1",
                 active="partial",
             )
+        ),
+        dbc.NavItem(
+            dbc.NavLink(className="bi bi-house-fill me-1", id="welcome-button")
         ),
         dbc.NavItem(
             dbc.NavLink(className="bi bi-filter-circle-fill me-1", id="filter-by")
@@ -229,9 +228,9 @@ def get_variable_list(value, options, path):
     location_items = path.split("/")
     logger.debug("dataframe-variables={}", options)
     options = [
-        {"label": config["VARIABLES_LABEL"].get(option, option), "value": option}
+        {"label": VARIABLES_LABEL.get(option, option), "value": option}
         for option in options.split(",")
-        if option in config["PRIMARY_VARIABLES"][location_items[1]]
+        if option in PRIMARY_VARIABLES[location_items[1]]
     ]
 
     # If value given in url use that
@@ -295,8 +294,8 @@ navbar = dbc.Navbar(
         ],
         className="header-container",
     ),
-    color=config["NAVBAR_COLOR"],
-    dark=config["NAVBAR_DARK"],
+    color="#B52026",
+    dark=True,
 )
 
 
