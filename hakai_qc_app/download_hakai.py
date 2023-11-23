@@ -12,8 +12,9 @@ from hakai_api import Client
 from loguru import logger
 
 from hakai_qc import ctd, nutrients
-from hakai_qc_app.variables import pages
 from hakai_qc_app.__version__ import __version__
+from hakai_qc_app.variables import pages
+
 
 def parse_hakai_token(token):
     info = dict(item.split("=", 1) for item in token.split("&"))
@@ -93,7 +94,11 @@ hakai_api_credentials_modal = dbc.Modal(
                     ],
                 ),
                 html.Br(),
-                html.Sub(f"v{__version__}: {datetime.utcnow().isoformat()[:19]}",id='deployment-info',className='deployment-info'),
+                html.Sub(
+                    f"v{__version__}: {datetime.utcnow().isoformat()[:19]}",
+                    id="deployment-info",
+                    className="deployment-info",
+                ),
                 dcc.Store(id="credentials", storage_type="local"),
             ]
         ),

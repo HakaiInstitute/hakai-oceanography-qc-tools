@@ -7,8 +7,8 @@ import dash_bootstrap_components as dbc
 import plotly.io as pio
 import sentry_sdk
 from dash import Dash, Input, Output, callback, dcc, html
-from sentry_sdk.integrations.loguru import LoguruIntegration
 from dotenv import load_dotenv
+from sentry_sdk.integrations.loguru import LoguruIntegration
 
 import hakai_qc_app.selection as selection
 from hakai_qc_app.download_hakai import hakai_api_credentials_modal
