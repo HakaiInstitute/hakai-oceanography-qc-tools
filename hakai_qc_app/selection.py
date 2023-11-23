@@ -335,7 +335,13 @@ def set_selection_apply_options(action, dataSelected, apply, to):
             {"label": "Unknown", "value": "unknown"},
             {"label": "All", "value": "all"},
         ]
-        return [], None, None, "unknown" if no_selection else "selection", apply_to_options
+        return (
+            [],
+            None,
+            None,
+            "unknown" if no_selection else "selection",
+            apply_to_options,
+        )
 
 
 @callback(
