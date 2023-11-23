@@ -8,14 +8,12 @@ ENV PYTHONFAULTHANDLER=1 \
     PIP_DEFAULT_TIMEOUT=100 \
     POETRY_VERSION=1.0.0
 
-# Stop docker caching
-ADD https://www.google.com /time.now
-
 # System deps:
 RUN pip install poetry
 
 # Copy only requirements to cache them in docker layer
 WORKDIR /code
+ADD https://www.google.com /time.now
 COPY . /code
 
 # Project initialization:
