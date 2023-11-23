@@ -22,6 +22,7 @@ gsw = "^3.6.17"
 loguru = "^0.7.2"
 sentry-sdk = {extras = ["loguru"], version = "^1.36.0"}
 click = "^8.1.7"
+orjson = "^3.9.10"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
