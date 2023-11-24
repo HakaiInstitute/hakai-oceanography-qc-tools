@@ -40,7 +40,7 @@ app = Dash(
     external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],
     external_scripts=[
         {
-            "data-domain": "hakai-quality-control-data-dasboard",
+            "data-domain": "quality-control-data.server.hakai.app",
             "src": "http://plausible.server.hakai.app/js/script.js",
         }
     ],
