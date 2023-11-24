@@ -19,7 +19,7 @@ from hakai_qc_app.variables import pages
 def parse_hakai_token(token):
     info = dict(item.split("=", 1) for item in token.split("&"))
     base64_bytes = info["access_token"].encode("ascii")
-    for padding_ignore in range(0, 5):
+    for padding_ignore in range(1, 12):
         try:
             message_bytes = base64.b64decode(base64_bytes[:-padding_ignore])
             if not message_bytes:
