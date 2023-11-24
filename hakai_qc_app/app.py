@@ -41,7 +41,7 @@ app = Dash(
     external_scripts=[
         {
             "data-domain": "quality-control-data.server.hakai.app",
-            "src": "http://plausible.server.hakai.app/js/script.js",
+            "src": "http://plausible.server.hakai.app/js/script.local.js",
         }
     ],
     assets_folder="./hakai_qc_app/assets",
