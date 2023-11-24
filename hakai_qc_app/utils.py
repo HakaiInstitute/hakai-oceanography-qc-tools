@@ -18,7 +18,7 @@ def update_dataframe(df, new_df, on=None, suffix="_new", how="outer"):
     return df_merge
 
 
-def update_ctd_survey_station_lists(path='assets/ctd_survey_stations.parquet'):
+def update_ctd_survey_station_lists(path="assets/ctd_survey_stations.parquet"):
     client = Client()
     response = client.get(
         f"{client.api_root}/ctd/views/file/cast?"
@@ -28,7 +28,10 @@ def update_ctd_survey_station_lists(path='assets/ctd_survey_stations.parquet'):
     df = pd.DataFrame(response.json())
     df.to_parquet(path)
 
-def update_nutrients_survey_station_lists(path='assets/nutrients_survey_stations.parquet'):
+
+def update_nutrients_survey_station_lists(
+    path="assets/nutrients_survey_stations.parquet",
+):
     client = Client()
     response = client.get(
         f"{client.api_root}/eims/views/output/nutrients?"
@@ -38,9 +41,11 @@ def update_nutrients_survey_station_lists(path='assets/nutrients_survey_stations
     df = pd.DataFrame(response.json())
     df.to_parquet(path)
 
+
 def update_survey_stations_lists(path=None):
     update_ctd_survey_station_lists(path)
     update_nutrients_survey_station_lists(path)
+
 
 if __name__ == "__main__":
     update_survey_stations_lists()

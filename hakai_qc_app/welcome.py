@@ -1,7 +1,7 @@
 from datetime import date
 
 import dash_bootstrap_components as dbc
-from dash import Input, Output, State, callback, dcc, html, ctx
+from dash import Input, Output, State, callback, ctx, dcc, html
 from hakai_api import Client
 from loguru import logger
 
