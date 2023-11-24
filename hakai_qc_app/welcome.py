@@ -1,7 +1,7 @@
 from datetime import date
 
 import dash_bootstrap_components as dbc
-from dash import Input, Output, State, callback, dcc, html, ctx
+from dash import Input, Output, State, callback, ctx, dcc, html
 from hakai_api import Client
 from loguru import logger
 
@@ -200,7 +200,7 @@ def get_datatype_from_pathname(pathname, welcome_is_open):
 )
 def show_welcome_page(path, search, valid_credentials, n_clicks):
     if not valid_credentials:
-        return False
+        return False, False
     data_type = path.split("/")[1]
     logger.debug("show welcome for data_type={} in path={}", data_type, path)
     no_search = len(search) < 10

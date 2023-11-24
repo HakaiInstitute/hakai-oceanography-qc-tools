@@ -38,6 +38,12 @@ sentry_sdk.init(
 app = Dash(
     "Hakai Data Viewer",
     external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],
+    external_scripts=[
+        {
+            "data-domain": "quality-control-data.server.hakai.app",
+            "src": "http://plausible.server.hakai.app/js/script.js",
+        }
+    ],
     assets_folder="./hakai_qc_app/assets",
 )
 
