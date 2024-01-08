@@ -686,7 +686,7 @@ def get_qc_excel(n_clicks, data, location):
     variable_output = pages.get(data_type)[0].get("upload_fields")
     logger.debug("Save excel file type:{}", data_type)
     if variable_output:
-        logger.debug("Upload only varaibles={}", variable_output)
+        logger.debug("Upload only subset-variables={}", variable_output)
         df = df[variable_output]
     temp_dir = Path("temp")
     temp_dir.mkdir(parents=True, exist_ok=True)
