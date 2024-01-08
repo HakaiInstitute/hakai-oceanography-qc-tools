@@ -37,6 +37,7 @@ sentry_sdk.init(
 
 app = Dash(
     "Hakai Data Viewer",
+    title="Hakai Data QC Viewer",
     external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],
     external_scripts=[
         {
