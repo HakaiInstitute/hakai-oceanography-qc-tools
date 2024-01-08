@@ -30,6 +30,8 @@ def parse_hakai_token(token):
             logger.debug("failed to read token[:-{}]", padding_ignore)
 
     message = message_bytes.decode("ascii", "ignore")
+    # remove trailing characters after '"}'
+    message = message.rsplit('"}',1)[0] + '"}'
     logger.debug("Decoded token={}", message)
     if message is None:
         logger.error("failed to decode token")
