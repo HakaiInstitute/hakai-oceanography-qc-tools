@@ -128,10 +128,6 @@ pages = {
             "endpoint": "eims/views/output/ctd_qc",
             "fields": [
                 "hakai_id",
-                "collected",
-                "work_area",
-                "survey",
-                "site_id",
                 "depth_flag",
                 "pressure_flag",
                 "conductivity_flag",
