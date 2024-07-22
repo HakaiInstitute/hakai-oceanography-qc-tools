@@ -691,9 +691,10 @@ def get_qc_excel(n_clicks, data, location):
     State("qc-table", "data"),
     State("location", "pathname"),
     State("credentials", "data"),
+    State("select-organization","value"),
 )
 @logger.catch(reraise=True)
-def upload_qc_excel(n_clicks, data, location, credentials):
+def upload_qc_excel(n_clicks, data, location, credentials, organization):
     """Upload the QC data to the Hakai Portal"""
     if data is None:
         return None
@@ -705,7 +706,7 @@ def upload_qc_excel(n_clicks, data, location, credentials):
     response = client.post(
         f"{client.api_root or 'https://hecate.hakai.org/api'}/eims/forms/xlsx/form-data",
         files={"file": open(temp_file, "rb")},
-        data={"data_type": data_type, "organization": "HAKAI"},
+        headers={"organization": organization},
     )
 
     response.raise_for_status()
