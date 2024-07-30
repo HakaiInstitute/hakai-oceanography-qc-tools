@@ -8,6 +8,7 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 from dash import ALL, Input, Output, State, callback, ctx, dash_table, dcc, html
 from loguru import logger
+from hakai_api import Client
 
 from hakai_qc.ctd import generate_qc_flags
 from hakai_qc.flags import (
@@ -21,8 +22,8 @@ from hakai_qc.qc import update_dataframe
 from hakai_qc_app.variables import (
     DEFAULT_HIDDEN_COLUMNS_IN_TABLE,
     VARIABLES_LABEL,
-    pages,
 )
+from hakai_qc_app.output import generate_excel_output
 
 variables_flag_mapping = {"no2_no3_um": "no2_no3_flag"}
 nutrient_variables_flags = [get_hakai_variable_flag(var) for var in nutrient_variables]
@@ -164,7 +165,9 @@ table_extra_buttons = html.Div(
                         ]
                     ),
                     id="upload-to-hakai-button",
-                    disabled=True,
+                ),
+                html.Div(
+                    id="upload-toast-div",
                 ),
             ],
             className="me-1",
@@ -680,32 +683,57 @@ def get_qc_excel(n_clicks, data, location):
         return None, None
     df = pd.DataFrame(data)
     data_type = location.split("/")[1]
-    logger.info("Retrieve excel file template for {}", data_type)
-    excel_template = MODULE_PATH / f"assets/hakai-template-{data_type}-samples.xlsx"
+    temp_file = generate_excel_output(df, data_type)
 
-    variable_output = pages.get(data_type)[0].get("upload_fields")
-    logger.debug("Save excel file type:{}", data_type)
-    if variable_output:
-        logger.debug("Upload only subset-variables={}", variable_output)
-        df = df[variable_output]
-    temp_dir = Path("temp")
-    temp_dir.mkdir(parents=True, exist_ok=True)
-    temp_file = (
-        temp_dir
-        / f"hakai-qc-{data_type}-{datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}.xlsx"
-    )
-    logger.info("Copy {} template/update excel file to: {}", data_type, temp_file)
-    shutil.copy(
-        excel_template,
-        temp_file,
-    )
-    logger.debug("Add data to qc excel file")
-    with pd.ExcelWriter(
-        temp_file, engine="openpyxl", mode="a", if_sheet_exists="replace"
-    ) as writer:
-        df.to_excel(writer, sheet_name="Hakai Data", index=False)
-    logger.info("Upload Hakai QC excel file")
+    logger.info("Upload Hakai QC excel file to user")
     return dcc.send_file(temp_file), None
+
+@callback(
+    Output("hakai-upload-to-hakai-spinner", "children"),
+    Output("upload-toast-div", "children"),
+    Input("upload-to-hakai-button", "n_clicks"),
+    State("qc-table", "data"),
+    State("location", "pathname"),
+    State("credentials", "data"),
+    State("select-organization","value"),
+)
+@logger.catch(reraise=True)
+def upload_qc_excel(n_clicks, data, location, credentials, organization):
+    """Upload the QC data to the Hakai Portal"""
+    if data is None:
+        return None
+    df = pd.DataFrame(data)
+    data_type = location.split("/")[1]
+    temp_file = generate_excel_output(df, data_type)
+    client = Client(credentials)
+    logger.debug("Upload Hakai QC excel file to Hakai Portal")
+    response = client.post(
+        f"{client.api_root or 'https://hecate.hakai.org/api'}/eims/forms/xlsx/form-data",
+        files={"file": open(temp_file, "rb")},
+        headers={"organization": organization},
+    )
+
+    
+    response_json = response.json()
+    if response.status_code != 200:
+        logger.error("Upload failed: {}", response_json)
+        return None, dbc.Toast(
+            "Upload failed: {}".format(response_json),
+            header="Error",
+            icon="danger",
+            dismissable=True,
+            is_open=True,
+            style={"position": "fixed", "top": 66, "right": 10},
+        )
+    return None, dbc.Toast(
+            "Upload successful",
+            header="Success",
+            icon="success",
+            dismissable=True,
+            is_open=True,
+            duration=4000,
+            style={"position": "fixed", "top": 66, "right": 10},
+        )
 
 
 @callback(

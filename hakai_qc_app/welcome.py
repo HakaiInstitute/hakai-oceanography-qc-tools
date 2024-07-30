@@ -55,6 +55,11 @@ welcome_section = dbc.Modal(
                             persistence=True,
                         ),
                         dbc.Select(
+                            id="select-organization",
+                            placeholder="Organization",
+                            persistence=True,
+                        ),
+                        dbc.Select(
                             id="select-work-area",
                             placeholder="Work Area",
                             persistence=True,
@@ -105,19 +110,35 @@ welcome_section = dbc.Modal(
 
 def list_to_select_dict(options: list):
     return [{"label": option, "value": option} for option in options]
-
+@callback(
+    Output("select-organization", "options"),
+    Input("select-data-type", "value"),
+    State("credentials-input", "value"),
+)
+def get_organization_list(data_type, credentials):
+    if data_type is None:
+        return None
+    client = Client(credentials=credentials)
+    logger.debug("Get organization list for data_type={}", data_type)
+    response = client.get(
+        f"{client.api_root}/{pages[data_type][0]['endpoint']}?fields=organization&sort=organization&limit=-1&distinct"
+    )
+    organizations = list_to_select_dict([item["organization"] for item in response.json()])
+    logger.debug("organization response={}", organizations)
+    return organizations
 
 @callback(
     Output("select-station-list", "children"),
     Output("load-sites", "children"),
     Input("select-data-type", "value"),
     State("credentials-input", "value"),
+    Input("select-organization", "value"),
     Input("select-work-area", "value"),
     Input("select-survey", "value"),
     State("select-date-range", "start_date"),
     State("select-date-range", "end_date"),
 )
-def get_station_list(data_type, credentials, work_area, survey, start_date, end_date):
+def get_station_list(data_type, credentials, organization, work_area, survey, start_date, end_date):
     if data_type is None:
         return None, None
 
@@ -134,10 +155,12 @@ def get_station_list(data_type, credentials, work_area, survey, start_date, end_
         time_variable = "collected"
         survey_variable = "survey"
 
+    organization_filter = f"organization={organization}&" if organization else ""
     work_area_filter = f"work_area={work_area}&" if work_area else ""
     survey_filter = f"{survey_variable}={survey}&" if survey else ""
     response = client.get(
         f"{client.api_root}/{pages[data_type][0]['endpoint']}?"
+        f"{organization_filter}"
         f"{work_area_filter}{survey_filter}"
         f"fields={site_label}&sort={site_label}&limit=-1&distinct"
         f"&{time_variable}>={start_date}"
@@ -152,11 +175,12 @@ def get_station_list(data_type, credentials, work_area, survey, start_date, end_
     Output("select-survey-list", "children"),
     Input("select-data-type", "value"),
     State("credentials-input", "value"),
+    Input("select-organization", "value"),
     Input("select-work-area", "value"),
     State("select-date-range", "start_date"),
     State("select-date-range", "end_date"),
 )
-def get_survey_list(data_type, credentials, work_area, start_date, end_date):
+def get_survey_list(data_type, credentials, organization, work_area, start_date, end_date):
     if data_type is None:
         return None
 
@@ -165,8 +189,10 @@ def get_survey_list(data_type, credentials, work_area, start_date, end_date):
     time_variable = "start_dt" if data_type == "ctd" else "collected"
     survey_variable = "cruise" if data_type == "ctd" else "survey"
     work_area_filter = f"work_area={work_area}&" if work_area else ""
+    organization_filter = f"organization={organization}&" if organization else ""
     response = client.get(
         f"{client.api_root}/{pages[data_type][0]['endpoint']}?"
+        f"{organization_filter}"
         f"{work_area_filter}"
         f"fields={survey_variable}&sort={survey_variable}&limit=-1&distinct"
         f"&{time_variable}>={start_date}"
@@ -226,6 +252,7 @@ def apply_default_extra_filters(data_type):
 @callback(
     Output("run-search-selection", "children"),
     Input("select-data-type", "value"),
+    Input("select-organization", "value"),
     Input("select-work-area", "value"),
     Input("select-survey", "value"),
     Input("select-station", "value"),
@@ -236,6 +263,7 @@ def apply_default_extra_filters(data_type):
 )
 def get_hakai_search_url(
     data_type,
+    organization,
     work_area,
     survey,
     station,
@@ -254,6 +282,7 @@ def get_hakai_search_url(
         [
             item
             for item in [
+                f"organization={organization}" if organization else None,
                 f"work_area={work_area}" if work_area else None,
                 f"{survey_label}={survey}" if survey else None,
                 f"{site_label}={station}",
