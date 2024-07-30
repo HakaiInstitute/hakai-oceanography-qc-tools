@@ -166,6 +166,9 @@ table_extra_buttons = html.Div(
                     ),
                     id="upload-to-hakai-button",
                 ),
+                html.Div(
+                    id="upload-toast-div",
+                ),
             ],
             className="me-1",
         ),
@@ -687,6 +690,7 @@ def get_qc_excel(n_clicks, data, location):
 
 @callback(
     Output("hakai-upload-to-hakai-spinner", "children"),
+    Output("upload-toast-div", "children"),
     Input("upload-to-hakai-button", "n_clicks"),
     State("qc-table", "data"),
     State("location", "pathname"),
@@ -709,13 +713,28 @@ def upload_qc_excel(n_clicks, data, location, credentials, organization):
         headers={"organization": organization},
     )
 
-    response.raise_for_status()
-    response_json = response.json()
-    logger.debug("Upload response: {}", response_json)
-    if "errors" in response_json:
-        raise ValueError("Upload failed: {}", response_json)
-        return None
     
+    response_json = response.json()
+    if response.status_code != 200:
+        logger.error("Upload failed: {}", response_json)
+        return None, dbc.Toast(
+            "Upload failed: {}".format(response_json),
+            header="Error",
+            icon="danger",
+            dismissable=True,
+            is_open=True,
+            style={"position": "fixed", "top": 66, "right": 10},
+        )
+    return None, dbc.Toast(
+            "Upload successful",
+            header="Success",
+            icon="success",
+            dismissable=True,
+            is_open=True,
+            duration=4000,
+            style={"position": "fixed", "top": 66, "right": 10},
+        )
+
 
 @callback(
     Output("flag-progress-bar", "children"),
