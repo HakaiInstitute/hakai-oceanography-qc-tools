@@ -108,9 +108,3 @@ https://quality-control-data.server.hak4i.org
 Any pushes to the development and main branches are automatically reflected on the respectives deployments.
 
 ---
-
-## Documentation
-
-#TODO 
-
----
