@@ -17,7 +17,7 @@
 # Hakai Data QC tools
 
 
-The Hakai QC tool is a web interface used to review and QC hakai data. Here's an [example](https://quality-control-data.server.hakai.app/ctd/dissolved_oxygen_ml_l/contour_profiles?station=QU39&start_dt>2020-01-01&start_dt<2023-01-01) that show the data oxygen data from QU39 from Jan 2020 to Jan 2023.
+The Hakai QC tool is a web interface used to review and QC Hakai CTD and Nutrient data. Here's an [example](https://quality-control-data.server.hakai.app/ctd/dissolved_oxygen_ml_l/contour_profiles?station=QU39&start_dt>2020-01-01&start_dt<2023-01-01) that show the data oxygen data from QU39 from Jan 2020 to Jan 2023.
 
 
 ---
