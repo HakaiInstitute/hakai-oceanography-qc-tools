@@ -147,3 +147,5 @@ where total_drops_available > 2
 ```
 
 This will give you something like [this](unqced_data_2024-08-29.csv)
+
+Or go see here: <https://hakai-ctd-qc.server.hakai.app/manual-qc-status>
