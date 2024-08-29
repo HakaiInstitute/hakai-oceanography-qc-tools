@@ -127,7 +127,8 @@ select
 	count(qc.flc_flag) as flc_qced,
 	count(qc.par_flag ) as par_qced,
 	count(cfc.hakai_id) as total_drops_available,
-	sum(case when qc.temperature_flag is null then 1 else 0 end) as temperature_unqced
+	sum(case when qc.temperature_flag is null then 1 else 0 end) as temperature_unqced,
+	max(case when qc.temperature_flag notnull then cfc.start_dt else null end) as most_recent_temperature_qced_drop_start_dt
 from
 	ctd.ctd_qc qc
 right join ctd.ctd_file_cast cfc on
@@ -140,8 +141,9 @@ group by
 	cfc.work_area ,
 	cfc.station)
 order by organization, work_area , station
-)
+) as subset
 where total_drops_available > 2
+;
 ```
 
 This will give you something like [this](unqced_data_2024-08-29.csv)
