@@ -108,3 +108,38 @@ https://quality-control-data.server.hak4i.org
 Any pushes to the development and main branches are automatically reflected on the respectives deployments.
 
 ---
+
+## How many CTD stations still needs to be QCed
+
+You can run the following sql script on the hakai database:
+
+```sql
+select *
+from (
+select
+	organization,
+	work_area,
+	station,
+	COUNT(qc.conductivity_flag) as conductivity_qced,
+	count(qc.temperature_flag) as temperature_qced,
+	count(qc.salinity_flag) as salinity_qced,
+	count(qc.dissolved_oxygen_ml_l_flag) as dissolved_oxygen_ml_l_qced,
+	count(qc.flc_flag) as flc_qced,
+	count(qc.par_flag ) as par_qced,
+	count(cfc.hakai_id) as total_drops_available,
+	sum(case when qc.temperature_flag is null then 1 else 0 end) as temperature_unqced
+from
+	ctd.ctd_qc qc
+right join ctd.ctd_file_cast cfc on
+	qc.ctd_cast_pk = cfc.ctd_cast_pk
+where cfc.organization ='HAKAI'
+and (status is null or status = '')
+and cfc.processing_stage > '1_datCnv'
+group by
+	(cfc.organization,
+	cfc.work_area ,
+	cfc.station)
+order by organization, work_area , station
+)
+where total_drops_available > 2
+```
