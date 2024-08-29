@@ -143,3 +143,5 @@ order by organization, work_area , station
 )
 where total_drops_available > 2
 ```
+
+This will give you something like [this](unqced_data_2024-08-29.csv)
