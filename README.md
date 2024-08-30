@@ -17,7 +17,7 @@
 # Hakai Data QC tools
 
 
-The Hakai QC tool is a web interface used to review and QC hakai data. Here's an [example](https://quality-control-data.server.hakai.app/ctd/dissolved_oxygen_ml_l/contour_profiles?station=QU39&start_dt>2020-01-01&start_dt<2023-01-01) that show the data oxygen data from QU39 from Jan 2020 to Jan 2023.
+The Hakai QC tool is a web interface used to review and QC Hakai CTD and Nutrient data. Here's an [example](https://quality-control-data.server.hakai.app/ctd/dissolved_oxygen_ml_l/contour_profiles?station=QU39&start_dt>2020-01-01&start_dt<2023-01-01) that show the data oxygen data from QU39 from Jan 2020 to Jan 2023.
 
 
 ---
@@ -109,8 +109,43 @@ Any pushes to the development and main branches are automatically reflected on t
 
 ---
 
-## Documentation
+## How many CTD stations still needs to be QCed
 
-#TODO 
+You can run the following sql script on the hakai database:
 
----
+```sql
+select *
+from (
+select
+	organization,
+	work_area,
+	station,
+	COUNT(qc.conductivity_flag) as conductivity_qced,
+	count(qc.temperature_flag) as temperature_qced,
+	count(qc.salinity_flag) as salinity_qced,
+	count(qc.dissolved_oxygen_ml_l_flag) as dissolved_oxygen_ml_l_qced,
+	count(qc.flc_flag) as flc_qced,
+	count(qc.par_flag ) as par_qced,
+	count(cfc.hakai_id) as total_drops_available,
+	sum(case when qc.temperature_flag is null then 1 else 0 end) as temperature_unqced,
+	max(case when qc.temperature_flag notnull then cfc.start_dt else null end) as most_recent_temperature_qced_drop_start_dt
+from
+	ctd.ctd_qc qc
+right join ctd.ctd_file_cast cfc on
+	qc.ctd_cast_pk = cfc.ctd_cast_pk
+where cfc.organization ='HAKAI'
+and (status is null or status = '')
+and cfc.processing_stage > '1_datCnv'
+group by
+	(cfc.organization,
+	cfc.work_area ,
+	cfc.station)
+order by organization, work_area , station
+) as subset
+where total_drops_available > 2
+;
+```
+
+This will give you something like [this](unqced_data_2024-08-29.csv)
+
+Or go see here: <https://hakai-ctd-qc.server.hakai.app/manual-qc-status>

@@ -36,5 +36,13 @@ tooltips = html.Div(
             "Clear hakai_id selection filter in qc-table",
             target="clear-selected-row-table",
         ),
+        dbc.Tooltip(
+            "Download Excel file with QC data",
+            target="download-qc-excel-button",
+        ),
+        dbc.Tooltip(
+            "Upload Excel file with QC data directly to the hakai database",
+            target="upload-to-hakai-button",
+        ),
     ]
 )
