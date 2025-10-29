@@ -56,6 +56,26 @@ LOG_LEVEL=DEBUG
 DASH_HOST=127.0.0.1
 ACTIVATE_SENTRY_LOG=false
 ```
+## Run Notbooks Locally
+install dependencies
+
+```shell
+  uv sync
+```
+Start jupyter lab
+
+Run jupyter notebooks
+```shell
+  uv run --with jupyter jupyter notebook
+```
+
+Or start jupyter lab
+
+```shell
+uv run --with jupyter jupyter lab
+```
+
+navigate to the notbooks folder and open the notebook you want to run.
 
 ## Development
 
