@@ -922,6 +922,11 @@ dev = [
     { name = "pytest" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "black", marker = "extra == 'dev'", specifier = ">=23.1.0,<24.0.0" },
@@ -951,6 +956,9 @@ requires-dist = [
     { name = "sentry-sdk", extras = ["loguru"], specifier = ">=2.42.1" },
 ]
 provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=7.4.4" }]
 
 [[package]]
 name = "httpcore"

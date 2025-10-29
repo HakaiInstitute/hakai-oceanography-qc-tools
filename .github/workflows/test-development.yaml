@@ -19,7 +19,8 @@ jobs:
       - name: Install packages
         run: |
           pip install --upgrade pip
-          pip install poetry
-          poetry install --with dev
+          pip install uv
+          uv sync
+          uv sync --dev
       - name: Run Pytests
-        run: poetry run pytest
+        run: uv run pytest

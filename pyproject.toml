@@ -45,3 +45,8 @@ packages = ["hakai_qc", "hakai_qc_app"]
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest>=7.4.4",
+]
