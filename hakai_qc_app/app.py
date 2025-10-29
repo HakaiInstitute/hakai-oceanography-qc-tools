@@ -84,7 +84,7 @@ def show_figure_area(figure):
 @click.option("--port", default=8050, type=int, envvar="PORT")
 @click.option("--debug", is_flag=True, show_default=True, default=True, envvar="DEBUG")
 def run_app(host, port, debug=True):
-    app.run_server(
+    app.run(
         host=host,
         port=port,
         debug=debug,

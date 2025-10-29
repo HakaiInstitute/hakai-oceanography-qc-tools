@@ -25,19 +25,20 @@ def qc_dataframe(df, configs, groupby=None, axes=None):
         result_store = []
         df_subset = df.query(query)[original_columns]
         logger.info("run qc on query: {} = len(df)={}", query, len(df_subset))
-        for group, timeserie in df_subset.groupby(groupby, as_index=False):
-            # Make sure that the timeseries are sorted chronologically
-            timeserie = timeserie.reset_index()
-            # logger.debug("timeseries to be qc len(df)={}: {}", len(timeserie),timeserie)
-            stream = PandasStream(timeserie, **axes)
-            results = stream.run(Config(config))
-
-            store = PandasStore(results, axes=axes)
-            result_store += [
-                timeserie.join(store.save(write_data=False, write_axes=False))
-            ]
-
-        df_qced = pd.concat(result_store, ignore_index=True)
+        if len(df_subset) > 0:
+            for group, timeserie in df_subset.groupby(groupby, as_index=False):
+                # Make sure that the timeseries are sorted chronologically
+                timeserie = timeserie.reset_index()
+                # logger.debug("timeseries to be qc len(df)={}: {}", len(timeserie),timeserie)
+                stream = PandasStream(timeserie, **axes)
+                results = stream.run(Config(config))
+                store = PandasStore(results, axes=axes)
+                result_store += [
+                    timeserie.join(store.save(write_data=False, write_axes=False))
+                ]
+            df_qced = pd.concat(result_store, ignore_index=True)
+        else:
+            df_qced = pd.DataFrame(columns=[*original_columns])
         df = update_dataframe(df, df_qced, on="hakai_id")
 
     return df

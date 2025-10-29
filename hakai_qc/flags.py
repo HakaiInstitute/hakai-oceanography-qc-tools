@@ -17,10 +17,10 @@ flag_color_map = {
 }
 flag_qartod_to_hakai = {
     1: "AV",
-    2: "UKN",
+    2: "",
     3: "SVC",
     4: "SVD",
-    9: "MV",
+    9: "NA",
 }
 flags_conventions = {
     "Hakai": [
@@ -56,6 +56,7 @@ flag_tooltips = {
     Suspicious Value Cautious = SVC
     Suspicious Value Discard = SVD
     Below Detection Limit = BDL
+    Not Available = NA
     """,
     "quality_level": """
     - Raw = collected but no event QC / nothing has been done yet.

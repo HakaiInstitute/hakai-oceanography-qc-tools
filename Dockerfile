@@ -6,18 +6,23 @@ ENV PYTHONFAULTHANDLER=1 \
     PIP_NO_CACHE_DIR=off \
     PIP_DISABLE_PIP_VERSION_CHECK=on \
     PIP_DEFAULT_TIMEOUT=100 \
-    POETRY_VERSION=1.0.0
+    # uv is used for package management
+    UV_VERSION=0.1.11
 
 # System deps:
-RUN pip install poetry
+RUN pip install "uv==${UV_VERSION}"
 
-# Copy only requirements to cache them in docker layer
 WORKDIR /code
-COPY . /code
 
-# Project initialization:
-RUN poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi
+# Copy only pyproject.toml to leverage Docker layer caching.
+COPY pyproject.toml ./
+
+# Install dependencies using uv. The --system flag installs packages into the
+# global site-packages, which is standard practice for containers.
+RUN uv pip install . --system
+
+# Copy the rest of the application code.
+COPY . .
 
 EXPOSE 8050
 

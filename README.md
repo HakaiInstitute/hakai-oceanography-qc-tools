@@ -74,14 +74,16 @@ Go to the project directory
 Install dependencies
 
 ```shell
-    pip install -e .
+    uv sync
 ```
 
 Start the development server
 
 ```shell
-  python hakai_qc_app/app.py
+  uv run hakai_qc_app/app.py
 ```
+
+Navigate to `http://127.0.0.1:8050/`
 
 ## Tests
 

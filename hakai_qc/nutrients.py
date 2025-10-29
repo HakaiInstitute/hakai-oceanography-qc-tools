@@ -11,7 +11,7 @@ nutrients_qc_configs = {
     "-5 < line_out_depth < 50": """
         contexts:
                 -   window:
-                        starting: 2010-01-01T00:00:00Z
+                        starting: 2010-01-01T00:00:00
                         ending: null
                     streams:
                         no2_no3_um:
@@ -33,7 +33,7 @@ nutrients_qc_configs = {
     "50<=line_out_depth": """
         contexts:
              -  window:
-                    starting: 2010-01-01T00:00:00Z
+                    starting: 2010-01-01T00:00:00
                     ending: null
                 streams:
                     no2_no3_um:
@@ -98,7 +98,7 @@ def run_nutrient_qc(
         agg_flag = f"{var}_qartod_aggregate"
         df.loc[:, agg_flag] = qartod_compare(
             df.filter(like=f"{var}_qartod_")
-            .fillna(9)
+            .fillna(1)  # treat NaN as GOOD flag
             .astype(int)
             .transpose()
             .to_numpy()
