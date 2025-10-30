@@ -66,13 +66,13 @@ Start jupyter lab
 
 Run jupyter notebooks
 ```shell
-  uv run --with jupyter jupyter notebook
+  uv run jupyter notebook
 ```
 
 Or start jupyter lab
 
 ```shell
-uv run --with jupyter jupyter lab
+uv run jupyter lab
 ```
 
 navigate to the notbooks folder and open the notebook you want to run.
