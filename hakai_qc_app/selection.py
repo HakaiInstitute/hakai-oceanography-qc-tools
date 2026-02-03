@@ -708,7 +708,7 @@ def upload_qc_excel(n_clicks, data, location, credentials, organization):
     client = Client(credentials)
     logger.debug("Upload Hakai QC excel file to Hakai Portal")
     response = client.post(
-        f"{client.api_root or 'https://hecate.hakai.org/api'}/eims/forms/xlsx/form-data",
+        f"{client.api_root or 'https://portal.hakai.org/api'}/eims/forms/xlsx/form-data",
         files={"file": open(temp_file, "rb")},
         headers={"organization": organization},
     )

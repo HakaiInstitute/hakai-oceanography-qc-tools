@@ -63,8 +63,8 @@ hakai_api_credentials_modal = dbc.Modal(
                 "Please go here and authorize:\n",
                 html.Br(),
                 dcc.Link(
-                    "https://hecate.hakai.org/api-client-login",
-                    href="https://hecate.hakai.org/api-client-login",
+                    "https://portal.hakai.org/api-client-login",
+                    href="https://portal.hakai.org/api-client-login",
                     target="_blank",
                 ),
                 html.Br(),
